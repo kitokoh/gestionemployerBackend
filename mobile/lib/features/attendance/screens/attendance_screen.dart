@@ -1,3 +1,4 @@
+import 'package:leopardo_rh/core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +18,16 @@ class AttendanceScreen extends ConsumerWidget {
         child: attState.error != null && attState.error!.contains('NOT_IMPLEMENTED')
             ? _buildStubScreen(context, ref)
             : attState.isLoading && attState.todayLog == null
-                ? const Center(child: CircularProgressIndicator())
+                ? ListView(
+                    padding: const EdgeInsets.all(24.0),
+                    children: [
+                      const ShimmerLoading(width: double.infinity, height: 100, borderRadius: 16),
+                      const SizedBox(height: 32),
+                      const Center(child: ShimmerLoading(width: 200, height: 200, borderRadius: 100)),
+                      const SizedBox(height: 32),
+                      const ShimmerLoading(width: double.infinity, height: 120, borderRadius: 16),
+                    ],
+                  )
                 : RefreshIndicator(
                     onRefresh: () => ref.read(attendanceProvider.notifier).loadTodayData(),
                     child: ListView(

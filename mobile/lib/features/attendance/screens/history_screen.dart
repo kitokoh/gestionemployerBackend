@@ -1,3 +1,4 @@
+import 'package:leopardo_rh/core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,7 +21,27 @@ class HistoryScreen extends ConsumerWidget {
         title: const Text('Historique'),
       ),
       body: historyAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: 6,
+          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          itemBuilder: (_, __) => Row(
+            children: [
+              const ShimmerLoading(width: 40, height: 40, borderRadius: 20),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const ShimmerLoading(width: 100, height: 16),
+                    const SizedBox(height: 8),
+                    const ShimmerLoading(width: double.infinity, height: 16),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
         error: (err, stack) {
           if (err.toString().contains('NOT_IMPLEMENTED')) {
             return Center(
