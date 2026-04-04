@@ -74,7 +74,7 @@ jobs:
         run: php artisan test
 
   mobile-tests:
-    name: Mobile Flutter (stable)
+    name: Mobile Flutter (Stable Channel)
     runs-on: ubuntu-latest
 
     steps:
