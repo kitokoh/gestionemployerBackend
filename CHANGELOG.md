@@ -65,6 +65,14 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.9] - 2026-04-04
+### CI — Stabilisation des checks PR
+
+- Backend CI: ajout `gd` aux extensions PHP (dépendance requise par `barryvdh/laravel-dompdf`)
+- Mobile CI: alignement du nom du job sur `Mobile Flutter (Stable Channel)` (conforme aux règles de protection de branche)
+
+---
+
 ## [4.1.8] - 2026-04-04
 ### CI — Gouvernance unifiée
 
