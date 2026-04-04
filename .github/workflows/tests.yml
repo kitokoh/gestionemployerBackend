@@ -47,6 +47,13 @@ jobs:
           extensions: pdo, pdo_pgsql, pdo_sqlite, sqlite3, redis, bcmath, mbstring, xml, zip
           coverage: xdebug
 
+      - name: Prepare environment
+        working-directory: ./api
+        run: |
+          cp .env.example .env
+          echo "APP_ENV=testing" >> .env
+          echo "APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" >> .env
+
       - name: Install Composer dependencies
         working-directory: ./api
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
@@ -63,23 +70,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Detect mobile workspace
+        id: mobile
+        run: |
+          if [ -f "mobile/pubspec.yaml" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Flutter
+        if: steps.mobile.outputs.exists == 'true'
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
       - name: Install dependencies
+        if: steps.mobile.outputs.exists == 'true'
         working-directory: ./mobile
         run: flutter pub get
 
       - name: Analyze
+        if: steps.mobile.outputs.exists == 'true'
         working-directory: ./mobile
         run: flutter analyze --no-fatal-infos
 
       - name: Run Flutter tests
+        if: steps.mobile.outputs.exists == 'true'
         working-directory: ./mobile
         run: flutter test --coverage
+
+      - name: Skip mobile checks (no mobile/ directory)
+        if: steps.mobile.outputs.exists != 'true'
+        run: echo "Mobile workspace not present in this branch; skipping."
 
   governance-gates:
     name: Governance Gates (changelog + canonical files)
