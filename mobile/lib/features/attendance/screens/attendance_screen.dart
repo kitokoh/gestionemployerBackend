@@ -14,23 +14,52 @@ class AttendanceScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: attState.isLoading && attState.todayLog == null
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: () => ref.read(attendanceProvider.notifier).loadTodayData(),
-                child: ListView(
-                  padding: const EdgeInsets.all(24.0),
-                  children: [
-                    _buildHeader(context, authState),
-                    const SizedBox(height: 32),
-                    _buildActionCard(context, ref, attState),
-                    const SizedBox(height: 32),
-                    _buildSummaryCard(context, attState),
-                    const SizedBox(height: 32),
-                    _buildActions(context, ref),
-                  ],
-                ),
-              ),
+        child: attState.error != null && attState.error!.contains('NOT_IMPLEMENTED')
+            ? _buildStubScreen(context, ref)
+            : attState.isLoading && attState.todayLog == null
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: () => ref.read(attendanceProvider.notifier).loadTodayData(),
+                    child: ListView(
+                      padding: const EdgeInsets.all(24.0),
+                      children: [
+                        _buildHeader(context, authState),
+                        const SizedBox(height: 32),
+                        _buildActionCard(context, ref, attState),
+                        const SizedBox(height: 32),
+                        _buildSummaryCard(context, attState),
+                        const SizedBox(height: 32),
+                        _buildActions(context, ref),
+                      ],
+                    ),
+                  ),
+      ),
+    );
+  }
+
+  Widget _buildStubScreen(BuildContext context, WidgetRef ref) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.build_circle_outlined, size: 64, color: Colors.grey),
+          const SizedBox(height: 16),
+          const Text('Fonction bientôt disponible', style: TextStyle(fontSize: 20)),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              ref.read(attendanceProvider.notifier).loadTodayData();
+            },
+            child: const Text('Réessayer'),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () {
+              ref.read(authProvider.notifier).logout();
+            },
+            child: const Text('Déconnexion', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
