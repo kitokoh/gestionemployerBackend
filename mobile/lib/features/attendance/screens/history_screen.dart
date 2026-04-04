@@ -1,0 +1,112 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:leopardo_rh/features/attendance/providers/attendance_provider.dart';
+
+class HistoryScreen extends ConsumerWidget {
+  const HistoryScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final now = DateTime.now();
+    final historyAsync = ref.watch(historyProvider(DateTime(now.year, now.month)));
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text('Historique'),
+      ),
+      body: historyAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Erreur : $err')),
+        data: (logs) {
+          if (logs.isEmpty) {
+            return const Center(child: Text('Aucun historique pour ce mois.'));
+          }
+          final totalJours = logs.length;
+          final totalHeures = logs.fold<double>(0, (sum, log) => sum + (log.workedHours ?? 0));
+          return Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Mois actuel', style: Theme.of(context).textTheme.titleLarge),
+                  ],
+                ),
+              ),
+              const Divider(),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: logs.length,
+                  itemBuilder: (context, index) {
+                    final log = logs[index];
+                    Color statusColor = Colors.grey;
+                    switch (log.status) {
+                      case 'ontime':
+                        statusColor = Colors.green;
+                        break;
+                      case 'late':
+                        statusColor = Colors.orange;
+                        break;
+                      case 'absent':
+                        statusColor = Colors.red;
+                        break;
+                    }
+                    
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: statusColor.withOpacity(0.2),
+                        child: Icon(Icons.circle, color: statusColor, size: 12),
+                      ),
+                      title: Text('${log.date.day.toString().padLeft(2, '0')}/${log.date.month.toString().padLeft(2, '0')}'),
+                      subtitle: Text(
+                        log.checkIn != null 
+                          ? '${log.checkIn!.hour.toString().padLeft(2,'0')}:${log.checkIn!.minute.toString().padLeft(2,'0')} → '
+                            '${log.checkOut != null ? "${log.checkOut!.hour.toString().padLeft(2,'0')}:${log.checkOut!.minute.toString().padLeft(2,'0')}" : "En cours"}'
+                          : 'Absence'
+                      ),
+                      trailing: Text('${log.workedHours ?? 0}h', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    );
+                  },
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Total jours'),
+                          Text('$totalJours', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Total heures'),
+                          Text('${totalHeures.toStringAsFixed(1)}h', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
