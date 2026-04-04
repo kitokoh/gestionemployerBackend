@@ -55,6 +55,9 @@ class ApiClient {
     if (e.response?.statusCode == 404 || e.response?.statusCode == 501) {
       message = "Fonction bientôt disponible";
       code = "NOT_IMPLEMENTED";
+    } else if (e.response?.statusCode == 403) {
+      message = "Compte suspendu — contactez votre employeur";
+      code = "FORBIDDEN";
     } else if (e.response != null && e.response?.data != null) {
       if (e.response?.data is Map) {
         message = e.response?.data['message'] ?? message;
