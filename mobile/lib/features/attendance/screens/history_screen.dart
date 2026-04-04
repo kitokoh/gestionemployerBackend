@@ -4,11 +4,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:leopardo_rh/features/attendance/providers/attendance_provider.dart';
 
-class HistoryScreen extends ConsumerWidget {
+class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends ConsumerState<HistoryScreen> {
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingMore = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent && !_isLoadingMore) {
+        setState(() => _isLoadingMore = true);
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) setState(() => _isLoadingMore = false);
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final now = DateTime.now();
     final historyAsync = ref.watch(historyProvider(DateTime(now.year, now.month)));
 
@@ -82,8 +109,15 @@ class HistoryScreen extends ConsumerWidget {
               const Divider(),
               Expanded(
                 child: ListView.builder(
-                  itemCount: logs.length,
+                  controller: _scrollController,
+                  itemCount: logs.length + (_isLoadingMore ? 1 : 0),
                   itemBuilder: (context, index) {
+                    if (index == logs.length) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
                     final log = logs[index];
                     Color statusColor = Colors.grey;
                     switch (log.status) {
@@ -137,6 +171,14 @@ class HistoryScreen extends ConsumerWidget {
                         children: [
                           const Text('Total heures'),
                           Text('${totalHeures.toStringAsFixed(1)}h', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Heures supplémentaires', style: TextStyle(color: Colors.grey)),
+                          Text('${(totalHeures > 160 ? totalHeures - 160 : 0).toStringAsFixed(1)}h', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
                         ],
                       ),
                     ],

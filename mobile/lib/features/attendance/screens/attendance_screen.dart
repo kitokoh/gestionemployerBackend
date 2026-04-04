@@ -1,5 +1,7 @@
 import 'package:leopardo_rh/core/widgets/shimmer_loading.dart';
+import 'package:leopardo_rh/core/widgets/pulse_button.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:leopardo_rh/features/attendance/providers/attendance_provider.dart';
@@ -104,40 +106,16 @@ class AttendanceScreen extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          GestureDetector(
-            onTap: state.isLoading
-                ? null
-                : () {
-                    if (isCheckedIn) {
-                      ref.read(attendanceProvider.notifier).checkOut();
-                    } else {
-                      ref.read(attendanceProvider.notifier).checkIn();
-                    }
-                  },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isCheckedIn ? Theme.of(context).colorScheme.error : Theme.of(context).primaryColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: (isCheckedIn ? Theme.of(context).colorScheme.error : Theme.of(context).primaryColor).withOpacity(0.3),
-                    blurRadius: 20,
-                    spreadRadius: 5,
-                  )
-                ],
-              ),
-              child: Center(
-                child: state.isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(
-                        isCheckedIn ? 'CHECK OUT' : 'CHECK IN',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-              ),
-            ),
+          PulseButton(
+            isCheckedIn: isCheckedIn,
+            isLoading: state.isLoading,
+            onTap: () {
+              if (isCheckedIn) {
+                ref.read(attendanceProvider.notifier).checkOut();
+              } else {
+                ref.read(attendanceProvider.notifier).checkIn();
+              }
+            },
           ),
           const SizedBox(height: 32),
           if (state.todayLog?.checkIn != null)
@@ -153,6 +131,8 @@ class AttendanceScreen extends ConsumerWidget {
   Widget _buildSummaryCard(BuildContext context, AttendanceState state) {
     if (state.summary == null) return const SizedBox.shrink();
     
+    final currencyFormat = NumberFormat.currency(locale: 'fr_DZ', symbol: state.summary!.currency, decimalDigits: 2);
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -166,7 +146,7 @@ class AttendanceScreen extends ConsumerWidget {
             children: [
               const Text('💰 Gain estimé aujourd\'hui', style: TextStyle(fontSize: 16)),
               const Spacer(),
-              Text('${state.summary!.totalEstimated.toStringAsFixed(0)} ${state.summary!.currency}',
+              Text(currencyFormat.format(state.summary!.totalEstimated),
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
             ],
           ),
