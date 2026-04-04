@@ -21,7 +21,26 @@ class HistoryScreen extends ConsumerWidget {
       ),
       body: historyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Erreur : $err')),
+        error: (err, stack) {
+          if (err.toString().contains('NOT_IMPLEMENTED')) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.build_circle_outlined, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  const Text('Fonction bientôt disponible', style: TextStyle(fontSize: 20)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => ref.refresh(historyProvider(DateTime(now.year, now.month))),
+                    child: const Text('Réessayer'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return Center(child: Text('Erreur : $err'));
+        },
         data: (logs) {
           if (logs.isEmpty) {
             return const Center(child: Text('Aucun historique pour ce mois.'));
