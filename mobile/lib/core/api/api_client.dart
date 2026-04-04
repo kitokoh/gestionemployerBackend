@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:dio/dio.dart';
 import 'package:leopardo_rh/core/storage/secure_storage.dart';
 import 'package:leopardo_rh/core/api/api_exceptions.dart';
+import 'package:leopardo_rh/core/api/mock_interceptor.dart';
 
 class ApiClient {
   final Dio _dio;
@@ -35,6 +36,14 @@ class ApiClient {
         },
       ),
     );
+
+    if (const String.fromEnvironment('API_BASE_URL') == 'mock') {
+      import_mock_interceptor();
+    }
+  }
+
+  void import_mock_interceptor() {
+    _dio.interceptors.insert(0, MockInterceptor());
   }
 
   Dio get dio => _dio;
