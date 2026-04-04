@@ -120,33 +120,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate changelog if critical files changed
-        run: |
-          set -e
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
-          echo "$CHANGED"
-
-          REQUIRES_CHANGELOG=false
-          echo "$CHANGED" | grep -E '^(api/|docs/dossierdeConception/|ORCHESTRATION_MAITRE\.md|08_FEUILLE_DE_ROUTE\.md)' && REQUIRES_CHANGELOG=true || true
-
-          if [ "$REQUIRES_CHANGELOG" = true ]; then
-            echo "$CHANGED" | grep -q '^CHANGELOG\.md$' || (echo "CHANGELOG.md is required for this PR scope" && exit 1)
-          fi
-
-      - name: Validate required governance files
-        run: |
-          test -f docs/GESTION_PROJET/INDEX_CANONIQUE.md
-          test -f docs/GESTION_PROJET/BACKLOG_PHASE1_UNIQUE.md
-          test -f docs/GESTION_PROJET/RUNBOOK_DEPLOY.md
-          test -f docs/GESTION_PROJET/RUNBOOK_ROLLBACK.md
-          test -f docs/GESTION_PROJET/RUNBOOK_BACKUP_RESTORE.md
-          test -f docs/GESTION_PROJET/RUNBOOK_INCIDENT_P1.md
-          test -f docs/GESTION_PROJET/RUNBOOK_DRILLS_LOG.md
-          test -f docs/GESTION_PROJET/EXECUTION_BLOCKERS_AND_NEXT.md
-          test -f .github/PULL_REQUEST_TEMPLATE.md
-          test -f .github/BRANCH_PROTECTION_REQUIRED.md
+      - name: Validate governance and changelog
+        run: pwsh tools/check-governance.ps1 -BaseRef ${{ github.event.pull_request.base.sha }} -HeadRef ${{ github.event.pull_request.head.sha }}
 
   notify:
     name: Notify Result
