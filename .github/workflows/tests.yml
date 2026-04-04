@@ -50,9 +50,20 @@ jobs:
       - name: Prepare environment
         working-directory: ./api
         run: |
-          cp .env.example .env
-          echo "APP_ENV=testing" >> .env
-          echo "APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" >> .env
+          cat > .env <<'EOF'
+          APP_NAME=LeopardoRH
+          APP_ENV=testing
+          APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          APP_DEBUG=true
+          APP_URL=http://localhost
+
+          DB_CONNECTION=sqlite
+          DB_DATABASE=:memory:
+
+          CACHE_STORE=array
+          QUEUE_CONNECTION=sync
+          SESSION_DRIVER=array
+          EOF
 
       - name: Install Composer dependencies
         working-directory: ./api
