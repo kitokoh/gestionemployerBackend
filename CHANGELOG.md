@@ -142,6 +142,7 @@ CODE_VERSION     = Version release applicative (git tag)
 
 - Correction des libelles web corrompus dans les vues Blade du dashboard et de la fiche employe
 - Ajout de tests feature pour l'acces manager au dashboard, au detail employe, au quick estimate et au PDF
+- Correction isolation tenant sur les routes web employe: resolution de l'employe apres `TenantMiddleware`, pas via route model binding
 
 ---
 

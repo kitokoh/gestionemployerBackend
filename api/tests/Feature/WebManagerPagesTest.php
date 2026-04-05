@@ -85,7 +85,44 @@ class WebManagerPagesTest extends TestCase
         $pdf = $this->actingAs($manager, 'web')
             ->get("/employees/{$employee->id}/receipt?from=2026-04-04&to=2026-04-04");
         $pdf->assertOk();
-        $this->assertStringStartsWith('%PDF', $pdf->streamedContent());
+        $content = $pdf->getContent();
+        $this->assertNotFalse($content);
+        $this->assertStringStartsWith('%PDF', $content);
+    }
+
+    public function test_manager_cannot_open_employee_from_other_company(): void
+    {
+        [$company, $manager] = $this->makeCompanyWithUsers();
+
+        $otherCompany = Company::withoutGlobalScopes()->create([
+            'name' => 'Company B',
+            'slug' => 'company-b',
+            'sector' => 'restaurant',
+            'country' => 'DZ',
+            'city' => 'Oran',
+            'email' => 'b@company.test',
+            'schema_name' => 'shared_tenants',
+            'tenancy_type' => 'shared',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'currency' => 'DZD',
+        ]);
+
+        $outsider = Employee::withoutGlobalScopes()->create([
+            'company_id' => $otherCompany->id,
+            'first_name' => 'Other',
+            'last_name' => 'User',
+            'email' => 'other@company.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'employee',
+            'status' => 'active',
+            'salary_type' => 'daily',
+            'salary_base' => 800,
+        ]);
+
+        $response = $this->actingAs($manager, 'web')->get("/employees/{$outsider->id}");
+
+        $response->assertNotFound();
     }
 
     private function makeCompanyWithUsers(): array
@@ -100,6 +137,8 @@ class WebManagerPagesTest extends TestCase
             'schema_name' => 'shared_tenants',
             'tenancy_type' => 'shared',
             'status' => 'active',
+            'timezone' => 'UTC',
+            'currency' => 'DZD',
         ]);
 
         $manager = Employee::query()->create([
