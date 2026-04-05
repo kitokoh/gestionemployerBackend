@@ -129,6 +129,14 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.16] - 2026-04-05
+### Beta — Hardening auth web manager
+
+- Blocage du login web pour les comptes employe, inactifs, ou rattaches a une societe suspendue/expiree
+- Ajout de tests feature web pour la redirection guest, le login manager et les refus d'acces Beta
+
+---
+
 ## [4.1.11] - 2026-04-05
 ### MVP-06 — App Flutter (bootstrap)
 
