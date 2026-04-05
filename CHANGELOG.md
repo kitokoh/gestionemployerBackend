@@ -92,7 +92,7 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
-## [4.1.10] - 2026-04-04
+## [4.1.10] - 2026-04-05
 ### MVP-03 — Pointage (attendance)
 
 - Ajout endpoints pointage (check-in/check-out/today/history) sous `/api/v1/attendance/*`
