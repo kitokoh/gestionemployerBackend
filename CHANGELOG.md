@@ -137,6 +137,14 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.17] - 2026-04-05
+### Beta — Web polish et couverture manager
+
+- Correction des libelles web corrompus dans les vues Blade du dashboard et de la fiche employe
+- Ajout de tests feature pour l'acces manager au dashboard, au detail employe, au quick estimate et au PDF
+
+---
+
 ## [4.1.11] - 2026-04-05
 ### MVP-06 — App Flutter (bootstrap)
 
