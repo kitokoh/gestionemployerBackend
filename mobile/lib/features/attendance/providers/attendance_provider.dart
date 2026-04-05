@@ -67,7 +67,9 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
       try {
         final summary = await _repository.getDailySummary(authState.employee!.id);
         state = state.copyWith(summary: summary);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore summary loading errors, non-blocking
+      }
     }
   }
 
