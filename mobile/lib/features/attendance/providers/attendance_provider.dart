@@ -4,6 +4,7 @@ import 'package:leopardo_rh/models/attendance_log.dart';
 import 'package:leopardo_rh/models/daily_summary.dart';
 import 'package:leopardo_rh/core/providers/core_providers.dart';
 import 'package:leopardo_rh/features/auth/providers/auth_provider.dart';
+import 'package:leopardo_rh/core/api/api_exceptions.dart';
 
 class AttendanceState {
   final bool isLoading;
@@ -57,6 +58,10 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
       );
       _loadSummary();
     } catch (e) {
+      if (e is ApiException && e.statusCode == 401) {
+        await _ref.read(authProvider.notifier).logout();
+        return;
+      }
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -80,6 +85,10 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
       state = state.copyWith(todayLog: log, isLoading: false);
       _loadSummary();
     } catch (e) {
+      if (e is ApiException && e.statusCode == 401) {
+        await _ref.read(authProvider.notifier).logout();
+        return;
+      }
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -91,6 +100,10 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
       state = state.copyWith(todayLog: log, isLoading: false);
       _loadSummary();
     } catch (e) {
+      if (e is ApiException && e.statusCode == 401) {
+        await _ref.read(authProvider.notifier).logout();
+        return;
+      }
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
