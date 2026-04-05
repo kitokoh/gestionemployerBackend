@@ -38,11 +38,11 @@ class ApiClient {
     );
 
     if (const String.fromEnvironment('API_BASE_URL') == 'mock') {
-      import_mock_interceptor();
+      importMockInterceptor();
     }
   }
 
-  void import_mock_interceptor() {
+  void importMockInterceptor() {
     _dio.interceptors.insert(0, MockInterceptor());
   }
 

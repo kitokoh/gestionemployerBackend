@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:leopardo_rh/core/api/api_client.dart';
 import 'package:leopardo_rh/models/employee.dart';
 import 'package:leopardo_rh/models/company.dart';
