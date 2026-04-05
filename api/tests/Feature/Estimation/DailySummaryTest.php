@@ -59,7 +59,7 @@ class DailySummaryTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonPath('data.status', 'absent');
-        $response->assertJsonPath('data.total_estimated', 0.0);
+        $response->assertJsonPath('data.total_estimated', 0);
         $response->assertJsonPath('data.currency', 'DZD');
     }
 
@@ -111,7 +111,7 @@ class DailySummaryTest extends TestCase
         $response->assertJsonPath('data.employee_id', $employee->id);
         $response->assertJsonPath('data.name', 'Ahmed Benali');
         $response->assertJsonPath('data.status', 'complete');
-        $response->assertJsonPath('data.base_gain', 800.0);
+        $response->assertJsonPath('data.base_gain', 800);
         $response->assertJsonPath('data.overtime_gain', 250.0);
         $response->assertJsonPath('data.total_estimated', 1050.0);
     }
@@ -200,4 +200,3 @@ class DailySummaryTest extends TestCase
         $response->assertOk();
     }
 }
-

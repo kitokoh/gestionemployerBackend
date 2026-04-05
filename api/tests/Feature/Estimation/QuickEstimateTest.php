@@ -97,7 +97,7 @@ class QuickEstimateTest extends TestCase
         $response->assertJsonPath('data.employee_id', $employee->id);
 
         // gross = (8h*100) + (8h*100 + 2h*100*1.25) = 800 + 1050 = 1850
-        $response->assertJsonPath('data.totals.gross', 1850.0);
+        $response->assertJsonPath('data.totals.gross', 1850);
         // DZ deductions 9%
         $response->assertJsonPath('data.totals.deductions', 166.5);
         $response->assertJsonPath('data.totals.net', 1683.5);
@@ -135,4 +135,3 @@ class QuickEstimateTest extends TestCase
         $response->assertForbidden();
     }
 }
-
