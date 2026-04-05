@@ -57,6 +57,20 @@ class WebManagerPagesTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_guest_is_redirected_from_employee_pages(): void
+    {
+        [, , $employee] = $this->makeCompanyWithUsers();
+
+        $detail = $this->get("/employees/{$employee->id}");
+        $detail->assertRedirect('/login');
+
+        $estimate = $this->get("/employees/{$employee->id}/quick-estimate?from=2026-04-04&to=2026-04-04");
+        $estimate->assertRedirect('/login');
+
+        $pdf = $this->get("/employees/{$employee->id}/receipt?from=2026-04-04&to=2026-04-04");
+        $pdf->assertRedirect('/login');
+    }
+
     public function test_manager_can_open_employee_detail_and_download_pdf(): void
     {
         [$company, $manager, $employee] = $this->makeCompanyWithUsers();
@@ -88,6 +102,22 @@ class WebManagerPagesTest extends TestCase
         $content = $pdf->getContent();
         $this->assertNotFalse($content);
         $this->assertStringStartsWith('%PDF', $content);
+    }
+
+    public function test_employee_is_forbidden_from_other_manager_pages(): void
+    {
+        [, , $employee] = $this->makeCompanyWithUsers();
+
+        $detail = $this->actingAs($employee, 'web')->get("/employees/{$employee->id}");
+        $detail->assertForbidden();
+
+        $estimate = $this->actingAs($employee, 'web')
+            ->get("/employees/{$employee->id}/quick-estimate?from=2026-04-04&to=2026-04-04");
+        $estimate->assertForbidden();
+
+        $pdf = $this->actingAs($employee, 'web')
+            ->get("/employees/{$employee->id}/receipt?from=2026-04-04&to=2026-04-04");
+        $pdf->assertForbidden();
     }
 
     public function test_manager_cannot_open_employee_from_other_company(): void
