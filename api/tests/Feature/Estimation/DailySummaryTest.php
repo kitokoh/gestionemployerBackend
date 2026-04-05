@@ -112,8 +112,8 @@ class DailySummaryTest extends TestCase
         $response->assertJsonPath('data.name', 'Ahmed Benali');
         $response->assertJsonPath('data.status', 'complete');
         $response->assertJsonPath('data.base_gain', 800);
-        $response->assertJsonPath('data.overtime_gain', 250.0);
-        $response->assertJsonPath('data.total_estimated', 1050.0);
+        $response->assertJsonPath('data.overtime_gain', 250);
+        $response->assertJsonPath('data.total_estimated', 1050);
     }
 
     public function test_employee_cannot_view_other_employee_summary(): void
