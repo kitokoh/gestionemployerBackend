@@ -146,6 +146,14 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.18] - 2026-04-05
+### Beta — Config MVP par defaut
+
+- Alignement des fallbacks Laravel sur le MVP reel: `SESSION_DRIVER=file`, `CACHE_STORE=file`, `QUEUE_CONNECTION=sync`
+- Remplacement de `api/.env.example` pour retirer les defaults Redis/Horizon et autres options hors scope Beta
+
+---
+
 ## [4.1.11] - 2026-04-05
 ### MVP-06 — App Flutter (bootstrap)
 
