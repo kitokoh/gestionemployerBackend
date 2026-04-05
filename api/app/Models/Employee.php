@@ -18,6 +18,7 @@ class Employee extends Authenticatable
 
     protected $fillable = [
         'company_id',
+        'schedule_id',
         'matricule',
         'first_name',
         'last_name',
@@ -40,8 +41,18 @@ class Employee extends Authenticatable
         return $this->password_hash;
     }
 
+    public function isManager(): bool
+    {
+        return $this->role === 'manager';
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(Schedule::class, 'schedule_id');
     }
 }

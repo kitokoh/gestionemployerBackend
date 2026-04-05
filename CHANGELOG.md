@@ -65,6 +65,42 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.7] - 2026-04-04
+### MVP-02 — Auth + Employés
+
+- Ajout endpoints Auth : `/api/v1/auth/login`, `/api/v1/auth/logout`, `/api/v1/auth/me`
+- Ajout CRUD employés : list/create/show/update/archive avec RBAC (manager vs self)
+- Ajout policies + services + FormRequests (pas de logique métier dans controllers)
+- Tests : auth, RBAC employés, isolation tenant
+
+---
+
+## [4.1.8] - 2026-04-04
+### CI — Gouvernance unifiée
+
+- CI: `Governance Gates` exécute `tools/check-governance.ps1` (plus de logique bash dupliquée)
+- Scope critique étendu à `mobile/` (PR Flutter ⇒ `CHANGELOG.md` requis)
+
+---
+
+## [4.1.9] - 2026-04-04
+### CI — Stabilisation des checks PR
+
+- Backend CI: ajout `gd` aux extensions PHP (dépendance requise par `barryvdh/laravel-dompdf`)
+- Backend CI: exécution temporaire sous PHP 8.4 (le `composer.lock` actuel exige Symfony v8 → PHP >= 8.4)
+- Mobile CI: alignement du nom du job sur `Mobile Flutter (Stable Channel)` (conforme aux règles de protection de branche)
+
+---
+
+## [4.1.10] - 2026-04-05
+### MVP-03 — Pointage (attendance)
+
+- Ajout endpoints pointage (check-in/check-out/today/history) sous `/api/v1/attendance/*`
+- Ajout modèle/service/policy `AttendanceLog` + `Schedule` (multitenancy shared via scope `company_id`)
+- Ajout tests feature pointage (dup check-in, check-out sans check-in, heures/HS, RBAC manager vs employee, isolation tenant)
+
+---
+
 ## [4.1.4] - 2026-04-04
 ### Hardening execution discipline (post-governance)
 
