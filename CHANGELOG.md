@@ -154,6 +154,14 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.19] - 2026-04-05
+### Beta — Docs deploiement alignees MVP
+
+- Mise a jour de `api/README.md` pour refleter le stack MVP reel et les checks utiles
+- Mise a jour de `docs/GESTION_PROJET/RUNBOOK_DEPLOY.md` avec verifications post-deploy web, PDF et session
+
+---
+
 ## [4.1.11] - 2026-04-05
 ### MVP-06 — App Flutter (bootstrap)
 
