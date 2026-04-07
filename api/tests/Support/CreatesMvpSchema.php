@@ -58,6 +58,7 @@ trait CreatesMvpSchema
             $table->timestamps();
 
             $table->unique(['company_id', 'email']);
+            $table->unique(['company_id', 'matricule']);
         });
 
         Schema::create('user_lookups', function (Blueprint $table): void {

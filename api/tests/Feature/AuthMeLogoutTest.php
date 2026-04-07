@@ -116,4 +116,35 @@ class AuthMeLogoutTest extends TestCase
         $response->assertStatus(403);
         $response->assertJsonPath('error', 'EMPLOYEE_ARCHIVED');
     }
+
+    public function test_company_suspension_revokes_employee_tokens(): void
+    {
+        $company = Company::query()->create([
+            'name' => 'Company A',
+            'slug' => 'company-a',
+            'sector' => 'restaurant',
+            'country' => 'DZ',
+            'city' => 'Alger',
+            'email' => 'a@company.test',
+            'schema_name' => 'shared_tenants',
+            'tenancy_type' => 'shared',
+            'status' => 'active',
+        ]);
+
+        $employee = Employee::query()->create([
+            'company_id' => $company->id,
+            'email' => 'employee@company.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'employee',
+            'status' => 'active',
+        ]);
+
+        $employee->createToken('tests');
+        $this->assertSame(1, $employee->tokens()->count());
+
+        $company->status = 'suspended';
+        $company->save();
+
+        $this->assertSame(0, $employee->fresh()->tokens()->count());
+    }
 }
