@@ -47,6 +47,16 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.28] - 2026-04-07
+### Couverture unitaire des services métier
+
+- Ajout de tests unitaires dédiés pour `AuthService` (login, token metadata, statuts bloqués)
+- Ajout de tests unitaires dédiés pour `AttendanceService` (double check-in, check-out sans session, calcul heures/overtime)
+- Ajout de tests unitaires dédiés pour `EstimationService` (absence, `work_days`, taux de déduction HR template)
+- Alignement du schéma de test `CreatesMvpSchema` avec les colonnes `Schedule` réellement utilisées
+
+---
+
 ## [4.1.5] - 2026-04-04
 ### Hygiene docs + renforcement gouvernance
 
