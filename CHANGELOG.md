@@ -211,6 +211,14 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.25] - 2026-04-07
+### Audit v4 — Alignement CI PostgreSQL
+
+- Retire le forçage SQLite de `phpunit.xml` pour laisser la CI backend utiliser PostgreSQL
+- Ajoute un default `CURRENT_DATE` a `contract_start` dans la migration employees et le schema de tests
+
+---
+
 ## [4.1.11] - 2026-04-05
 ### MVP-06 — App Flutter (bootstrap)
 

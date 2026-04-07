@@ -3,6 +3,7 @@
 namespace Tests\Support;
 
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 trait CreatesMvpSchema
@@ -46,7 +47,7 @@ trait CreatesMvpSchema
             $table->string('email', 150);
             $table->string('password_hash', 255);
             $table->string('contract_type', 20)->default('CDI');
-            $table->date('contract_start');
+            $table->date('contract_start')->default(DB::raw('CURRENT_DATE'));
             $table->date('contract_end')->nullable();
             $table->string('salary_type', 20)->default('fixed');
             $table->decimal('salary_base', 10, 2)->default(0);
