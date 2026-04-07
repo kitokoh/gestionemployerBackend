@@ -200,6 +200,17 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.24] - 2026-04-07
+### Audit v4 — Correctifs securite batch 2
+
+- Revoque tous les tokens Sanctum lors de l'archivage d'un employe et bloque les comptes archives dans `TenantMiddleware`
+- Supprime le fallback production `sqlite` au profit de `pgsql` dans `config/database.php`
+- Garantit `contract_start` a la creation employe et l'autorise dans la validation API
+- Met a jour `last_login_at` au login et expose `token_type` + `token_expires_at` dans la reponse auth
+- Renforce le schema de tests pour couvrir `contract_start` et `last_login_at`
+
+---
+
 ## [4.1.11] - 2026-04-05
 ### MVP-06 — App Flutter (bootstrap)
 

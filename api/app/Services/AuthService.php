@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 class AuthService
 {
     /**
-     * @return array{employee: Employee, token: string}
+     * @return array{employee: Employee, token: string, token_type: string, token_expires_at: ?string}
      */
     public function login(string $email, string $password, ?string $deviceName = null): array
     {
@@ -53,12 +53,18 @@ class AuthService
             abort(403, 'EMPLOYEE_NOT_ACTIVE');
         }
 
+        $employee->forceFill(['last_login_at' => now()])->saveQuietly();
+
         $tokenName = $deviceName ?: 'api';
-        $token = $employee->createToken($tokenName)->plainTextToken;
+        $expirationMinutes = (int) config('sanctum.expiration', 0);
+        $expiresAt = $expirationMinutes > 0 ? now()->addMinutes($expirationMinutes) : null;
+        $tokenResult = $employee->createToken($tokenName, ['*'], $expiresAt);
 
         return [
             'employee' => $employee,
-            'token' => $token,
+            'token' => $tokenResult->plainTextToken,
+            'token_type' => 'Bearer',
+            'token_expires_at' => $expiresAt?->toIso8601String(),
         ];
     }
 
