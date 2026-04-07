@@ -48,7 +48,6 @@ trait CreatesMvpSchema
             $table->string('password_hash', 255);
             $table->string('contract_type', 20)->default('CDI');
             $table->date('contract_start')->default(DB::raw('CURRENT_DATE'));
-            $table->date('contract_start')->default(DB::raw('CURRENT_DATE'));
             $table->date('contract_end')->nullable();
             $table->string('salary_type', 20)->default('fixed');
             $table->decimal('salary_base', 10, 2)->default(0);
