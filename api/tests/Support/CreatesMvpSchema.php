@@ -10,6 +10,7 @@ trait CreatesMvpSchema
     protected function setUpMvpSchema(): void
     {
         Schema::dropIfExists('personal_access_tokens');
+        Schema::dropIfExists('user_lookups');
         Schema::dropIfExists('attendance_logs');
         Schema::dropIfExists('employees');
         Schema::dropIfExists('schedules');
@@ -52,6 +53,14 @@ trait CreatesMvpSchema
             $table->timestamps();
 
             $table->unique(['company_id', 'email']);
+        });
+
+        Schema::create('user_lookups', function (Blueprint $table): void {
+            $table->string('email', 150)->primary();
+            $table->uuid('company_id');
+            $table->string('schema_name', 63);
+            $table->unsignedInteger('employee_id');
+            $table->string('role', 20);
         });
 
         Schema::create('schedules', function (Blueprint $table): void {
@@ -104,6 +113,7 @@ trait CreatesMvpSchema
     {
         app()->forgetInstance('current_company');
         Schema::dropIfExists('personal_access_tokens');
+        Schema::dropIfExists('user_lookups');
         Schema::dropIfExists('attendance_logs');
         Schema::dropIfExists('employees');
         Schema::dropIfExists('schedules');

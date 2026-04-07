@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\Employee;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class AuthService
 {
@@ -12,8 +14,27 @@ class AuthService
      */
     public function login(string $email, string $password, ?string $deviceName = null): array
     {
+        $lookup = null;
+        if (Schema::hasTable('user_lookups')) {
+            $lookup = DB::table($this->lookupTable())
+                ->where('email', $email)
+                ->first();
+        }
+
         /** @var Employee|null $employee */
-        $employee = Employee::withoutGlobalScopes()->where('email', $email)->first();
+        $employee = null;
+
+        if ($lookup) {
+            $employee = Employee::withoutGlobalScopes()
+                ->where('company_id', $lookup->company_id)
+                ->where('id', $lookup->employee_id)
+                ->first();
+        }
+
+        if (! $employee) {
+            $employee = Employee::withoutGlobalScopes()->where('email', $email)->first();
+            $employee?->syncUserLookup();
+        }
 
         if (! $employee || ! Hash::check($password, $employee->password_hash)) {
             abort(401, 'INVALID_CREDENTIALS');
@@ -40,5 +61,9 @@ class AuthService
             'token' => $token,
         ];
     }
-}
 
+    private function lookupTable(): string
+    {
+        return DB::getDriverName() === 'pgsql' ? 'public.user_lookups' : 'user_lookups';
+    }
+}

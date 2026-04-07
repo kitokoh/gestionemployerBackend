@@ -187,6 +187,19 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.23] - 2026-04-07
+### Audit v3 — Correctifs critiques batch 1
+
+- CI backend basculee sur PostgreSQL de test avec migrations reelles avant `php artisan test`
+- Auth API branchee sur `user_lookups` avec resynchronisation automatique lors des sauvegardes employees
+- Reductions de N+1 sur dashboard web, fiche employe web et quick estimate
+- Ajout throttle API sur login et routes Sanctum
+- Factories `EmployeeFactory` et `CompanyFactory` alignees sur les namespaces/modeles reels
+- Deploiement durci avec tentative de rollback + sortie du mode maintenance en cas d'echec
+- Ajout expiration explicite des tokens Sanctum et alignement `.env.example`
+
+---
+
 ## [4.1.11] - 2026-04-05
 ### MVP-06 — App Flutter (bootstrap)
 

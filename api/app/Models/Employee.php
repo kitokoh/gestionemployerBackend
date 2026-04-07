@@ -6,6 +6,8 @@ use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\HasApiTokens;
 
 class Employee extends Authenticatable
@@ -39,6 +41,17 @@ class Employee extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::saved(function (self $employee): void {
+            $employee->syncUserLookup();
+        });
+
+        static::deleted(function (self $employee): void {
+            $employee->deleteUserLookup();
+        });
+    }
+
     public function getAuthPassword(): string
     {
         return $this->password_hash;
@@ -57,5 +70,54 @@ class Employee extends Authenticatable
     public function schedule(): BelongsTo
     {
         return $this->belongsTo(Schedule::class, 'schedule_id');
+    }
+
+    public function syncUserLookup(): void
+    {
+        if (! $this->canSyncUserLookup()) {
+            return;
+        }
+
+        DB::table($this->userLookupTable())
+            ->where('employee_id', $this->id)
+            ->where('company_id', $this->company_id)
+            ->where('email', '!=', $this->email)
+            ->delete();
+
+        DB::table($this->userLookupTable())->updateOrInsert(
+            ['email' => $this->email],
+            [
+                'company_id' => $this->company_id,
+                'schema_name' => $this->company?->schema_name ?? 'shared_tenants',
+                'employee_id' => $this->id,
+                'role' => $this->role,
+            ]
+        );
+    }
+
+    public function deleteUserLookup(): void
+    {
+        if (! $this->canSyncUserLookup()) {
+            return;
+        }
+
+        DB::table($this->userLookupTable())
+            ->where('employee_id', $this->id)
+            ->where('company_id', $this->company_id)
+            ->delete();
+    }
+
+    private function canSyncUserLookup(): bool
+    {
+        if (! $this->email || ! $this->company_id) {
+            return false;
+        }
+
+        return Schema::hasTable('user_lookups');
+    }
+
+    private function userLookupTable(): string
+    {
+        return DB::getDriverName() === 'pgsql' ? 'public.user_lookups' : 'user_lookups';
     }
 }
