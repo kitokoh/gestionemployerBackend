@@ -228,6 +228,14 @@ CODE_VERSION     = Version release applicative (git tag)
 - Ajout de tests de regression pour `matricule` multi-tenant et suspension company
 
 ---
+## [4.1.27] - 2026-04-07
+### Batch 2 — Domaine et handler d'erreurs
+
+- Remplacement des `abort()` metier dans `AuthService` et `AttendanceService` par des exceptions domaine
+- Ajout d'un handler global JSON pour erreurs domaine, validation, not found et authorization
+- Normalisation du format `{error, message}` sur les erreurs API les plus courantes
+
+---
 ## [4.1.11] - 2026-04-05
 ### MVP-06 — App Flutter (bootstrap)
 
