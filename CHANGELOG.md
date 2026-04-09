@@ -47,6 +47,15 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.31] - 2026-04-09
+### Hardening post-rapport v2
+
+- Optimisation de `GET /attendance/today` manager : chargement des logs filtré sur les employés de la page courante
+- Activation de `Model::preventLazyLoading()` en local dans `AppServiceProvider` pour détecter les N+1 plus tôt
+- Remplacement de la page `welcome.blade.php` Laravel de démonstration par une page backend minimale orientée Beta
+
+---
+
 ## [4.1.30] - 2026-04-09
 ### Gouvernance locale - Docker d'abord pour les tests backend
 
