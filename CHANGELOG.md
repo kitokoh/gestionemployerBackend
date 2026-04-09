@@ -47,6 +47,14 @@ CODE_VERSION     = Version release applicative (git tag)
 
 ---
 
+## [4.1.32] - 2026-04-09
+### Post-rapport v2 - fiabilité tests et modèle settings
+
+- `phpunit.xml` complète désormais la configuration PostgreSQL de test (`DB_CONNECTION`, hôte, port, base, utilisateur, mot de passe)
+- Ajout du modèle Eloquent `CompanySetting` pour la table `company_settings` (clé primaire string, `updated_at` géré, `created_at` absent)
+
+---
+
 ## [4.1.31] - 2026-04-09
 ### Hardening post-rapport v2
 
