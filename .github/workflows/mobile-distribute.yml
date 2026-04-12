@@ -1,12 +1,29 @@
 name: 📱 Mobile — Build & Firebase Distribution
 
 on:
+  # ── Déclenché par un TAG Git ────────────────────────────────────────────────
+  # Staging : git tag v1.0-staging  && git push origin v1.0-staging
+  # Prod    : git tag v1.0-prod     && git push origin v1.0-prod
   push:
-    branches: [main]
-    paths:
-      - 'mobile/**'   # Ne se déclenche que si le code mobile change
+    tags:
+      - 'v*-staging'   # ex: v1.0-staging, v1.2-staging
+      - 'v*-prod'      # ex: v1.0-prod
 
-  workflow_dispatch:   # Permet de lancer manuellement depuis GitHub
+  # ── Ou lancé manuellement depuis GitHub Actions ──────────────────────────
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Cible de déploiement'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - prod
+      release_notes:
+        description: 'Notes de version (optionnel)'
+        required: false
+        default: 'Build manuel Leopardo RH'
 
 jobs:
   build-and-distribute:
@@ -42,38 +59,67 @@ jobs:
         working-directory: ./mobile
         run: flutter analyze --no-fatal-infos
 
-      # ── 6. Générer le numéro de build depuis le numéro de run GitHub ────────
-      - name: Set build number
-        id: build_info
+      # ── 6. Détecter l'environnement (depuis le tag ou l'input manuel) ────────
+      - name: Detect environment
+        id: env_detect
         run: |
+          TAG="${{ github.ref_name }}"
+          INPUT_ENV="${{ github.event.inputs.environment }}"
+          
+          if [[ "$TAG" == *"-prod" ]]; then
+            echo "TARGET=prod" >> $GITHUB_ENV
+            echo "BUILD_NAME=${TAG//-prod/}" >> $GITHUB_ENV
+          elif [[ "$TAG" == *"-staging" ]]; then
+            echo "TARGET=staging" >> $GITHUB_ENV
+            echo "BUILD_NAME=${TAG//-staging/}" >> $GITHUB_ENV
+          elif [[ "$INPUT_ENV" == "prod" ]]; then
+            echo "TARGET=prod" >> $GITHUB_ENV
+            echo "BUILD_NAME=manual-$(date +%Y%m%d)" >> $GITHUB_ENV
+          else
+            echo "TARGET=staging" >> $GITHUB_ENV
+            echo "BUILD_NAME=manual-$(date +%Y%m%d)" >> $GITHUB_ENV
+          fi
           echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
-          echo "BUILD_NAME=1.0.${{ github.run_number }}" >> $GITHUB_ENV
 
-      # ── 7. Créer le fichier .env.staging dynamiquement ──────────────────────
-      - name: Create .env.staging
+      # ── 7. Créer le fichier .env dynamiquement selon l'environnement ──────────
+      - name: Create .env file
         working-directory: ./mobile
         run: |
-          echo "API_BASE_URL=https://gestionemployerbackend.onrender.com/api/v1" > .env.staging
+          if [ "$TARGET" = "prod" ]; then
+            echo "API_BASE_URL=https://api.leopardo-rh.com/api/v1" > .env.build
+          else
+            echo "API_BASE_URL=https://gestionemployerbackend.onrender.com/api/v1" > .env.build
+          fi
 
-      # ── 8. Compiler l'APK Release ───────────────────────────────────────────
-      - name: Build APK (staging)
+      # ── 8. Compiler l'APK ou l'AAB selon l'environnement ──────────────────────
+      - name: Build Flutter app
         working-directory: ./mobile
         run: |
-          flutter build apk --release \
-            --dart-define-from-file=.env.staging \
-            --build-name=${{ env.BUILD_NAME }} \
-            --build-number=${{ env.BUILD_NUMBER }}
+          if [ "$TARGET" = "prod" ]; then
+            flutter build appbundle --release \
+              --dart-define-from-file=.env.build \
+              --build-name=${{ env.BUILD_NAME }} \
+              --build-number=${{ env.BUILD_NUMBER }}
+          else
+            flutter build apk --release \
+              --dart-define-from-file=.env.build \
+              --build-name=${{ env.BUILD_NAME }} \
+              --build-number=${{ env.BUILD_NUMBER }}
+          fi
 
-      # ── 9. Uploader l'APK comme artefact GitHub ─────────────────────────────
-      - name: Upload APK artifact
+      # ── 9. Uploader l'artefact GitHub ───────────────────────────────────────
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: leopardo-rh-staging-${{ env.BUILD_NAME }}
-          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          name: leopardo-rh-${{ env.TARGET }}-${{ env.BUILD_NAME }}
+          path: |
+            mobile/build/app/outputs/flutter-apk/app-release.apk
+            mobile/build/app/outputs/bundle/release/app-release.aab
           retention-days: 30
 
-      # ── 10. Distribuer via Firebase App Distribution ────────────────────────
+      # ── 10. Firebase App Distribution (staging uniquement) ─────────────────
       - name: Firebase App Distribution
+        if: env.TARGET == 'staging'
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
@@ -81,7 +127,7 @@ jobs:
           groups: testeurs-internes
           file: mobile/build/app/outputs/flutter-apk/app-release.apk
           releaseNotes: |
-            🐆 Leopardo RH — Build automatique
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
+            🐆 Leopardo RH ${{ env.BUILD_NAME }}
+            Tag: ${{ github.ref_name }}
+            ${{ github.event.inputs.release_notes }}
             Backend: https://gestionemployerbackend.onrender.com
