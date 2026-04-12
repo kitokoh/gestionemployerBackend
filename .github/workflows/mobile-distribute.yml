@@ -1,0 +1,87 @@
+name: 📱 Mobile — Build & Firebase Distribution
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'   # Ne se déclenche que si le code mobile change
+
+  workflow_dispatch:   # Permet de lancer manuellement depuis GitHub
+
+jobs:
+  build-and-distribute:
+    name: Build APK Staging → Firebase App Distribution
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Récupérer le code ────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Configurer Java (requis pour Gradle/Android) ─────────────────────
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # ── 3. Configurer Flutter ───────────────────────────────────────────────
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # ── 4. Installer les dépendances ────────────────────────────────────────
+      - name: Install Flutter dependencies
+        working-directory: ./mobile
+        run: flutter pub get
+
+      # ── 5. Analyser le code ─────────────────────────────────────────────────
+      - name: Analyze Flutter code
+        working-directory: ./mobile
+        run: flutter analyze --no-fatal-infos
+
+      # ── 6. Générer le numéro de build depuis le numéro de run GitHub ────────
+      - name: Set build number
+        id: build_info
+        run: |
+          echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+          echo "BUILD_NAME=1.0.${{ github.run_number }}" >> $GITHUB_ENV
+
+      # ── 7. Créer le fichier .env.staging dynamiquement ──────────────────────
+      - name: Create .env.staging
+        working-directory: ./mobile
+        run: |
+          echo "API_BASE_URL=https://gestionemployerbackend.onrender.com/api/v1" > .env.staging
+
+      # ── 8. Compiler l'APK Release ───────────────────────────────────────────
+      - name: Build APK (staging)
+        working-directory: ./mobile
+        run: |
+          flutter build apk --release \
+            --dart-define-from-file=.env.staging \
+            --build-name=${{ env.BUILD_NAME }} \
+            --build-number=${{ env.BUILD_NUMBER }}
+
+      # ── 9. Uploader l'APK comme artefact GitHub ─────────────────────────────
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: leopardo-rh-staging-${{ env.BUILD_NAME }}
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      # ── 10. Distribuer via Firebase App Distribution ────────────────────────
+      - name: Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          token: ${{ secrets.FIREBASE_TOKEN }}
+          groups: testeurs-internes
+          file: mobile/build/app/outputs/flutter-apk/app-release.apk
+          releaseNotes: |
+            🐆 Leopardo RH — Build automatique
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Backend: https://gestionemployerbackend.onrender.com
