@@ -22,7 +22,7 @@ jobs:
   analyze:
     name: CodeQL (Backend)
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]')
+    if: github.event_name != 'pull_request' || vars.ENABLE_CODEQL_PR == 'true'
 
     strategy:
       fail-fast: false

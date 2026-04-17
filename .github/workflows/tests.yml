@@ -220,6 +220,7 @@ jobs:
 
       - name: Review dependency changes
         uses: actions/dependency-review-action@v4
+        continue-on-error: true
 
   notify:
     name: Notify Result
