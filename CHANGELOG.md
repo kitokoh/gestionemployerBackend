@@ -11,6 +11,7 @@
 - Ajout de `.github/workflows/codeql.yml` pour analyse statique securite backend sur PR, `main` et scan hebdomadaire
 - Mise a jour de `.github/BRANCH_PROTECTION_REQUIRED.md` avec les checks qualite/securite recommandes
 - Mise a jour des runbooks CI/CD et deploy pour documenter le flux cible: PR verte -> merge `main` -> deploiement automatique API/web/mobile
+- Durcissement de `api/Dockerfile.prod` pour rendre le bootstrap Render tolerant aux courses de creation de la table `migrations` et aux echecs transitoires de migration au demarrage
 
 ## [4.1.37] - 2026-04-16
 ### Hygiene deploy
