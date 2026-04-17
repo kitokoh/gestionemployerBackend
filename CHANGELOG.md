@@ -2,6 +2,15 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.38] - 2026-04-17
+### CI/CD automatisée PR -> main -> deploy
+
+- Renforcement de `.github/workflows/tests.yml` : backend, securite Composer, mobile (format/analyze/test/build smoke), governance et dependency review
+- Ajout de `.github/workflows/deploy-main.yml` pour deployer automatiquement Render apres succes des checks sur `main`
+- Ajout de la distribution mobile staging automatique sur Firebase apres validation de `main`
+- Mise a jour de `.github/BRANCH_PROTECTION_REQUIRED.md` avec les checks qualite/securite recommandes
+- Mise a jour des runbooks CI/CD et deploy pour documenter le flux cible: PR verte -> merge `main` -> deploiement automatique API/web/mobile
+
 ## [4.1.37] - 2026-04-16
 ### Hygiene deploy
 
