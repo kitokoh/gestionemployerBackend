@@ -58,7 +58,7 @@ trait CreatesMvpSchema
             $table->timestampTz('last_login_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['company_id', 'email']);
+            $table->unique('email');
             $table->unique(['company_id', 'matricule']);
         });
 
