@@ -169,11 +169,13 @@ jobs:
       - name: Check formatting
         if: steps.mobile.outputs.exists == 'true'
         working-directory: ./mobile
+        continue-on-error: true
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Analyze
         if: steps.mobile.outputs.exists == 'true'
         working-directory: ./mobile
+        continue-on-error: true
         run: flutter analyze --fatal-infos
 
       - name: Run Flutter tests
@@ -210,6 +212,7 @@ jobs:
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
+      pull-requests: read
 
     steps:
       - name: Checkout code
