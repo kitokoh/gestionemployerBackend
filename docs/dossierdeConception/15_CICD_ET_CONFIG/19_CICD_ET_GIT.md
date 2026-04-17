@@ -32,6 +32,9 @@ Le workflow `.github/workflows/tests.yml` tourne sur chaque PR vers `main` ou `d
    - verification `CHANGELOG.md` sur scope critique
 5. **Dependency Review**
    - blocage des dependances vulnerables ajoutees en PR
+6. **CodeQL**
+   - analyse statique de securite backend (PHP)
+   - execution sur PR, `main`, et scan planifie hebdomadaire
 
 ### Regle
 - **Aucune PR ne doit etre mergee tant que ces checks ne sont pas verts.**
@@ -84,7 +87,15 @@ Usage recommande :
 - **Merge sur `main`** : GitHub revalide puis deploie automatiquement.
 - **Si un check echoue** : pas de merge, pas de deploiement.
 
-## 7. Rollback
+## 7. Garde-fous GitHub a activer dans l'interface
+
+- **Dependabot alerts**
+- **Dependabot security updates**
+- **Secret scanning**
+- **Push protection for secrets**
+- **Code scanning** (pour exposer les resultats CodeQL)
+
+## 8. Rollback
 
 - **API/Web** : rollback depuis Render vers le deploy precedent valide.
 - **Mobile** : redistribuer le build precedent depuis Firebase App Distribution ou relancer un tag stable.

@@ -8,6 +8,7 @@
 - Renforcement de `.github/workflows/tests.yml` : backend, securite Composer, mobile (format/analyze/test/build smoke), governance et dependency review
 - Ajout de `.github/workflows/deploy-main.yml` pour deployer automatiquement Render apres succes des checks sur `main`
 - Ajout de la distribution mobile staging automatique sur Firebase apres validation de `main`
+- Ajout de `.github/workflows/codeql.yml` pour analyse statique securite backend sur PR, `main` et scan hebdomadaire
 - Mise a jour de `.github/BRANCH_PROTECTION_REQUIRED.md` avec les checks qualite/securite recommandes
 - Mise a jour des runbooks CI/CD et deploy pour documenter le flux cible: PR verte -> merge `main` -> deploiement automatique API/web/mobile
 

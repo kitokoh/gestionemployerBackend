@@ -15,11 +15,18 @@
   - `Mobile Flutter (Stable Channel)`
   - `Governance Gates (changelog + canonical files)`
   - `Dependency Review (PR Security)`
+  - `CodeQL (Backend)`
 - Secrets GitHub presents :
   - `RENDER_DEPLOY_HOOK_URL`
   - `FIREBASE_APP_ID`
   - `FIREBASE_TOKEN`
 - `API_HEALTHCHECK_URL` optionnel mais recommande
+- GitHub Security active :
+  - Dependabot alerts
+  - Dependabot security updates
+  - Secret scanning
+  - Push protection for secrets
+  - Code scanning
 
 ## Flux normal
 1. Ouvrir une PR vers `main`
