@@ -291,6 +291,12 @@ jobs:
       - governance-gates
       - dependency-review
     if: always()
+    env:
+      CI_SMTP_SERVER: ${{ secrets.CI_SMTP_SERVER }}
+      CI_SMTP_USERNAME: ${{ secrets.CI_SMTP_USERNAME }}
+      CI_SMTP_PASSWORD: ${{ secrets.CI_SMTP_PASSWORD }}
+      CI_REPORT_TO: ${{ vars.CI_REPORT_TO }}
+      CI_REPORT_FROM: ${{ vars.CI_REPORT_FROM }}
 
     steps:
       - name: Build CI report
@@ -335,17 +341,17 @@ jobs:
           if-no-files-found: error
 
       - name: Send CI report email (if SMTP configured)
-        if: always() && secrets.CI_SMTP_SERVER != '' && secrets.CI_SMTP_USERNAME != '' && secrets.CI_SMTP_PASSWORD != ''
+        if: always() && env.CI_SMTP_SERVER != '' && env.CI_SMTP_USERNAME != '' && env.CI_SMTP_PASSWORD != ''
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: ${{ secrets.CI_SMTP_SERVER }}
+          server_address: ${{ env.CI_SMTP_SERVER }}
           server_port: 587
-          username: ${{ secrets.CI_SMTP_USERNAME }}
-          password: ${{ secrets.CI_SMTP_PASSWORD }}
+          username: ${{ env.CI_SMTP_USERNAME }}
+          password: ${{ env.CI_SMTP_PASSWORD }}
           secure: false
           subject: "Leopardo RH CI Report — Run #${{ github.run_number }}"
-          to: ${{ vars.CI_REPORT_TO || 'nouractu.com@gmail.com' }}
-          from: ${{ vars.CI_REPORT_FROM || secrets.CI_SMTP_USERNAME }}
+          to: ${{ env.CI_REPORT_TO != '' && env.CI_REPORT_TO || 'nouractu.com@gmail.com' }}
+          from: ${{ env.CI_REPORT_FROM != '' && env.CI_REPORT_FROM || env.CI_SMTP_USERNAME }}
           body: file://ci-report.md
 
       - name: All checks passed
@@ -367,3 +373,4 @@ jobs:
         run: |
           echo "Checks failed - merge or deployment blocked"
           exit 1
+

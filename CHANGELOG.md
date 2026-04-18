@@ -2,6 +2,13 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.51] - 2026-04-18
+### Deblocage des checks GitHub Actions de PR
+
+- `.github/workflows/tests.yml` corrige le job `notify` pour ne plus utiliser `secrets.*` directement dans le `if` de l'etape d'email
+- Les secrets SMTP optionnels sont exposes via `env` au niveau du job puis reutilises dans l'action d'envoi de mail
+- Ce correctif vise a eviter l'echec immediat du workflow `Tests - Leopardo RH` avant la creation effective des checks requis sur la PR
+
 ## [4.1.50] - 2026-04-18
 ### Correctif connexion mobile et validation login
 
