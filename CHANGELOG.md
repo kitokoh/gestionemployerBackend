@@ -2,6 +2,16 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.47] - 2026-04-18
+### QA pro: CI scenario coverage + super admin reset flow
+
+- Renforcement de .github/workflows/tests.yml avec execution distincte des tests backend Unit puis Feature
+- Migrations CI executees explicitement par schemas (database/migrations/public puis database/migrations/tenant) avec --isolated
+- Ajout d'artefacts de tests CI (rapports backend JUnit + logs, couverture mobile lcov.info)
+- api/database/seeders/SuperAdminSeeder.php supporte la reinitialisation forcee du mot de passe (FORCE_SUPER_ADMIN_PASSWORD_RESET=true + SUPER_ADMIN_PASSWORD)
+- Ajout de la commande artisan super-admin:reset-password dans api/routes/console.php
+- Ajout du rapport QA dans docs/GESTION_PROJET/RAPPORT_QA_CI_2026-04-18.md
+
 ## [4.1.46] - 2026-04-18
 ### Silence duplicate plans migration race
 
@@ -811,6 +821,9 @@ docs(erd): unify manager_id and remove supervisor_id from employees
     
     
  
+
+
+
 
 
 

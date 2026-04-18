@@ -90,13 +90,31 @@ jobs:
         working-directory: ./api
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: Run migrations
+      - name: Run public migrations
         working-directory: ./api
-        run: php artisan migrate --force
+        run: php artisan migrate --path=database/migrations/public --force --isolated
 
-      - name: Run backend tests
+      - name: Run tenant migrations
         working-directory: ./api
-        run: php artisan test
+        run: php artisan migrate --path=database/migrations/tenant --force --isolated
+
+      - name: Run backend unit tests
+        working-directory: ./api
+        run: php artisan test --testsuite=Unit --log-junit=storage/test-results/unit.xml
+
+      - name: Run backend feature tests
+        working-directory: ./api
+        run: php artisan test --testsuite=Feature --log-junit=storage/test-results/feature.xml
+
+      - name: Upload backend test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            api/storage/test-results/*.xml
+            api/storage/logs/*.log
+          if-no-files-found: ignore
 
   backend-security:
     name: Backend Security (Composer Audit)
@@ -218,6 +236,16 @@ jobs:
         if: steps.mobile.outputs.exists == 'true' && steps.mobile.outputs.changed == 'true'
         working-directory: ./mobile
         run: flutter build apk --debug --dart-define=API_BASE_URL=https://gestionemployerbackend.onrender.com/api/v1
+
+      - name: Upload mobile test artifacts
+        if: always() && steps.mobile.outputs.exists == 'true' && steps.mobile.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-test-reports
+          path: |
+            mobile/coverage/lcov.info
+            mobile/test/**/*
+          if-no-files-found: ignore
 
       - name: Skip mobile checks (no mobile change)
         if: steps.mobile.outputs.exists != 'true' || steps.mobile.outputs.changed != 'true'
