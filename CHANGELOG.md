@@ -2,6 +2,13 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.41] - 2026-04-18
+### Correctif final entrypoint Render
+
+- Deplacement de la logique de demarrage dans `api/docker-entrypoint.sh` versionne (au lieu du heredoc inline dans `api/Dockerfile.prod`)
+- Suppression du risque de substitution de variables shell pendant le build Docker qui cassait les variables runtime (`$1`, `$attempt`, `$?`)
+- Stabilisation de la boucle retry migration pour eviter les erreurs `sh: out of range` / `Illegal number` au boot Render
+
 ## [4.1.40] - 2026-04-18
 ### Correctif shell startup Render (Alpine)
 
