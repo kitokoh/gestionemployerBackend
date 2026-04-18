@@ -68,7 +68,7 @@ run_migrate_with_retry() {
             sleep 5
         else
             echo "Final migration failure for $path."
-            return 1
+            return "$last_status"
         fi
     done
 
