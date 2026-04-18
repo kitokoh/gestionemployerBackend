@@ -2,6 +2,13 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.48] - 2026-04-18
+### CI report central + scenarios mobile Flutter
+
+- .github/workflows/tests.yml genere maintenant un rapport CI central (ci-report.md) et l'uploade en artefact
+- Ajout d'un envoi email optionnel du rapport CI via SMTP (secrets CI_SMTP_SERVER / CI_SMTP_USERNAME / CI_SMTP_PASSWORD)
+- Ajout de docs/GESTION_PROJET/SCENARIOS_TEST_MOBILE_FLUTTER.md avec scenarios de test mobile Flutter (auth, presence, resilience, securite)
+
 ## [4.1.47] - 2026-04-18
 ### QA pro: CI scenario coverage + super admin reset flow
 
@@ -821,6 +828,7 @@ docs(erd): unify manager_id and remove supervisor_id from employees
     
     
  
+
 
 
 

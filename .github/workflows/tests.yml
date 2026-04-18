@@ -293,6 +293,52 @@ jobs:
     if: always()
 
     steps:
+      - name: Build CI report
+        id: report
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > ci-report.md <<EOF
+          # CI Report — Leopardo RH
+
+          - Workflow: ${{ github.workflow }}
+          - Run ID: ${{ github.run_id }}
+          - Run Number: ${{ github.run_number }}
+          - Branch/Ref: ${{ github.ref }}
+          - Commit: ${{ github.sha }}
+          - Actor: ${{ github.actor }}
+          - URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          ## Job Results
+          - Backend Tests: ${{ needs.backend-tests.result }}
+          - Backend Security: ${{ needs.backend-security.result }}
+          - Mobile Tests: ${{ needs.mobile-tests.result }}
+          - Governance Gates: ${{ needs.governance-gates.result }}
+          - Dependency Review: ${{ needs.dependency-review.result }}
+          EOF
+
+      - name: Upload CI report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-report
+          path: ci-report.md
+          if-no-files-found: error
+
+      - name: Send CI report email (if SMTP configured)
+        if: always() && secrets.CI_SMTP_SERVER != '' && secrets.CI_SMTP_USERNAME != '' && secrets.CI_SMTP_PASSWORD != ''
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.CI_SMTP_SERVER }}
+          server_port: 587
+          username: ${{ secrets.CI_SMTP_USERNAME }}
+          password: ${{ secrets.CI_SMTP_PASSWORD }}
+          secure: false
+          subject: "Leopardo RH CI Report — Run #${{ github.run_number }}"
+          to: ${{ vars.CI_REPORT_TO || 'nouractu.com@gmail.com' }}
+          from: ${{ vars.CI_REPORT_FROM || secrets.CI_SMTP_USERNAME }}
+          body: file://ci-report.md
+
       - name: All checks passed
         if: |
           needs.backend-tests.result == 'success' &&
