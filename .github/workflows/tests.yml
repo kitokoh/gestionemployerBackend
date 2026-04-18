@@ -90,13 +90,40 @@ jobs:
         working-directory: ./api
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
+      - name: Bootstrap migration repositories
+        working-directory: ./api
+        run: |
+          php <<'PHP'
+          <?php
+          $dsn = 'pgsql:host=127.0.0.1;port=5432;dbname=leopardo_test';
+          $pdo = new PDO($dsn, 'leopardo_user', 'leopardo_pass_test', [
+              PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+          ]);
+
+          $pdo->exec(<<<'SQL'
+          CREATE SCHEMA IF NOT EXISTS shared_tenants;
+          CREATE TABLE IF NOT EXISTS public.migrations (
+              id serial PRIMARY KEY,
+              migration varchar(255) NOT NULL,
+              batch integer NOT NULL
+          );
+          CREATE TABLE IF NOT EXISTS shared_tenants.migrations (
+              id serial PRIMARY KEY,
+              migration varchar(255) NOT NULL,
+              batch integer NOT NULL
+          );
+          SQL);
+
+          echo "Migration repositories ensured for public/shared_tenants.\n";
+          PHP
+
       - name: Run public migrations
         working-directory: ./api
-        run: php artisan migrate --path=database/migrations/public --force --isolated
+        run: DB_SEARCH_PATH=public php artisan migrate --path=database/migrations/public --force --isolated
 
       - name: Run tenant migrations
         working-directory: ./api
-        run: php artisan migrate --path=database/migrations/tenant --force --isolated
+        run: DB_SEARCH_PATH=shared_tenants php artisan migrate --path=database/migrations/tenant --force --isolated
 
       - name: Run backend unit tests
         working-directory: ./api
