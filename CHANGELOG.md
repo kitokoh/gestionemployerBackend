@@ -2,6 +2,15 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.50] - 2026-04-18
+### Correctif connexion mobile et validation login
+
+- `mobile/lib/core/api/api_client.dart` pointe maintenant par defaut vers l'API Render au lieu de `10.0.2.2`
+- Timeouts mobile reduits pour eviter l'impression de boucle infinie au login
+- `mobile/lib/features/auth/screens/login_screen.dart` ajoute une validation simple et compatible avec les comptes de test existants
+- `mobile/lib/features/auth/providers/auth_provider.dart` remonte proprement tous les messages `ApiException`
+- `mobile/test/features/auth/login_screen_test.dart` couvre la resolution par defaut de `API_BASE_URL`
+
 ## [4.1.49] - 2026-04-18
 ### Scenarios mobile exhaustifs par role
 
