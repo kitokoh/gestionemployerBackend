@@ -18,6 +18,12 @@ Renforcer la qualite des validations backend/mobile en CI, fiabiliser le reset S
 - Artefacts uploades:
   - `api/storage/test-results/*.xml`
   - `api/storage/logs/*.log`
+- Scenarios backend de reference documentes:
+  - `docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md`
+- Couverture backend renforcee avec nouveaux tests:
+  - garde-fous auth (`AuthLoginGuardrailsTest`)
+  - contrats JSON critiques mobile (`MobilePayloadContractTest`)
+  - isolation estimation inter-tenant (`Feature/Estimation/TenantIsolationTest`)
 
 ### 2) Mobile CI
 
@@ -25,6 +31,8 @@ Renforcer la qualite des validations backend/mobile en CI, fiabiliser le reset S
 - Si mobile execute:
   - `flutter test --coverage`
   - artefact couverture: `mobile/coverage/lcov.info`
+- Scenarios mobile de reference documentes:
+  - `docs/GESTION_PROJET/SCENARIOS_TEST_MOBILE_FLUTTER.md`
 
 ### 3) Super Admin (test online)
 
@@ -41,6 +49,8 @@ Renforcer la qualite des validations backend/mobile en CI, fiabiliser le reset S
 - Couverture separee Unit/Feature = diagnostic rapide.
 - Migrations CI alignees sur le modele public/tenant reel.
 - Flux de reset Super Admin reproductible sans toucher la base manuellement.
+- Les scenarios attendus sont maintenant formalises separement pour l'API et le mobile.
+- La CI backend couvre maintenant explicitement les contrats critiques consommes par le mobile.
 
 ## Procedure de validation recommandee
 
@@ -59,3 +69,4 @@ Renforcer la qualite des validations backend/mobile en CI, fiabiliser le reset S
 
 - Le mot de passe actuel d'un Super Admin existant ne peut pas etre lu (hash irreversible) ; il doit etre reinitialise.
 - Les tests CI ne remplacent pas un run d'acceptance manuel complet des parcours metier.
+- Certains domaines backend restent a automatiser completement en CI: register public, conges, payroll, blocked user dedie.

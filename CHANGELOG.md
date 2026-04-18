@@ -2,6 +2,20 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.49] - 2026-04-18
+### Scenarios mobile exhaustifs par role
+
+- Refonte complete de `docs/GESTION_PROJET/SCENARIOS_TEST_MOBILE_FLUTTER.md`
+- Couverture etendue a tous les profils: Super Admin, Owner/Admin, HR, Manager, Employee, Finance, compte bloque
+- Ajout d'une matrice de test exhaustive par domaine fonctionnel (auth, permissions, employes, presence, conges, paie, notifications, resilience, securite)
+- Ajout des parcours E2E minimaux obligatoires par role
+- Clarification du mapping CI GitHub Actions et des criteres de validation `GO/NO GO`
+- Ajout de `docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md` pour formaliser la couverture backend complete par role, domaine metier, securite et contrats API
+- Mise a jour de `.github/workflows/tests.yml` et `docs/GESTION_PROJET/RAPPORT_QA_CI_2026-04-18.md` pour referencer explicitement les scenarios API et les gaps backend a fermer
+- Ajout de tests backend reels pour les garde-fous auth, les contrats JSON critiques consommes par Flutter et l'isolation estimation inter-tenant
+- Ajout de `docs/GESTION_PROJET/DOSSIER_REPONSE_AU_CAHIER_DES_CHARGES.md` comme reponse formelle au cahier des charges avec architecture, deploiement, modules valides et ecarts restants
+- Normalisation des reponses API `404` JSON pour renvoyer `RESOURCE_NOT_FOUND` de maniere stable sur les chemins consommes par la CI et le mobile
+
 ## [4.1.48] - 2026-04-18
 ### CI report central + scenarios mobile Flutter
 

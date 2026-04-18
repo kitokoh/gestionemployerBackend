@@ -315,6 +315,15 @@ jobs:
           - Mobile Tests: ${{ needs.mobile-tests.result }}
           - Governance Gates: ${{ needs.governance-gates.result }}
           - Dependency Review: ${{ needs.dependency-review.result }}
+
+          ## Scenario References
+          - Backend API scenarios: docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md
+          - Mobile Flutter scenarios: docs/GESTION_PROJET/SCENARIOS_TEST_MOBILE_FLUTTER.md
+
+          ## Backend Coverage Intent
+          - Unit: services et logique metier pure
+          - Feature: auth, auth guardrails, RBAC, multitenant, attendance, estimation, health, contrats JSON mobile
+          - Gaps prioritaires a fermer: register public, conges, payroll, blocked user dedie
           EOF
 
       - name: Upload CI report artifact
