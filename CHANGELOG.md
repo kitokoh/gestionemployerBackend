@@ -2,6 +2,13 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.46] - 2026-04-18
+### Silence duplicate plans migration race
+
+- Migration api/database/migrations/public/2026_04_01_000001_create_plans_table.php rendue idempotente et tolerante a SQLSTATE 42P07
+- Ajout d'un garde-fou Schema::hasTable('plans') + capture QueryException sur creation concurrente
+- Objectif: supprimer le bruit d'erreur relation "plans" already exists pendant le boot multi-instance
+
 ## [4.1.45] - 2026-04-18
 ### Bootstrap DB_URL + retry readiness (Render)
 
@@ -804,6 +811,8 @@ docs(erd): unify manager_id and remove supervisor_id from employees
     
     
  
+
+
 
 
 
