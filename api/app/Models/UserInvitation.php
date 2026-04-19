@@ -36,6 +36,11 @@ class UserInvitation extends Model
         'metadata' => 'array',
     ];
 
+    public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
+
     public function getTable(): string
     {
         return \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql'

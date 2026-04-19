@@ -2,6 +2,16 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.60] - 2026-04-19
+### SuperAdmin panel : stabilisation et exploitation reelle
+
+- Ajout de la migration publique `platform_settings` et du seeder associe pour rendre le branding, les reglages globaux et le mode maintenance deployables en production
+- Durcissement du middleware de maintenance et du modele `PlatformSetting` pour ne jamais casser le SaaS si la table n est pas encore initialisee
+- Stabilisation des routes web SuperAdmin avec tableau de bord, plans, invitations, audit, entreprises et parametres dans un routage propre
+- Liste entreprises amelioree avec pagination, recherche, filtre par statut et export CSV plus lisible pour l exploitation
+- Relance d invitation manager rendue effective avec reemission d email et regeneration du lien d activation
+- Ajout des tests web SuperAdmin pour les plans, le dashboard, le filtrage entreprises et les actions principales du panel
+
 ## [4.1.59] - 2026-04-19
 ### Phase 2 terrain : shifts de nuit, alertes RH et export comptable
 

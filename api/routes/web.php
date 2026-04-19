@@ -1,11 +1,16 @@
 <?php
 
+use App\Http\Controllers\Web\BiometricAdminController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InvitationController;
-use App\Http\Controllers\Web\BiometricAdminController;
 use App\Http\Controllers\Web\KioskController;
+use App\Http\Controllers\Web\PlatformAuditController;
 use App\Http\Controllers\Web\PlatformAuthController;
 use App\Http\Controllers\Web\PlatformCompanyController;
+use App\Http\Controllers\Web\PlatformDashboardController;
+use App\Http\Controllers\Web\PlatformInvitationController;
+use App\Http\Controllers\Web\PlatformPlanController;
+use App\Http\Controllers\Web\PlatformSettingController;
 use App\Http\Controllers\Web\WebAuthController;
 use App\Http\Controllers\Web\WebEmployeeController;
 use App\Http\Controllers\Web\WebEmployeeManagementController;
@@ -25,9 +30,31 @@ Route::post('/platform/logout', [PlatformAuthController::class, 'logout'])
     ->name('platform.logout');
 
 Route::middleware('auth:super_admin_web')->prefix('platform')->name('platform.')->group(function (): void {
+    Route::get('/dashboard', [PlatformDashboardController::class, 'index'])->name('dashboard');
+
     Route::get('/companies', [PlatformCompanyController::class, 'index'])->name('companies.index');
+    Route::get('/companies/export', [PlatformCompanyController::class, 'export'])->name('companies.export');
     Route::get('/companies/create', [PlatformCompanyController::class, 'create'])->name('companies.create');
     Route::post('/companies', [PlatformCompanyController::class, 'store'])->name('companies.store');
+    Route::get('/companies/{company}', [PlatformCompanyController::class, 'show'])->name('companies.show');
+    Route::get('/companies/{company}/edit', [PlatformCompanyController::class, 'edit'])->name('companies.edit');
+    Route::put('/companies/{company}', [PlatformCompanyController::class, 'update'])->name('companies.update');
+    Route::post('/companies/{company}/suspend', [PlatformCompanyController::class, 'suspend'])->name('companies.suspend');
+    Route::post('/companies/{company}/reactivate', [PlatformCompanyController::class, 'reactivate'])->name('companies.reactivate');
+
+    Route::get('/plans', [PlatformPlanController::class, 'index'])->name('plans.index');
+    Route::get('/plans/create', [PlatformPlanController::class, 'create'])->name('plans.create');
+    Route::post('/plans', [PlatformPlanController::class, 'store'])->name('plans.store');
+    Route::get('/plans/{plan}/edit', [PlatformPlanController::class, 'edit'])->name('plans.edit');
+    Route::put('/plans/{plan}', [PlatformPlanController::class, 'update'])->name('plans.update');
+
+    Route::get('/invitations', [PlatformInvitationController::class, 'index'])->name('invitations.index');
+    Route::post('/invitations/{invitation}/resend', [PlatformInvitationController::class, 'resend'])->name('invitations.resend');
+
+    Route::get('/audit', [PlatformAuditController::class, 'index'])->name('audit.index');
+
+    Route::get('/settings', [PlatformSettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [PlatformSettingController::class, 'update'])->name('settings.update');
 });
 
 Route::middleware('guest:web')->group(function (): void {

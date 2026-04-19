@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PlatformCompanyController extends Controller
 {
@@ -21,20 +22,91 @@ class PlatformCompanyController extends Controller
     ) {
     }
 
+    public function export(Request $request): StreamedResponse
+    {
+        DB::statement('SET search_path TO public');
+
+        $fileName = 'leopardo_companies_export_'.date('Y-m-d').'.csv';
+        $headers = [
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $columns = ['ID', 'Nom', 'Slug', 'Email', 'Ville', 'Pays', 'Plan', 'Statut', 'Type tenancy', 'Schema', 'Cree le'];
+
+        $callback = function () use ($columns): void {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns, ';');
+
+            Company::query()
+                ->with('plan')
+                ->orderByDesc('created_at')
+                ->chunk(100, function ($companies) use ($file): void {
+                    foreach ($companies as $company) {
+                        fputcsv($file, [
+                            $company->id,
+                            $company->name,
+                            $company->slug,
+                            $company->email,
+                            $company->city,
+                            $company->country,
+                            $company->plan?->name ?? $company->plan_id,
+                            $company->status,
+                            $company->tenancy_type,
+                            $company->schema_name,
+                            $company->created_at?->format('Y-m-d H:i:s'),
+                        ], ';');
+                    }
+                });
+
+            fclose($file);
+        };
+
+        /** @var SuperAdmin $superAdmin */
+        $superAdmin = $request->user('super_admin_web');
+        AuditLogger::log('super_admin', $superAdmin->id, null, 'platform.companies.export', $request);
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function index(Request $request): View|JsonResponse
     {
         DB::statement('SET search_path TO public');
+
         /** @var SuperAdmin|null $superAdmin */
         $superAdmin = $request->user('super_admin_web') ?? $request->user('super_admin_api');
         if ($superAdmin) {
             AuditLogger::log('super_admin', $superAdmin->id, null, 'platform.companies.index', $request);
         }
 
-        $companies = Company::query()->latest()->limit(50)->get();
+        $companies = Company::query()
+            ->with('plan')
+            ->when($request->string('q')->isNotEmpty(), function ($query) use ($request): void {
+                $term = '%'.$request->string('q')->toString().'%';
+                $query->where(function ($subQuery) use ($term): void {
+                    $subQuery
+                        ->where('name', 'like', $term)
+                        ->orWhere('email', 'like', $term)
+                        ->orWhere('city', 'like', $term)
+                        ->orWhere('slug', 'like', $term);
+                });
+            })
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
 
         if ($request->expectsJson()) {
             return new JsonResponse([
-                'data' => $companies,
+                'data' => $companies->items(),
+                'meta' => [
+                    'current_page' => $companies->currentPage(),
+                    'per_page' => $companies->perPage(),
+                    'total' => $companies->total(),
+                ],
             ]);
         }
 
@@ -48,7 +120,7 @@ class PlatformCompanyController extends Controller
         DB::statement('SET search_path TO public');
 
         return view('platform.companies.create', [
-            'plans' => DB::table('plans')->orderBy('id')->get(),
+            'plans' => DB::table('plans')->where('is_active', true)->orderBy('price_monthly')->get(),
         ]);
     }
 
@@ -111,4 +183,94 @@ class PlatformCompanyController extends Controller
             ->with('status', 'Societe creee et invitation manager envoyee.');
     }
 
+    public function show(Company $company, Request $request): View
+    {
+        DB::statement('SET search_path TO public');
+
+        /** @var SuperAdmin $superAdmin */
+        $superAdmin = $request->user('super_admin_web') ?? $request->user('super_admin_api');
+        AuditLogger::log('super_admin', $superAdmin->id, $company->id, 'platform.companies.show', $request);
+
+        $managerLookup = DB::getDriverName() === 'pgsql'
+            ? DB::table('public.user_lookups')
+                ->where('company_id', $company->id)
+                ->where('role', 'manager')
+                ->first()
+            : null;
+
+        $employeesCount = 0;
+
+        try {
+            if ($company->tenancy_type === 'shared') {
+                DB::statement('SET search_path TO shared_tenants, public');
+                $employeesCount = DB::table('shared_tenants.employees')->where('company_id', $company->id)->count();
+            } else {
+                DB::statement("SET search_path TO {$company->schema_name}, public");
+                $employeesCount = DB::table("{$company->schema_name}.employees")->count();
+            }
+        } catch (\Throwable) {
+            $employeesCount = 0;
+        }
+
+        DB::statement('SET search_path TO public');
+
+        return view('platform.companies.show', [
+            'company' => $company->load('plan'),
+            'managerLookup' => $managerLookup,
+            'employeesCount' => $employeesCount,
+        ]);
+    }
+
+    public function edit(Company $company): View
+    {
+        DB::statement('SET search_path TO public');
+
+        return view('platform.companies.edit', [
+            'company' => $company,
+            'plans' => DB::table('plans')->orderBy('price_monthly')->get(),
+        ]);
+    }
+
+    public function update(Request $request, Company $company): RedirectResponse
+    {
+        DB::statement('SET search_path TO public');
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'plan_id' => ['required', 'integer', Rule::exists('plans', 'id')],
+            'status' => ['required', 'string', Rule::in(['trial', 'active', 'suspended', 'expired'])],
+        ]);
+
+        $company->update($validated);
+
+        /** @var SuperAdmin $superAdmin */
+        $superAdmin = $request->user('super_admin_web') ?? $request->user('super_admin_api');
+        AuditLogger::log('super_admin', $superAdmin->id, $company->id, 'platform.companies.update', $request, $validated);
+
+        return redirect()->route('platform.companies.show', $company)->with('status', 'Entreprise mise a jour avec succes.');
+    }
+
+    public function suspend(Request $request, Company $company): RedirectResponse
+    {
+        DB::statement('SET search_path TO public');
+        $company->update(['status' => 'suspended']);
+
+        /** @var SuperAdmin $superAdmin */
+        $superAdmin = $request->user('super_admin_web') ?? $request->user('super_admin_api');
+        AuditLogger::log('super_admin', $superAdmin->id, $company->id, 'platform.companies.suspend', $request);
+
+        return redirect()->back()->with('status', 'Entreprise suspendue. Les acces sont desormais bloques.');
+    }
+
+    public function reactivate(Request $request, Company $company): RedirectResponse
+    {
+        DB::statement('SET search_path TO public');
+        $company->update(['status' => 'active']);
+
+        /** @var SuperAdmin $superAdmin */
+        $superAdmin = $request->user('super_admin_web') ?? $request->user('super_admin_api');
+        AuditLogger::log('super_admin', $superAdmin->id, $company->id, 'platform.companies.reactivate', $request);
+
+        return redirect()->back()->with('status', 'Entreprise reactivee. Acces retablis.');
+    }
 }

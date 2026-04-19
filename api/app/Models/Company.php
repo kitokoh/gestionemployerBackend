@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use Illuminate\Support\Facades\DB;
+use App\Models\Employee;
+
 class Company extends Model
 {
     use HasFactory;
@@ -45,14 +48,22 @@ class Company extends Model
                 return;
             }
 
-            if (! in_array($company->status, ['suspended', 'expired'], true)) {
-                return;
-            }
+            $originalPath = DB::selectOne('SHOW search_path')->search_path;
+            
+            try {
+                if ($company->tenancy_type === 'shared') {
+                    DB::statement('SET search_path TO shared_tenants, public');
+                } else {
+                    DB::statement("SET search_path TO {$company->schema_name}, public");
+                }
 
-            Employee::withoutGlobalScopes()
-                ->where('company_id', $company->id)
-                ->get()
-                ->each(fn (Employee $employee) => $employee->tokens()->delete());
+                Employee::withoutGlobalScopes()
+                    ->where('company_id', $company->id)
+                    ->get()
+                    ->each(fn (Employee $employee) => $employee->tokens()->delete());
+            } finally {
+                DB::statement("SET search_path TO {$originalPath}");
+            }
         });
     }
 
@@ -74,5 +85,25 @@ class Company extends Model
     public function attendanceKiosks(): HasMany
     {
         return $this->hasMany(AttendanceKiosk::class, 'company_id');
+    }
+
+    /**
+     * Plan Enforcement Helpers
+     */
+    public function canAddMoreEmployees(): bool
+    {
+        if (! $this->plan || $this->plan->hasUnlimitedEmployees()) {
+            return true;
+        }
+
+        // Count non-archived employees
+        $count = $this->employees()->where('status', '!=', 'archived')->count();
+
+        return $count < $this->plan->max_employees;
+    }
+
+    public function isFeatureEnabled(string $feature): bool
+    {
+        return $this->plan?->hasFeature($feature) ?? false;
     }
 }

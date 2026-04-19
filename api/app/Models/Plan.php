@@ -31,6 +31,16 @@ class Plan extends Model
         'price_yearly' => 'decimal:2',
     ];
 
+    public function hasFeature(string $feature): bool
+    {
+        return isset($this->features[$feature]) && (bool) $this->features[$feature];
+    }
+
+    public function hasUnlimitedEmployees(): bool
+    {
+        return is_null($this->max_employees);
+    }
+
     public function companies(): HasMany
     {
         return $this->hasMany(Company::class, 'plan_id');

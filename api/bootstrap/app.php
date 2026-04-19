@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(App\Http\Middleware\PlatformMaintenanceMiddleware::class);
         $middleware->append(RestoreSearchPathMiddleware::class);
         $middleware->alias([
             'tenant' => TenantMiddleware::class,

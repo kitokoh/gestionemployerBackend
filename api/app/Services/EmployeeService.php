@@ -2,7 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Employee;
+use App\Models\Company;
+use App\Exceptions\DomainException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -23,6 +24,17 @@ class EmployeeService
             $companyId = $payload['company_id']
                 ?? $actor?->company_id
                 ?? (app()->bound('current_company') ? app('current_company')->id : null);
+
+            // Plan Enforcement: Check employee quota
+            $company = Company::query()->findOrFail($companyId);
+            if (! $company->canAddMoreEmployees()) {
+                throw new DomainException(
+                    "Quota d'employés atteint pour votre plan actuel ({$company->plan?->max_employees}). Veuillez passer au plan supérieur.",
+                    403,
+                    'PLAN_LIMIT_REACHED'
+                );
+            }
+
             $password = $providedPassword ?: Str::random(32);
 
             $payload['password_hash'] = Hash::make($password);

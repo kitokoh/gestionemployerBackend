@@ -53,6 +53,35 @@ class UserInvitationService
         return $plainToken;
     }
 
+    public function resend(UserInvitation $invitation, string $invitedByEmail): string
+    {
+        $company = Company::query()->findOrFail($invitation->company_id);
+        $originalPath = DB::getDriverName() === 'pgsql'
+            ? (DB::selectOne('SHOW search_path')->search_path ?? 'shared_tenants,public')
+            : null;
+        $searchPath = $company->tenancy_type === 'schema'
+            ? sprintf('"%s",public', str_replace('"', '""', $company->schema_name))
+            : 'shared_tenants,public';
+
+        DB::statement("SET search_path TO {$searchPath}");
+
+        try {
+            /** @var Employee $employee */
+            $employee = Employee::query()->findOrFail($invitation->employee_id);
+
+            return $this->createAndSend(
+                company: $company,
+                employee: $employee,
+                invitedByType: 'super_admin',
+                invitedByEmail: $invitedByEmail,
+            );
+        } finally {
+            if (DB::getDriverName() === 'pgsql' && $originalPath) {
+                DB::statement("SET search_path TO {$originalPath}");
+            }
+        }
+    }
+
     public function accept(string $plainToken, string $password): Employee
     {
         $invitation = UserInvitation::query()
