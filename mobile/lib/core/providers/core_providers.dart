@@ -16,7 +16,18 @@ final appPreferencesProvider = Provider<AppPreferences>((ref) {
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.watch(secureStorageProvider);
-  return ApiClient(storage);
+  return ApiClient(
+    storage,
+    onUnauthorized: () {
+      // Use microtask to avoid modifying providers during build phase
+      Future.microtask(() {
+        // dynamic to avoid circular import since auth_provider imports core_providers
+        import('package:leopardo_rh/features/auth/providers/auth_provider.dart').then((m) {
+           ref.read(m.authProvider.notifier).markSessionExpired();
+        });
+      });
+    },
+  );
 });
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {

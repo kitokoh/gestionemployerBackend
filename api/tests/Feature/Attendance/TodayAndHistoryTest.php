@@ -98,6 +98,7 @@ class TodayAndHistoryTest extends TestCase
 
         app()->instance('current_company', $company);
         AttendanceLog::query()->create([
+            'company_id' => $company->id,
             'employee_id' => $employeeA->id,
             'date' => '2026-04-03',
             'session_number' => 1,
@@ -109,6 +110,7 @@ class TodayAndHistoryTest extends TestCase
         ]);
 
         AttendanceLog::query()->create([
+            'company_id' => $company->id,
             'employee_id' => $employeeB->id,
             'date' => '2026-04-03',
             'session_number' => 1,
@@ -129,7 +131,7 @@ class TodayAndHistoryTest extends TestCase
         $this->assertSame([$employeeA->id], $ids);
     }
 
-    public function test_manager_keeps_personal_today_status_and_receives_team_overview_context(): void
+    public function test_manager_keeps_personal_today_status_without_blocking_on_team_data(): void
     {
         $company = Company::query()->create([
             'name' => 'Company A',
@@ -178,12 +180,93 @@ class TodayAndHistoryTest extends TestCase
         $all->assertJsonPath('data.mode', 'single');
         $all->assertJsonPath('data.item.employee_id', $manager->id);
         $all->assertJsonPath('data.item.checked_in', true);
-        $all->assertJsonPath('data.context.mode', 'team_overview');
-        $all->assertJsonCount(2, 'data.context.items');
+        $all->assertJsonMissingPath('data.context');
 
         Sanctum::actingAs($employee);
         $forbidden = $this->getJson("/api/v1/attendance/today?employee_id={$manager->id}");
         $forbidden->assertStatus(403);
+    }
+
+    public function test_manager_can_load_team_overview_separately(): void
+    {
+        $company = Company::query()->create([
+            'name' => 'Company A',
+            'slug' => 'company-a',
+            'sector' => 'restaurant',
+            'country' => 'DZ',
+            'city' => 'Alger',
+            'email' => 'a@company.test',
+            'schema_name' => 'shared_tenants',
+            'tenancy_type' => 'shared',
+            'status' => 'active',
+            'timezone' => 'UTC',
+        ]);
+
+        $manager = Employee::query()->create([
+            'company_id' => $company->id,
+            'first_name' => 'Leila',
+            'last_name' => 'Manager',
+            'email' => 'manager@a.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'manager',
+            'status' => 'active',
+        ]);
+
+        $employee = Employee::query()->create([
+            'company_id' => $company->id,
+            'first_name' => 'Sami',
+            'last_name' => 'Employee',
+            'email' => 'employee@a.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'employee',
+            'status' => 'active',
+            'salary_type' => 'hourly',
+            'hourly_rate' => 10,
+        ]);
+
+        app()->instance('current_company', $company);
+        AttendanceLog::query()->create([
+            'company_id' => $company->id,
+            'employee_id' => $employee->id,
+            'date' => '2026-04-04',
+            'session_number' => 1,
+            'check_in' => Carbon::parse('2026-04-04 08:00:00', 'UTC'),
+            'check_out' => Carbon::parse('2026-04-04 17:00:00', 'UTC'),
+            'hours_worked' => 9.0,
+            'overtime_hours' => 1.0,
+            'status' => 'ontime',
+        ]);
+        app()->forgetInstance('current_company');
+
+        Sanctum::actingAs($manager);
+
+        $response = $this->getJson('/api/v1/attendance/team-overview');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.mode', 'collection');
+        $response->assertJsonCount(2, 'data.items');
+        $response->assertJsonStructure([
+            'data' => [
+                'mode',
+                'items' => [
+                    '*' => [
+                        'employee_id',
+                        'name',
+                        'role',
+                        'manager_role',
+                        'checked_in',
+                        'check_in_time',
+                        'check_out_time',
+                        'hours_worked',
+                        'overtime_hours',
+                        'estimated_gain',
+                        'currency',
+                        'status',
+                    ],
+                ],
+                'meta',
+            ],
+        ]);
     }
 
     public function test_manager_history_defaults_to_self_when_no_employee_id_is_given(): void
@@ -219,6 +302,7 @@ class TodayAndHistoryTest extends TestCase
 
         app()->instance('current_company', $company);
         AttendanceLog::query()->create([
+            'company_id' => $company->id,
             'employee_id' => $manager->id,
             'date' => '2026-04-03',
             'session_number' => 1,
@@ -230,6 +314,7 @@ class TodayAndHistoryTest extends TestCase
         ]);
 
         AttendanceLog::query()->create([
+            'company_id' => $company->id,
             'employee_id' => $employee->id,
             'date' => '2026-04-03',
             'session_number' => 1,
@@ -296,6 +381,7 @@ class TodayAndHistoryTest extends TestCase
 
         app()->instance('current_company', $companyB);
         AttendanceLog::query()->create([
+            'company_id' => $companyB->id,
             'employee_id' => $employeeB->id,
             'date' => '2026-04-03',
             'session_number' => 1,

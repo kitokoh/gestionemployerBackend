@@ -1,6 +1,7 @@
 import 'package:leopardo_rh/core/api/api_client.dart';
 import 'package:leopardo_rh/models/attendance_log.dart';
 import 'package:leopardo_rh/models/daily_summary.dart';
+import 'package:leopardo_rh/models/team_overview.dart';
 
 class AttendanceRepository {
   final ApiClient apiClient;
@@ -10,6 +11,14 @@ class AttendanceRepository {
   Future<Map<String, dynamic>> getTodayStatus() async {
     final response = await apiClient.dio.get('/attendance/today');
     return decodeTodayResponse((response.data as Map).cast<String, dynamic>());
+  }
+
+  Future<TeamOverview> getTeamOverview({int perPage = 20}) async {
+    final response = await apiClient.dio.get('/attendance/team-overview', queryParameters: {
+      'per_page': perPage,
+    });
+
+    return TeamOverview.fromJson((response.data['data'] as Map).cast<String, dynamic>());
   }
 
   Future<AttendanceLog> checkIn() async {

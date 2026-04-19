@@ -8,14 +8,27 @@ class AuthState {
   final bool isLoading;
   final Employee? employee;
   final String? error;
+  final bool sessionExpired;
 
-  AuthState({this.isLoading = false, this.employee, this.error});
+  AuthState({
+    this.isLoading = false,
+    this.employee,
+    this.error,
+    this.sessionExpired = false,
+  });
 
-  AuthState copyWith({bool? isLoading, Employee? employee, String? error, bool clearError = false}) {
+  AuthState copyWith({
+    bool? isLoading,
+    Employee? employee,
+    String? error,
+    bool clearError = false,
+    bool? sessionExpired,
+  }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
       employee: employee ?? this.employee,
       error: clearError ? null : (error ?? this.error),
+      sessionExpired: sessionExpired ?? this.sessionExpired,
     );
   }
 }
@@ -25,6 +38,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier(this._repository) : super(AuthState()) {
     checkAuth();
+  }
+
+  void markSessionExpired() {
+    state = AuthState(sessionExpired: true);
   }
 
   Future<void> checkAuth() async {

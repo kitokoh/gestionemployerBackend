@@ -103,7 +103,6 @@ class KioskController extends Controller
             ->map(fn (Employee $employee) => [
                 'employee_id' => $employee->id,
                 'name' => trim(($employee->first_name ?? '').' '.($employee->last_name ?? '')),
-                'email' => $employee->email,
                 'matricule' => $employee->matricule,
                 'zkteco_id' => $employee->zkteco_id,
                 'face_enabled' => $employee->biometric_face_enabled,
@@ -149,6 +148,9 @@ class KioskController extends Controller
 
     private function resolveAuthorizedKiosk(Request $request, string $deviceCode): AttendanceKiosk
     {
+        $token = (string) $request->header('X-Kiosk-Token', '');
+        abort_if($token === '', 401, 'MISSING_KIOSK_TOKEN');
+
         DB::statement('SET search_path TO shared_tenants,public');
 
         $kiosk = AttendanceKiosk::query()
@@ -156,8 +158,7 @@ class KioskController extends Controller
             ->where('status', 'active')
             ->firstOrFail();
 
-        $token = (string) $request->header('X-Kiosk-Token', '');
-        abort_if($token === '' || ! Hash::check($token, (string) $kiosk->sync_token_hash), 401, 'INVALID_KIOSK_TOKEN');
+        abort_if(! Hash::check($token, (string) $kiosk->sync_token_hash), 401, 'INVALID_KIOSK_TOKEN');
 
         return $kiosk;
     }

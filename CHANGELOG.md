@@ -17,6 +17,8 @@
 - `docs/GESTION_PROJET/PLAN_PHASE_2_POST_MVP.md` formalise la phase apres MVP en exploitation RH avancee et pilotage terrain
 - `docs/GESTION_PROJET/BACKLOG_PHASE_2_POST_MVP.md` priorise les taches post-MVP, y compris la regle cle selon laquelle manager et RH restent aussi des employes pouvant pointer et consulter leur propre activite
 - Demarrage de `P2-01` : l API `attendance/today` et l historique personnel traitent desormais manager / RH comme des employes pouvant pointer eux aussi, tout en ajoutant un contexte de supervision equipe pour le mobile
+- Correctif mobile terrain : le chargement du pointage personnel est maintenant decouple du chargement equipe afin d eviter qu un manager, un RH ou un employe reste bloque sur "chargement de votre presence du jour"
+- Demarrage de `P2-02` et `P2-03` : ajout d un endpoint `attendance/team-overview` et d un dashboard mobile superviseur affichant collaborateurs, statuts, heures travaillees, heures supplementaires et gain estime
 
 ## [4.1.56] - 2026-04-19
 ### Biometrie approuvee et borne d entree entreprise

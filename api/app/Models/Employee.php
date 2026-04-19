@@ -20,7 +20,6 @@ class Employee extends Authenticatable
     protected $table = 'employees';
 
     protected $fillable = [
-        'company_id',
         'schedule_id',
         'matricule',
         'zkteco_id',

@@ -1,10 +1,12 @@
-import 'package:leopardo_rh/core/widgets/pulse_button.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:leopardo_rh/core/widgets/pulse_button.dart';
 import 'package:leopardo_rh/features/attendance/providers/attendance_provider.dart';
 import 'package:leopardo_rh/features/auth/providers/auth_provider.dart';
+import 'package:leopardo_rh/models/employee.dart';
+import 'package:leopardo_rh/models/team_overview.dart';
 
 class AttendanceScreen extends ConsumerWidget {
   const AttendanceScreen({super.key});
@@ -13,34 +15,52 @@ class AttendanceScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final attState = ref.watch(attendanceProvider);
-    final canSupervise = authState.employee?.isManager == true;
+    final employee = authState.employee;
+    final canSupervise = employee?.isSupervisor == true;
 
     return Scaffold(
       body: SafeArea(
         child: attState.error != null && attState.error!.contains('NOT_IMPLEMENTED')
             ? _buildStubScreen(context, ref)
-            : RefreshIndicator(
-                onRefresh: () => ref.read(attendanceProvider.notifier).loadTodayData(),
-                child: ListView(
-                  padding: const EdgeInsets.all(24.0),
-                  children: [
-                    _buildHeader(context, authState, canSupervise),
-                    const SizedBox(height: 32),
-                    _buildActionCard(context, ref, attState),
-                    const SizedBox(height: 32),
-                    _buildSummaryCard(context, attState),
-                    if (canSupervise) ...[
-                      const SizedBox(height: 32),
-                      _buildManagerOverviewCard(context, ref, attState),
-                    ],
-                    if (attState.notice != null) ...[
-                      _buildNoticeCard(context, attState.notice!),
-                      const SizedBox(height: 32),
-                    ],
-                    const SizedBox(height: 32),
-                    _buildActions(context, ref, attState, canSupervise),
-                  ],
-                ),
+            : Column(
+                children: [
+                   if (const String.fromEnvironment('API_BASE_URL') == 'mock')
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      color: Colors.red.shade900,
+                      child: const Text(
+                        'MODE DÉMO ACTIF (DONNÉES FICTIVES)',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () => ref.read(attendanceProvider.notifier).loadTodayData(),
+                      child: ListView(
+                        padding: const EdgeInsets.all(24.0),
+                        children: [
+                          _buildHeader(context, authState, employee),
+                          const SizedBox(height: 32),
+                          _buildActionCard(context, ref, attState),
+                          const SizedBox(height: 32),
+                          _buildSummaryCard(context, attState),
+                          if (canSupervise) ...[
+                            const SizedBox(height: 32),
+                            _buildSupervisorDashboard(context, ref, attState, employee!),
+                          ],
+                          if (attState.notice != null) ...[
+                            const SizedBox(height: 32),
+                            _buildNoticeCard(context, attState.notice!),
+                          ],
+                          const SizedBox(height: 32),
+                          _buildActions(context, ref, attState),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
       ),
     );
@@ -56,16 +76,12 @@ class AttendanceScreen extends ConsumerWidget {
           const Text('Fonction bientot disponible', style: TextStyle(fontSize: 20)),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () {
-              ref.read(attendanceProvider.notifier).loadTodayData();
-            },
+            onPressed: () => ref.read(attendanceProvider.notifier).loadTodayData(),
             child: const Text('Reessayer'),
           ),
           const SizedBox(height: 16),
           TextButton(
-            onPressed: () {
-              ref.read(authProvider.notifier).logout();
-            },
+            onPressed: () => ref.read(authProvider.notifier).logout(),
             child: const Text('Deconnexion', style: TextStyle(color: Colors.red)),
           ),
         ],
@@ -73,7 +89,13 @@ class AttendanceScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, AuthState state, bool isManager) {
+  Widget _buildHeader(BuildContext context, AuthState state, Employee? employee) {
+    final roleLabel = employee?.isHrManager == true
+        ? 'Espace RH'
+        : employee?.isSupervisor == true
+            ? 'Espace manager'
+            : 'Espace employe';
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -88,10 +110,7 @@ class AttendanceScreen extends ConsumerWidget {
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
-          Text(
-            isManager ? 'Pointage personnel + suivi equipe' : 'Espace employe',
-            style: const TextStyle(color: Colors.grey),
-          ),
+          Text(roleLabel, style: const TextStyle(color: Colors.grey)),
         ],
       ),
     );
@@ -170,13 +189,19 @@ class AttendanceScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildManagerOverviewCard(BuildContext context, WidgetRef ref, AttendanceState state) {
-    final items = state.context?['items'];
-    final employees = items is List ? items : const [];
-    final checkedInCount = employees.whereType<Map>().where((item) {
-      final status = item['status']?.toString();
-      return status != null && status != 'absent';
-    }).length;
+  Widget _buildSupervisorDashboard(
+    BuildContext context,
+    WidgetRef ref,
+    AttendanceState state,
+    Employee employee,
+  ) {
+    final overview = state.teamOverview;
+    final items = overview?.items ?? const <TeamOverviewItem>[];
+    final checkedInCount = items.where((item) => item.status != 'absent').length;
+    final overtimeTotal = items.fold<double>(0, (sum, item) => sum + item.overtimeHours);
+    final estimatedTotal = items.fold<double>(0, (sum, item) => sum + item.estimatedGain);
+    final title = employee.isHrManager ? 'Pilotage RH' : 'Suivi manager';
+    final currency = items.isNotEmpty ? items.first.currency : 'DA';
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -187,17 +212,17 @@ class AttendanceScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Suivi de l equipe',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           const Text(
-            'Votre pointage personnel reste disponible au-dessus. Cette carte ajoute uniquement une vue equipe.',
+            'Votre pointage personnel reste disponible au-dessus. Cette section ajoute la vue equipe de la phase 2.',
             style: TextStyle(color: Colors.grey),
           ),
-          const SizedBox(height: 12),
-          if (state.isLoading && employees.isEmpty) ...[
+          const SizedBox(height: 16),
+          if (state.teamLoading && items.isEmpty) ...[
             const Row(
               children: [
                 SizedBox(
@@ -214,19 +239,117 @@ class AttendanceScreen extends ConsumerWidget {
                 ),
               ],
             ),
-          ] else ...[
+          ] else if (state.teamError != null && items.isEmpty) ...[
             Text(
-              employees.isEmpty
-                  ? 'Le suivi du jour sera disponible apres actualisation.'
-                  : '${employees.length} collaborateurs charges, $checkedInCount deja pointes aujourd hui.',
-              style: const TextStyle(color: Colors.grey),
+              state.teamError!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
             const SizedBox(height: 16),
             OutlinedButton(
-              onPressed: () => ref.read(attendanceProvider.notifier).loadTodayData(),
+              onPressed: () => ref.read(attendanceProvider.notifier).loadTeamOverview(),
+              child: const Text('Reessayer le suivi equipe'),
+            ),
+          ] else ...[
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _buildKpiChip('${items.length}', 'collaborateurs'),
+                _buildKpiChip('$checkedInCount', 'pointes'),
+                _buildKpiChip(overtimeTotal.toStringAsFixed(1), 'heures supp'),
+                _buildKpiChip('${estimatedTotal.toStringAsFixed(0)} $currency', 'gagne estime'),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (items.isEmpty)
+              const Text(
+                'Aucune donnee equipe chargee pour le moment.',
+                style: TextStyle(color: Colors.grey),
+              )
+            else ...[
+              ...items.take(5).map((item) => _buildTeamMemberTile(context, item)),
+              if (items.length > 5)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '+ ${items.length - 5} autres collaborateurs',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ),
+            ],
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: () => ref.read(attendanceProvider.notifier).loadTeamOverview(),
               child: const Text('Actualiser le suivi'),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKpiChip(String value, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeamMemberTile(BuildContext context, TeamOverviewItem item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  item.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              Text(
+                item.status,
+                style: TextStyle(
+                  color: item.status == 'absent' ? Colors.orangeAccent : Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Role: ${item.managerRole ?? item.role ?? 'employe'}',
+            style: const TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Heures: ${item.hoursWorked.toStringAsFixed(2)} | Supp: ${item.overtimeHours.toStringAsFixed(2)} | Gain estime: ${item.estimatedGain.toStringAsFixed(2)} ${item.currency}',
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Entree: ${item.checkInTime ?? '--:--'} | Sortie: ${item.checkOutTime ?? '--:--'}',
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -266,7 +389,7 @@ class AttendanceScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Heures sup : ${state.summary!.overtimeGain > 0 ? (state.summary!.overtimeGain).toStringAsFixed(0) : "0h"}',
+            'Heures sup : ${state.summary!.overtimeHours.toStringAsFixed(2)}h',
             style: const TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 8),
@@ -303,7 +426,7 @@ class AttendanceScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActions(BuildContext context, WidgetRef ref, AttendanceState state, bool isManager) {
+  Widget _buildActions(BuildContext context, WidgetRef ref, AttendanceState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -328,9 +451,7 @@ class AttendanceScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         TextButton(
-          onPressed: () {
-            ref.read(authProvider.notifier).logout();
-          },
+          onPressed: () => ref.read(authProvider.notifier).logout(),
           child: const Text('Deconnexion', style: TextStyle(color: Colors.red)),
         ),
       ],

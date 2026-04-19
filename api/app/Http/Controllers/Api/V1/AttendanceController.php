@@ -10,13 +10,15 @@ use App\Http\Requests\Api\V1\Attendance\CheckOutRequest;
 use App\Models\AttendanceLog;
 use App\Models\Employee;
 use App\Services\AttendanceService;
+use App\Services\EstimationService;
 use Illuminate\Http\JsonResponse;
 
 class AttendanceController extends Controller
 {
-    public function __construct(private readonly AttendanceService $attendanceService)
-    {
-    }
+    public function __construct(
+        private readonly AttendanceService $attendanceService,
+        private readonly EstimationService $estimationService,
+    ) {}
 
     public function checkIn(CheckInRequest $request): JsonResponse
     {
@@ -92,16 +94,26 @@ class AttendanceController extends Controller
             ->orderByDesc('id')
             ->first();
 
-        $context = $actor->isManager()
-            ? $this->buildTeamOverviewContext($request, $today)
-            : null;
-
         return new JsonResponse([
             'data' => [
                 'mode' => 'single',
                 'item' => $this->serializeToday($actor, $log),
-                'context' => $context,
             ],
+        ]);
+    }
+
+    public function teamOverview(AttendanceTodayRequest $request): JsonResponse
+    {
+        /** @var Employee $actor */
+        $actor = $request->user();
+
+        $this->authorize('viewAny', AttendanceLog::class);
+
+        $company = app('current_company');
+        $today = now('UTC')->setTimezone($company->timezone)->toDateString();
+
+        return new JsonResponse([
+            'data' => $this->buildTeamOverviewContext($request, $today),
         ]);
     }
 
@@ -183,12 +195,21 @@ class AttendanceController extends Controller
 
     private function buildTeamOverviewContext(AttendanceTodayRequest $request, string $today): array
     {
-        $this->authorize('viewAny', AttendanceLog::class);
-
         $perPage = $request->integer('per_page', 50);
 
         $paginator = Employee::query()
-            ->select(['id', 'first_name', 'last_name', 'email', 'role', 'status'])
+            ->select([
+                'id',
+                'first_name',
+                'last_name',
+                'email',
+                'role',
+                'manager_role',
+                'status',
+                'salary_type',
+                'salary_base',
+                'hourly_rate',
+            ])
             ->orderBy('id')
             ->paginate(max(1, min(100, $perPage)));
 
@@ -202,18 +223,38 @@ class AttendanceController extends Controller
             ->get()
             ->keyBy('employee_id');
 
-        $items = $employees->map(function (Employee $employee) use ($logsByEmployee) {
-            return $this->serializeToday($employee, $logsByEmployee->get($employee->id));
+        $items = $employees->map(function (Employee $employee) use ($logsByEmployee, $today) {
+            return $this->serializeTeamOverviewItem($employee, $logsByEmployee->get($employee->id), $today);
         })->values();
 
         return [
-            'mode' => 'team_overview',
+            'mode' => 'collection',
             'items' => $items,
             'meta' => [
                 'current_page' => $paginator->currentPage(),
                 'per_page' => $paginator->perPage(),
                 'total' => $paginator->total(),
             ],
+        ];
+    }
+
+    private function serializeTeamOverviewItem(Employee $employee, ?AttendanceLog $log, string $today): array
+    {
+        $summary = $this->estimationService->dailySummaryFromLog($employee, $log, $today);
+
+        return [
+            'employee_id' => $employee->id,
+            'name' => trim(($employee->first_name ?? '').' '.($employee->last_name ?? '')),
+            'role' => $employee->role,
+            'manager_role' => $employee->manager_role,
+            'checked_in' => (bool) $log?->check_in,
+            'check_in_time' => $log?->check_in?->setTimezone(app('current_company')->timezone)->format('H:i'),
+            'check_out_time' => $log?->check_out?->setTimezone(app('current_company')->timezone)->format('H:i'),
+            'hours_worked' => $summary['hours_worked'],
+            'overtime_hours' => $summary['overtime_hours'],
+            'estimated_gain' => $summary['total_estimated'],
+            'currency' => $summary['currency'],
+            'status' => $log?->status ?? 'absent',
         ];
     }
 }

@@ -71,7 +71,7 @@ class MobilePayloadContractTest extends TestCase
         $response->assertJsonPath('data.role', 'employee');
     }
 
-    public function test_attendance_today_manager_payload_matches_mobile_contract_with_personal_and_team_context(): void
+    public function test_attendance_today_manager_payload_matches_mobile_contract_for_personal_pointage(): void
     {
         $company = Company::query()->create([
             'name' => 'Company A',
@@ -93,6 +93,7 @@ class MobilePayloadContractTest extends TestCase
             'email' => 'manager@company.test',
             'password_hash' => Hash::make('password123'),
             'role' => 'manager',
+            'manager_role' => 'rh',
             'status' => 'active',
         ]);
 
@@ -150,24 +151,90 @@ class MobilePayloadContractTest extends TestCase
                     'hours_worked',
                     'status',
                 ],
-                'context' => [
-                    'mode',
-                    'items' => [
-                        '*' => [
-                            'employee_id',
-                            'name',
-                            'checked_in',
-                            'check_in_time',
-                            'check_out_time',
-                            'hours_worked',
-                            'status',
-                        ],
+            ],
+        ]);
+    }
+
+    public function test_attendance_team_overview_payload_matches_mobile_contract(): void
+    {
+        $company = Company::query()->create([
+            'name' => 'Company A',
+            'slug' => 'company-a',
+            'sector' => 'restaurant',
+            'country' => 'DZ',
+            'city' => 'Alger',
+            'email' => 'a@company.test',
+            'schema_name' => 'shared_tenants',
+            'tenancy_type' => 'shared',
+            'status' => 'active',
+            'timezone' => 'UTC',
+        ]);
+
+        $manager = Employee::query()->create([
+            'company_id' => $company->id,
+            'first_name' => 'Leila',
+            'last_name' => 'Manager',
+            'email' => 'manager@company.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'manager',
+            'manager_role' => 'rh',
+            'status' => 'active',
+        ]);
+
+        $employee = Employee::query()->create([
+            'company_id' => $company->id,
+            'first_name' => 'Sami',
+            'last_name' => 'Employee',
+            'email' => 'employee@company.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'employee',
+            'status' => 'active',
+            'salary_type' => 'hourly',
+            'hourly_rate' => 10,
+        ]);
+
+        AttendanceLog::query()->create([
+            'company_id' => $company->id,
+            'employee_id' => $employee->id,
+            'date' => '2026-04-18',
+            'session_number' => 1,
+            'check_in' => Carbon::parse('2026-04-18 08:00:00', 'UTC'),
+            'check_out' => Carbon::parse('2026-04-18 17:00:00', 'UTC'),
+            'hours_worked' => 9.0,
+            'overtime_hours' => 1.0,
+            'status' => 'ontime',
+        ]);
+
+        Sanctum::actingAs($manager);
+        $this->travelTo(Carbon::parse('2026-04-18 09:00:00', 'UTC'));
+
+        $response = $this->getJson('/api/v1/attendance/team-overview');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.mode', 'collection');
+        $response->assertJsonStructure([
+            'data' => [
+                'mode',
+                'items' => [
+                    '*' => [
+                        'employee_id',
+                        'name',
+                        'role',
+                        'manager_role',
+                        'checked_in',
+                        'check_in_time',
+                        'check_out_time',
+                        'hours_worked',
+                        'overtime_hours',
+                        'estimated_gain',
+                        'currency',
+                        'status',
                     ],
-                    'meta' => [
-                        'current_page',
-                        'per_page',
-                        'total',
-                    ],
+                ],
+                'meta' => [
+                    'current_page',
+                    'per_page',
+                    'total',
                 ],
             ],
         ]);

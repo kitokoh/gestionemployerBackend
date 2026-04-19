@@ -19,7 +19,9 @@ class UpdateEmployeeRequest extends FormRequest
         $companyId = $this->user()?->company_id
             ?? (app()->bound('current_company') ? app('current_company')->id : null);
 
-        return [
+        $isManager = $this->user()?->isManager();
+
+        $allRules = [
             'matricule' => [
                 'sometimes',
                 'nullable',
@@ -71,6 +73,19 @@ class UpdateEmployeeRequest extends FormRequest
             'extra_data.blood_group' => ['sometimes', 'nullable', 'string', 'max:10'],
             'extra_data.education_level' => ['sometimes', 'nullable', 'string', 'max:120'],
         ];
+
+        if (! $isManager) {
+            // Non-managers can only update their own basic info
+            $employeeAllowed = [
+                'first_name', 'last_name', 'email', 'password',
+                'phone', 'personal_email', 'address_line', 'postal_code',
+                'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation',
+            ];
+
+            return array_intersect_key($allRules, array_flip($employeeAllowed));
+        }
+
+        return $allRules;
     }
 
     protected function prepareForValidation(): void

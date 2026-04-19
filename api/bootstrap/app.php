@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\TenantMiddleware;
+use App\Http\Middleware\RestoreSearchPathMiddleware;
 use App\Http\Middleware\Web\EnsureManagerMiddleware;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Application;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(RestoreSearchPathMiddleware::class);
         $middleware->alias([
             'tenant' => TenantMiddleware::class,
             'manager' => EnsureManagerMiddleware::class,

@@ -51,55 +51,57 @@ class KioskAttendanceService
 
     public function syncPunches(AttendanceKiosk $kiosk, array $events): array
     {
-        $searchPath = $kiosk->company?->tenancy_type === 'schema'
-            ? $kiosk->company->schema_name.',public'
-            : 'shared_tenants,public';
-        DB::statement('SET search_path TO '.$searchPath);
+        return DB::transaction(function () use ($kiosk, $events) {
+            $searchPath = $kiosk->company?->tenancy_type === 'schema'
+                ? $kiosk->company->schema_name.',public'
+                : 'shared_tenants,public';
+            DB::statement('SET search_path TO '.$searchPath);
 
-        $processed = [];
+            $processed = [];
 
-        foreach ($events as $event) {
-            $identifier = trim((string) ($event['identifier'] ?? ''));
-            if ($identifier === '') {
-                continue;
+            foreach ($events as $event) {
+                $identifier = trim((string) ($event['identifier'] ?? ''));
+                if ($identifier === '') {
+                    continue;
+                }
+
+                $employee = Employee::query()
+                    ->where('company_id', $kiosk->company_id)
+                    ->where(function ($query) use ($identifier): void {
+                        $query
+                            ->where('email', $identifier)
+                            ->orWhere('matricule', $identifier)
+                            ->orWhere('zkteco_id', $identifier);
+                    })
+                    ->first();
+
+                if (! $employee) {
+                    continue;
+                }
+
+                if (! $employee->biometric_fingerprint_enabled && ! $employee->biometric_face_enabled) {
+                    continue;
+                }
+
+                $log = $this->attendanceService->importExternalPunch($employee, [
+                    'action' => $event['action'] ?? 'check_in',
+                    'occurred_at' => $event['occurred_at'] ?? null,
+                    'external_event_id' => $event['external_event_id'] ?? null,
+                    'source_device_code' => $kiosk->device_code,
+                    'method' => 'kiosk_offline',
+                    'biometric_type' => $event['biometric_type'] ?? $kiosk->biometric_mode,
+                    'synced_from_offline' => true,
+                ]);
+
+                $processed[] = $log->id;
             }
 
-            $employee = Employee::query()
-                ->where('company_id', $kiosk->company_id)
-                ->where(function ($query) use ($identifier): void {
-                    $query
-                        ->where('email', $identifier)
-                        ->orWhere('matricule', $identifier)
-                        ->orWhere('zkteco_id', $identifier);
-                })
-                ->first();
+            $kiosk->forceFill([
+                'last_seen_at' => now(),
+                'last_sync_at' => now(),
+            ])->save();
 
-            if (! $employee) {
-                continue;
-            }
-
-            if (! $employee->biometric_fingerprint_enabled && ! $employee->biometric_face_enabled) {
-                continue;
-            }
-
-            $log = $this->attendanceService->importExternalPunch($employee, [
-                'action' => $event['action'] ?? 'check_in',
-                'occurred_at' => $event['occurred_at'] ?? null,
-                'external_event_id' => $event['external_event_id'] ?? null,
-                'source_device_code' => $kiosk->device_code,
-                'method' => 'kiosk_offline',
-                'biometric_type' => $event['biometric_type'] ?? $kiosk->biometric_mode,
-                'synced_from_offline' => true,
-            ]);
-
-            $processed[] = $log->id;
-        }
-
-        $kiosk->forceFill([
-            'last_seen_at' => now(),
-            'last_sync_at' => now(),
-        ])->save();
-
-        return $processed;
+            return $processed;
+        });
     }
 }

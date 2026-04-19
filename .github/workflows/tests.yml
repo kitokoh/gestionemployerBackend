@@ -125,6 +125,10 @@ jobs:
         working-directory: ./api
         run: DB_SEARCH_PATH=shared_tenants php artisan migrate --path=database/migrations/tenant --force --isolated
 
+      - name: Run Run Pint code styling check
+        working-directory: ./api
+        run: ./vendor/bin/pint --test
+
       - name: Run backend unit tests
         working-directory: ./api
         run: php artisan test --testsuite=Unit --log-junit=storage/test-results/unit.xml

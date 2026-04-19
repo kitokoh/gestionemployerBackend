@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:leopardo_rh/features/attendance/data/attendance_repository.dart';
 import 'package:leopardo_rh/models/attendance_log.dart';
 import 'package:leopardo_rh/models/daily_summary.dart';
+import 'package:leopardo_rh/models/team_overview.dart';
 import 'package:leopardo_rh/core/providers/core_providers.dart';
 import 'package:leopardo_rh/features/auth/providers/auth_provider.dart';
 import 'package:leopardo_rh/core/api/api_exceptions.dart';
@@ -9,37 +10,46 @@ import 'package:leopardo_rh/core/api/api_exceptions.dart';
 class AttendanceState {
   final bool isLoading;
   final AttendanceLog? todayLog;
-  final Map<String, dynamic>? context;
+  final TeamOverview? teamOverview;
   final DailySummary? summary;
   final String? error;
   final String? notice;
+  final bool teamLoading;
+  final String? teamError;
 
   AttendanceState({
     this.isLoading = false,
     this.todayLog,
-    this.context,
+    this.teamOverview,
     this.summary,
     this.error,
     this.notice,
+    this.teamLoading = false,
+    this.teamError,
   });
 
   AttendanceState copyWith({
     bool? isLoading,
     AttendanceLog? todayLog,
-    Map<String, dynamic>? context,
+    TeamOverview? teamOverview,
     DailySummary? summary,
     String? error,
     String? notice,
+    bool? teamLoading,
+    String? teamError,
     bool clearError = false,
     bool clearNotice = false,
+    bool clearTeamError = false,
   }) {
     return AttendanceState(
       isLoading: isLoading ?? this.isLoading,
       todayLog: todayLog ?? this.todayLog,
-      context: context ?? this.context,
+      teamOverview: teamOverview ?? this.teamOverview,
       summary: summary ?? this.summary,
       error: clearError ? null : (error ?? this.error),
       notice: clearNotice ? null : (notice ?? this.notice),
+      teamLoading: teamLoading ?? this.teamLoading,
+      teamError: clearTeamError ? null : (teamError ?? this.teamError),
     );
   }
 }
@@ -58,12 +68,14 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
       final data = await _repository.getTodayStatus();
       state = state.copyWith(
         todayLog: data['log'],
-        context: data['context'],
         isLoading: false,
       );
       final authState = _ref.read(authProvider);
       if (authState.employee != null) {
         _loadSummary();
+        if (authState.employee!.isSupervisor) {
+          loadTeamOverview();
+        }
       }
     } catch (e) {
       if (e is ApiException && e.statusCode == 401) {
@@ -73,10 +85,6 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
       if (_isRecoverableLoadError(e)) {
         state = state.copyWith(
           isLoading: false,
-          context: {
-            ...?state.context,
-            'load_degraded': true,
-          },
           notice: 'Les donnees du jour prennent plus de temps que prevu. L\'ecran reste utilisable, vous pouvez actualiser.',
         );
         return;
@@ -94,6 +102,28 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
       } catch (e) {
         // Ignore summary loading errors, non-blocking
       }
+    }
+  }
+
+  Future<void> loadTeamOverview() async {
+    final authState = _ref.read(authProvider);
+    if (authState.employee == null || !authState.employee!.isSupervisor) {
+      return;
+    }
+
+    state = state.copyWith(teamLoading: true, clearTeamError: true);
+
+    try {
+      final overview = await _repository.getTeamOverview();
+      state = state.copyWith(
+        teamOverview: overview,
+        teamLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        teamLoading: false,
+        teamError: e.toString(),
+      );
     }
   }
 

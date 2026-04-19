@@ -45,6 +45,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn']);
         Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut']);
         Route::get('/attendance/today', [AttendanceController::class, 'today']);
+        Route::get('/attendance/team-overview', [AttendanceController::class, 'teamOverview']);
         Route::get('/attendance', [AttendanceController::class, 'index']);
 
         Route::get('/biometric-enrollment-requests', [BiometricEnrollmentController::class, 'index']);
@@ -53,9 +54,14 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/kiosks', [KioskController::class, 'register']);
     });
 
-    Route::get('/kiosks/{deviceCode}/roster', [KioskController::class, 'roster']);
-    Route::post('/kiosks/{deviceCode}/punch', [KioskController::class, 'punch']);
-    Route::post('/kiosks/{deviceCode}/sync', [KioskController::class, 'sync']);
+    Route::middleware(['throttle:30,1'])->group(function (): void {
+        Route::get('/kiosks/{deviceCode}/roster', [KioskController::class, 'roster'])
+            ->where('deviceCode', '[A-Z0-9]{1,20}');
+        Route::post('/kiosks/{deviceCode}/punch', [KioskController::class, 'punch'])
+            ->where('deviceCode', '[A-Z0-9]{1,20}');
+        Route::post('/kiosks/{deviceCode}/sync', [KioskController::class, 'sync'])
+            ->where('deviceCode', '[A-Z0-9]{1,20}');
+    });
 
     Route::middleware(['auth:super_admin_api'])->prefix('platform')->group(function (): void {
         Route::get('/auth/me', [PlatformAuthController::class, 'me']);

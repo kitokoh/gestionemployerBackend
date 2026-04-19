@@ -44,6 +44,11 @@ class ApiClient {
   }
 
   void importMockInterceptor() {
+    const bool isRelease = bool.fromEnvironment('dart.vm.product');
+    if (isRelease) {
+      // Never allow mock interceptor in release build for safety
+      return;
+    }
     _dio.interceptors.insert(0, MockInterceptor());
   }
 
@@ -51,7 +56,12 @@ class ApiClient {
 
   static String resolveBaseUrl() {
     const configured = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-    if (configured.isEmpty) {
+    if (configured.isEmpty || configured == 'mock') {
+      return _defaultRenderBaseUrl;
+    }
+
+    final uri = Uri.tryParse(configured);
+    if (uri == null || (!uri.isScheme('http') && !uri.isScheme('https'))) {
       return _defaultRenderBaseUrl;
     }
 

@@ -5,6 +5,7 @@ class Employee {
   final String lastName;
   final String email;
   final String? role;
+  final String? managerRole;
   final String status;
   final bool biometricFaceEnabled;
   final bool biometricFingerprintEnabled;
@@ -16,6 +17,7 @@ class Employee {
     required this.lastName,
     required this.email,
     this.role,
+    this.managerRole,
     required this.status,
     this.biometricFaceEnabled = false,
     this.biometricFingerprintEnabled = false,
@@ -29,6 +31,7 @@ class Employee {
       lastName: json['last_name'],
       email: json['email'],
       role: json['role'] as String?,
+      managerRole: json['manager_role'] as String?,
       status: json['status'],
       biometricFaceEnabled: json['biometric_face_enabled'] == true,
       biometricFingerprintEnabled: json['biometric_fingerprint_enabled'] == true,
@@ -36,4 +39,6 @@ class Employee {
   }
 
   bool get isManager => role == 'manager';
+  bool get isHrManager => isManager && managerRole == 'rh';
+  bool get isSupervisor => isManager;
 }

@@ -79,8 +79,20 @@ class EstimationService
         }
 
         $gross = round($gross, 2);
-        $deductions = round($gross * $this->resolveEmployeeDeductionRate($company->country), 2);
+        $deductionRate = $this->resolveEmployeeDeductionRate($company->country);
+        $deductions = round($gross * $deductionRate, 2);
         $net = round($gross - $deductions, 2);
+
+        $salaryNotConfigured = $totalHours > 0 && $gross === 0.0 && $employee->salary_base === null;
+        $deductionsUnavailable = $deductionRate === 0.0 && $company->country !== 'DZ';
+
+        $disclaimer = 'Estimation non officielle - le bulletin de paie fait foi';
+        if ($salaryNotConfigured) {
+            $disclaimer .= ' | ⚠️ Salaire non configuré pour cet employé';
+        }
+        if ($deductionsUnavailable) {
+            $disclaimer .= " | ℹ️ Les taux de cotisations pour {$company->country} ne sont pas encore supportés dans cette région (estimés à 0%)";
+        }
 
         return [
             'employee_id' => $employee->id,
@@ -99,9 +111,13 @@ class EstimationService
                 'deductions' => $deductions,
                 'net' => $net,
             ],
+            'flags' => [
+                'salary_not_configured' => $salaryNotConfigured,
+                'deduction_rate_unavailable' => $deductionsUnavailable,
+            ],
             'currency' => $company->currency,
             'breakdown' => $breakdown,
-            'disclaimer' => 'Estimation non officielle - le bulletin de paie fait foi',
+            'disclaimer' => $disclaimer,
         ];
     }
 
