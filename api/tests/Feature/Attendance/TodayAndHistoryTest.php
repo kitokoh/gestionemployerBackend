@@ -129,7 +129,64 @@ class TodayAndHistoryTest extends TestCase
         $this->assertSame([$employeeA->id], $ids);
     }
 
-    public function test_manager_can_view_today_for_all_employees_and_employee_cannot_view_others(): void
+    public function test_manager_keeps_personal_today_status_and_receives_team_overview_context(): void
+    {
+        $company = Company::query()->create([
+            'name' => 'Company A',
+            'slug' => 'company-a',
+            'sector' => 'restaurant',
+            'country' => 'DZ',
+            'city' => 'Alger',
+            'email' => 'a@company.test',
+            'schema_name' => 'shared_tenants',
+            'tenancy_type' => 'shared',
+            'status' => 'active',
+            'timezone' => 'UTC',
+        ]);
+
+        $manager = Employee::query()->create([
+            'company_id' => $company->id,
+            'first_name' => 'Leila',
+            'last_name' => 'Manager',
+            'email' => 'manager@a.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'manager',
+            'status' => 'active',
+        ]);
+
+        $employee = Employee::query()->create([
+            'company_id' => $company->id,
+            'email' => 'employee@a.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'employee',
+            'status' => 'active',
+        ]);
+
+        Sanctum::actingAs($employee);
+
+        $this->travelTo(Carbon::parse('2026-04-04 08:00:00', 'UTC'));
+        $this->postJson('/api/v1/attendance/check-in')->assertStatus(201);
+
+        Sanctum::actingAs($manager);
+        $this->travelTo(Carbon::parse('2026-04-04 08:05:00', 'UTC'));
+        $this->postJson('/api/v1/attendance/check-in')->assertStatus(201);
+
+        Sanctum::actingAs($manager);
+        $all = $this->getJson('/api/v1/attendance/today');
+
+        $all->assertOk();
+        $all->assertJsonPath('data.mode', 'single');
+        $all->assertJsonPath('data.item.employee_id', $manager->id);
+        $all->assertJsonPath('data.item.checked_in', true);
+        $all->assertJsonPath('data.context.mode', 'team_overview');
+        $all->assertJsonCount(2, 'data.context.items');
+
+        Sanctum::actingAs($employee);
+        $forbidden = $this->getJson("/api/v1/attendance/today?employee_id={$manager->id}");
+        $forbidden->assertStatus(403);
+    }
+
+    public function test_manager_history_defaults_to_self_when_no_employee_id_is_given(): void
     {
         $company = Company::query()->create([
             'name' => 'Company A',
@@ -160,21 +217,37 @@ class TodayAndHistoryTest extends TestCase
             'status' => 'active',
         ]);
 
-        Sanctum::actingAs($employee);
+        app()->instance('current_company', $company);
+        AttendanceLog::query()->create([
+            'employee_id' => $manager->id,
+            'date' => '2026-04-03',
+            'session_number' => 1,
+            'check_in' => Carbon::parse('2026-04-03 08:00:00', 'UTC'),
+            'check_out' => Carbon::parse('2026-04-03 17:00:00', 'UTC'),
+            'hours_worked' => 9.0,
+            'overtime_hours' => 1.0,
+            'status' => 'ontime',
+        ]);
 
-        $this->travelTo(Carbon::parse('2026-04-04 08:00:00', 'UTC'));
-        $this->postJson('/api/v1/attendance/check-in')->assertStatus(201);
+        AttendanceLog::query()->create([
+            'employee_id' => $employee->id,
+            'date' => '2026-04-03',
+            'session_number' => 1,
+            'check_in' => Carbon::parse('2026-04-03 08:00:00', 'UTC'),
+            'check_out' => Carbon::parse('2026-04-03 17:00:00', 'UTC'),
+            'hours_worked' => 9.0,
+            'overtime_hours' => 1.0,
+            'status' => 'ontime',
+        ]);
+        app()->forgetInstance('current_company');
 
         Sanctum::actingAs($manager);
-        $all = $this->getJson('/api/v1/attendance/today');
 
-        $all->assertOk();
-        $all->assertJsonPath('data.mode', 'collection');
-        $all->assertJsonCount(2, 'data.items');
+        $resp = $this->getJson('/api/v1/attendance');
 
-        Sanctum::actingAs($employee);
-        $forbidden = $this->getJson("/api/v1/attendance/today?employee_id={$manager->id}");
-        $forbidden->assertStatus(403);
+        $resp->assertOk();
+        $ids = collect($resp->json('data'))->pluck('employee_id')->unique()->values()->all();
+        $this->assertSame([$manager->id], $ids);
     }
 
     public function test_tenant_isolation_on_attendance_history(): void

@@ -83,42 +83,6 @@ class AttendanceController extends Controller
             ]);
         }
 
-        if ($actor->isManager()) {
-            $this->authorize('viewAny', AttendanceLog::class);
-            $perPage = $request->integer('per_page', 50);
-
-            $paginator = Employee::query()
-                ->select(['id', 'first_name', 'last_name', 'email', 'role', 'status'])
-                ->orderBy('id')
-                ->paginate(max(1, min(100, $perPage)));
-
-            $employees = collect($paginator->items());
-            $employeeIds = $employees->pluck('id')->all();
-
-            $logsByEmployee = AttendanceLog::query()
-                ->where('date', $today)
-                ->where('session_number', 1)
-                ->whereIn('employee_id', $employeeIds)
-                ->get()
-                ->keyBy('employee_id');
-
-            $data = $employees->map(function (Employee $employee) use ($logsByEmployee) {
-                return $this->serializeToday($employee, $logsByEmployee->get($employee->id));
-            })->values();
-
-            return new JsonResponse([
-                'data' => [
-                    'mode' => 'collection',
-                    'items' => $data,
-                    'meta' => [
-                        'current_page' => $paginator->currentPage(),
-                        'per_page' => $paginator->perPage(),
-                        'total' => $paginator->total(),
-                    ],
-                ],
-            ]);
-        }
-
         $this->authorize('viewForEmployee', [AttendanceLog::class, $actor]);
 
         $log = AttendanceLog::query()
@@ -128,10 +92,15 @@ class AttendanceController extends Controller
             ->orderByDesc('id')
             ->first();
 
+        $context = $actor->isManager()
+            ? $this->buildTeamOverviewContext($request, $today)
+            : null;
+
         return new JsonResponse([
             'data' => [
                 'mode' => 'single',
                 'item' => $this->serializeToday($actor, $log),
+                'context' => $context,
             ],
         ]);
     }
@@ -149,12 +118,7 @@ class AttendanceController extends Controller
             $this->authorize('viewForEmployee', [AttendanceLog::class, $target]);
         } else {
             $target = $actor;
-            if ($actor->isManager()) {
-                $this->authorize('viewAny', AttendanceLog::class);
-                $target = null;
-            } else {
-                $this->authorize('viewForEmployee', [AttendanceLog::class, $actor]);
-            }
+            $this->authorize('viewForEmployee', [AttendanceLog::class, $actor]);
         }
 
         $query = AttendanceLog::query()
@@ -214,6 +178,42 @@ class AttendanceController extends Controller
             'check_out_time' => $log?->check_out?->setTimezone(app('current_company')->timezone)->format('H:i'),
             'hours_worked' => $log?->hours_worked ?? '0.00',
             'status' => $log?->status ?? 'absent',
+        ];
+    }
+
+    private function buildTeamOverviewContext(AttendanceTodayRequest $request, string $today): array
+    {
+        $this->authorize('viewAny', AttendanceLog::class);
+
+        $perPage = $request->integer('per_page', 50);
+
+        $paginator = Employee::query()
+            ->select(['id', 'first_name', 'last_name', 'email', 'role', 'status'])
+            ->orderBy('id')
+            ->paginate(max(1, min(100, $perPage)));
+
+        $employees = collect($paginator->items());
+        $employeeIds = $employees->pluck('id')->all();
+
+        $logsByEmployee = AttendanceLog::query()
+            ->where('date', $today)
+            ->where('session_number', 1)
+            ->whereIn('employee_id', $employeeIds)
+            ->get()
+            ->keyBy('employee_id');
+
+        $items = $employees->map(function (Employee $employee) use ($logsByEmployee) {
+            return $this->serializeToday($employee, $logsByEmployee->get($employee->id));
+        })->values();
+
+        return [
+            'mode' => 'team_overview',
+            'items' => $items,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
         ];
     }
 }

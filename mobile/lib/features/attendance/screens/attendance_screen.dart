@@ -13,7 +13,7 @@ class AttendanceScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final attState = ref.watch(attendanceProvider);
-    final isManager = authState.employee?.isManager == true || attState.context?['mode'] == 'collection';
+    final canSupervise = authState.employee?.isManager == true;
 
     return Scaffold(
       body: SafeArea(
@@ -24,19 +24,21 @@ class AttendanceScreen extends ConsumerWidget {
                 child: ListView(
                   padding: const EdgeInsets.all(24.0),
                   children: [
-                    _buildHeader(context, authState, isManager),
+                    _buildHeader(context, authState, canSupervise),
                     const SizedBox(height: 32),
-                    isManager
-                        ? _buildManagerOverviewCard(context, ref, attState)
-                        : _buildActionCard(context, ref, attState),
+                    _buildActionCard(context, ref, attState),
                     const SizedBox(height: 32),
-                    if (!isManager) _buildSummaryCard(context, attState),
+                    _buildSummaryCard(context, attState),
+                    if (canSupervise) ...[
+                      const SizedBox(height: 32),
+                      _buildManagerOverviewCard(context, ref, attState),
+                    ],
                     if (attState.notice != null) ...[
                       _buildNoticeCard(context, attState.notice!),
                       const SizedBox(height: 32),
                     ],
                     const SizedBox(height: 32),
-                    _buildActions(context, ref, attState, isManager),
+                    _buildActions(context, ref, attState, canSupervise),
                   ],
                 ),
               ),
@@ -87,7 +89,7 @@ class AttendanceScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            isManager ? 'Espace RH / manager' : 'Espace employe',
+            isManager ? 'Pointage personnel + suivi equipe' : 'Espace employe',
             style: const TextStyle(color: Colors.grey),
           ),
         ],
@@ -188,6 +190,11 @@ class AttendanceScreen extends ConsumerWidget {
           const Text(
             'Suivi de l equipe',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Votre pointage personnel reste disponible au-dessus. Cette carte ajoute uniquement une vue equipe.',
+            style: TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 12),
           if (state.isLoading && employees.isEmpty) ...[
@@ -300,7 +307,7 @@ class AttendanceScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!isManager && state.isLoading && state.todayLog == null) ...[
+        if (state.isLoading && state.todayLog == null) ...[
           const Text(
             'L ecran est disponible pendant le chargement. Vous pouvez attendre quelques secondes ou tirer pour actualiser.',
             textAlign: TextAlign.center,

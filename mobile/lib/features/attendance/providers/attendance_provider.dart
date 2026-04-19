@@ -62,7 +62,7 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
         isLoading: false,
       );
       final authState = _ref.read(authProvider);
-      if (authState.employee != null && !authState.employee!.isManager) {
+      if (authState.employee != null) {
         _loadSummary();
       }
     } catch (e) {
@@ -102,7 +102,7 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
     try {
       final log = await _repository.checkIn();
       state = state.copyWith(todayLog: log, isLoading: false);
-      _loadSummary();
+      await _loadSummary();
     } catch (e) {
       if (e is ApiException && e.statusCode == 401) {
         await _ref.read(authProvider.notifier).logout();
@@ -117,7 +117,7 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
     try {
       final log = await _repository.checkOut();
       state = state.copyWith(todayLog: log, isLoading: false);
-      _loadSummary();
+      await _loadSummary();
     } catch (e) {
       if (e is ApiException && e.statusCode == 401) {
         await _ref.read(authProvider.notifier).logout();

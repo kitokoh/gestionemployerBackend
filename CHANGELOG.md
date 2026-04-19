@@ -14,6 +14,9 @@
 - `docs/GESTION_PROJET/SCHEMA_DEPLOIEMENT_ZKTECO_CLIENT.md` ajoute un schema visuel Mermaid du deploiement client ZKTeco, du flux metier et du mode offline / connecte
 - `docs/GESTION_PROJET/SUPPORT_COMMERCIAL_ZKTECO_LEOPARDO_RH.md` fournit un support commercial simple pour presenter la solution a un prospect, un client ou un integrateur
 - Le projet Flutter Android aligne maintenant Android Gradle Plugin, Kotlin et le wrapper Gradle sur des versions compatibles avec les dependances AndroidX recentes utilisees en CI GitHub Actions
+- `docs/GESTION_PROJET/PLAN_PHASE_2_POST_MVP.md` formalise la phase apres MVP en exploitation RH avancee et pilotage terrain
+- `docs/GESTION_PROJET/BACKLOG_PHASE_2_POST_MVP.md` priorise les taches post-MVP, y compris la regle cle selon laquelle manager et RH restent aussi des employes pouvant pointer et consulter leur propre activite
+- Demarrage de `P2-01` : l API `attendance/today` et l historique personnel traitent desormais manager / RH comme des employes pouvant pointer eux aussi, tout en ajoutant un contexte de supervision equipe pour le mobile
 
 ## [4.1.56] - 2026-04-19
 ### Biometrie approuvee et borne d entree entreprise
