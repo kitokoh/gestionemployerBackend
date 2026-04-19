@@ -97,6 +97,50 @@ class AuthProfileSettingsTest extends TestCase
         $this->assertTrue(Hash::check('password456', $employee->fresh()->password_hash));
     }
 
+    public function test_change_password_revokes_other_tokens_but_keeps_current_one(): void
+    {
+        $company = Company::query()->create([
+            'name' => 'Company A',
+            'slug' => 'company-a',
+            'sector' => 'restaurant',
+            'country' => 'DZ',
+            'city' => 'Alger',
+            'email' => 'a@company.test',
+            'schema_name' => 'shared_tenants',
+            'tenancy_type' => 'shared',
+            'status' => 'active',
+        ]);
+
+        $employee = Employee::query()->create([
+            'company_id' => $company->id,
+            'email' => 'employee@company.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'employee',
+            'status' => 'active',
+        ]);
+
+        $currentToken = $employee->createToken('current-device')->plainTextToken;
+        $otherToken = $employee->createToken('other-device')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$currentToken}")
+            ->postJson('/api/v1/auth/change-password', [
+                'current_password' => 'password123',
+                'new_password' => 'password456',
+                'new_password_confirmation' => 'password456',
+            ])
+            ->assertOk();
+
+        $this->assertTrue(Hash::check('password456', $employee->fresh()->password_hash));
+
+        $this->withHeader('Authorization', "Bearer {$currentToken}")
+            ->getJson('/api/v1/auth/me')
+            ->assertOk();
+
+        $this->withHeader('Authorization', "Bearer {$otherToken}")
+            ->getJson('/api/v1/auth/me')
+            ->assertStatus(401);
+    }
+
     public function test_employee_cannot_change_password_with_wrong_current_password(): void
     {
         $company = Company::query()->create([

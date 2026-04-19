@@ -3,6 +3,7 @@ import 'package:leopardo_rh/core/api/api_client.dart';
 import 'package:leopardo_rh/core/storage/app_preferences.dart';
 import 'package:leopardo_rh/core/storage/secure_storage.dart';
 import 'package:leopardo_rh/features/auth/data/auth_repository.dart';
+import 'package:leopardo_rh/features/auth/providers/auth_provider.dart';
 import 'package:leopardo_rh/features/attendance/data/attendance_repository.dart';
 import 'package:leopardo_rh/features/settings/data/settings_repository.dart';
 
@@ -19,12 +20,8 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(
     storage,
     onUnauthorized: () {
-      // Use microtask to avoid modifying providers during build phase
       Future.microtask(() {
-        // dynamic to avoid circular import since auth_provider imports core_providers
-        import('package:leopardo_rh/features/auth/providers/auth_provider.dart').then((m) {
-           ref.read(m.authProvider.notifier).markSessionExpired();
-        });
+        ref.read(authProvider.notifier).markSessionExpired();
       });
     },
   );

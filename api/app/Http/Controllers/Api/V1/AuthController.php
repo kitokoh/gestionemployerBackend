@@ -80,8 +80,15 @@ class AuthController extends Controller
             ], 422);
         }
 
+        $currentTokenId = $employee->currentAccessToken()?->id;
         $employee->password_hash = Hash::make($request->validated('new_password'));
         $employee->save();
+
+        if ($currentTokenId !== null) {
+            $employee->tokens()->where('id', '!=', $currentTokenId)->delete();
+        } else {
+            $employee->tokens()->delete();
+        }
 
         return new JsonResponse([
             'status' => 'ok',

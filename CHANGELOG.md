@@ -952,3 +952,5 @@ docs(erd): unify manager_id and remove supervisor_id from employees
 
 
 
+- Analyse du rapport externe `T19-T34` ajoutee avec tri des recommandations vraiment pertinentes, des points deja couverts et du plan d'integration priorise.
+- Debut du lot A securite avec revocation des autres tokens apres changement de mot de passe et premier `PlanFeatureGate` pour biometrie / exports.

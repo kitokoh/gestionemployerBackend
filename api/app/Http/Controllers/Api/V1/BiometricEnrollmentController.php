@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BiometricEnrollmentRequest;
 use App\Models\Employee;
 use App\Services\BiometricEnrollmentService;
+use App\Services\PlanFeatureGate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,6 +21,9 @@ class BiometricEnrollmentController extends Controller
     {
         /** @var Employee $actor */
         $actor = $request->user();
+        $company = app('current_company');
+
+        PlanFeatureGate::check($company, 'biometric');
 
         abort_unless($actor->isManager(), 403, 'FORBIDDEN');
 
@@ -39,6 +43,9 @@ class BiometricEnrollmentController extends Controller
     {
         /** @var Employee $actor */
         $actor = $request->user();
+        $company = app('current_company');
+
+        PlanFeatureGate::check($company, 'biometric');
 
         $requestItem = BiometricEnrollmentRequest::query()
             ->where('employee_id', $actor->id)
@@ -54,6 +61,9 @@ class BiometricEnrollmentController extends Controller
     {
         /** @var Employee $actor */
         $actor = $request->user();
+        $company = app('current_company');
+
+        PlanFeatureGate::check($company, 'biometric');
 
         $validated = $request->validate([
             'requested_face_enabled' => ['nullable', 'boolean'],
@@ -82,6 +92,9 @@ class BiometricEnrollmentController extends Controller
     {
         /** @var Employee $actor */
         $actor = $request->user();
+        $company = app('current_company');
+
+        PlanFeatureGate::check($company, 'biometric');
         abort_unless($actor->isManager(), 403, 'FORBIDDEN');
 
         $validated = $request->validate([
@@ -103,6 +116,9 @@ class BiometricEnrollmentController extends Controller
     {
         /** @var Employee $actor */
         $actor = $request->user();
+        $company = app('current_company');
+
+        PlanFeatureGate::check($company, 'biometric');
         abort_unless($actor->isManager(), 403, 'FORBIDDEN');
 
         $validated = $request->validate([

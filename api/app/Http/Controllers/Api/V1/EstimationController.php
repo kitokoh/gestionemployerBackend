@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\Estimation\QuickEstimateRequest;
 use App\Http\Requests\Api\V1\Estimation\ReceiptRequest;
 use App\Models\Employee;
 use App\Services\EstimationService;
+use App\Services\PlanFeatureGate;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -49,6 +50,7 @@ class EstimationController extends Controller
     public function receipt(ReceiptRequest $request, string $employeeId): Response
     {
         $this->authorize('viewAny', Employee::class);
+        PlanFeatureGate::check(app('current_company'), 'excel_export');
 
         $employee = Employee::query()->findOrFail($employeeId);
 
@@ -76,4 +78,3 @@ class EstimationController extends Controller
         return $pdf->download($fileName);
     }
 }
-

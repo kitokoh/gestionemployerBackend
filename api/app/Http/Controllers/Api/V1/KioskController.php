@@ -7,6 +7,7 @@ use App\Models\AttendanceKiosk;
 use App\Models\Company;
 use App\Models\Employee;
 use App\Services\KioskAttendanceService;
+use App\Services\PlanFeatureGate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -64,6 +65,7 @@ class KioskController extends Controller
 
         $company = $kiosk->company;
         app()->instance('current_company', $company);
+        PlanFeatureGate::check($company, 'biometric');
 
         $log = $this->kioskAttendanceService->punch(
             kiosk: $kiosk,
@@ -89,6 +91,7 @@ class KioskController extends Controller
         $company = $kiosk->company;
         app()->instance('current_company', $company);
         $this->setTenantSearchPath($company);
+        PlanFeatureGate::check($company, 'biometric');
 
         $items = Employee::query()
             ->where('company_id', $company->id)
