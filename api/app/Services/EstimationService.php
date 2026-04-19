@@ -182,6 +182,7 @@ class EstimationService
 
     private function resolveRates(Employee $employee): array
     {
+        $company = app('current_company');
         $salaryType = $employee->salary_type ?? 'fixed';
         $salaryBase = (float) ($employee->salary_base ?? 0);
         $hourlyRate = (float) ($employee->hourly_rate ?? 0);
@@ -200,7 +201,7 @@ class EstimationService
 
         return [
             $baseHourlyRate,
-            self::DEFAULT_OVERTIME_RATE_1,
+            $this->resolveCountryOvertimeRate($company->country),
         ];
     }
 
@@ -260,7 +261,41 @@ class EstimationService
 
         $cotisations = json_decode((string) $row->cotisations, true);
 
-        return (float) ($cotisations['total_salarial'] ?? $defaultRate);
+        if (array_key_exists('total_salarial', $cotisations)) {
+            return (float) $cotisations['total_salarial'];
+        }
+
+        $salariales = $cotisations['salariales'] ?? [];
+        if (! is_array($salariales) || $salariales === []) {
+            return $defaultRate;
+        }
+
+        $total = collect($salariales)
+            ->sum(fn ($item) => (float) ($item['rate'] ?? 0.0));
+
+        return round((float) $total, 4);
+    }
+
+    private function resolveCountryOvertimeRate(string $countryCode): float
+    {
+        if (! $this->hrModelTemplatesTableExists()) {
+            return self::DEFAULT_OVERTIME_RATE_1;
+        }
+
+        $row = DB::table(DB::getDriverName() === 'pgsql' ? 'public.hr_model_templates' : 'hr_model_templates')
+            ->select('working_hours')
+            ->where('country_code', $countryCode)
+            ->first();
+
+        if (! $row || empty($row->working_hours)) {
+            return self::DEFAULT_OVERTIME_RATE_1;
+        }
+
+        $workingHours = json_decode((string) $row->working_hours, true);
+
+        return (float) ($workingHours['overtime_rate_first']
+            ?? $workingHours['overtime_rate_first_8h']
+            ?? self::DEFAULT_OVERTIME_RATE_1);
     }
 
     private function hrModelTemplatesTableExists(): bool

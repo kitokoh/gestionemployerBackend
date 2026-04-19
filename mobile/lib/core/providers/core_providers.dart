@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:leopardo_rh/core/api/api_client.dart';
 import 'package:leopardo_rh/core/storage/app_preferences.dart';
@@ -43,3 +44,28 @@ final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   final preferences = ref.watch(appPreferencesProvider);
   return SettingsRepository(apiClient, preferences);
 });
+
+final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
+  final preferences = ref.watch(appPreferencesProvider);
+
+  return ThemeModeNotifier(preferences);
+});
+
+class ThemeModeNotifier extends StateNotifier<ThemeMode> {
+  ThemeModeNotifier(this._preferences) : super(_parseThemeMode(_preferences.themeMode));
+
+  final AppPreferences _preferences;
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    state = mode;
+    await _preferences.saveThemeMode(mode.name);
+  }
+
+  static ThemeMode _parseThemeMode(String value) {
+    return switch (value) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      default => ThemeMode.system,
+    };
+  }
+}

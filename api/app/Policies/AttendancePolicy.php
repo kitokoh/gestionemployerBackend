@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\AttendanceLog;
 use App\Models\Employee;
 
 class AttendancePolicy
@@ -25,5 +26,9 @@ class AttendancePolicy
     {
         return $actor->isManager() || $actor->id === $target->id;
     }
-}
 
+    public function update(Employee $actor, AttendanceLog $attendanceLog): bool
+    {
+        return $actor->isManager() && (string) $actor->company_id === (string) $attendanceLog->company_id;
+    }
+}

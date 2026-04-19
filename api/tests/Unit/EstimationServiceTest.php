@@ -119,6 +119,57 @@ class EstimationServiceTest extends TestCase
         $this->assertSame(814.0, $estimate['totals']['net']);
     }
 
+    public function test_quick_estimate_can_sum_country_contributions_and_use_country_overtime_rate(): void
+    {
+        [$company, $employee] = $this->seedEmployee([
+            'salary_type' => 'hourly',
+            'hourly_rate' => 100,
+        ]);
+
+        $company->forceFill([
+            'country' => 'MA',
+            'currency' => 'MAD',
+        ])->save();
+
+        app()->instance('current_company', $company->fresh());
+        $this->createHrModelTemplatesTable();
+
+        DB::table(DB::getDriverName() === 'pgsql' ? 'public.hr_model_templates' : 'hr_model_templates')->insert([
+            'country_code' => 'MA',
+            'cotisations' => json_encode([
+                'salariales' => [
+                    ['rate' => 0.0448],
+                    ['rate' => 0.0226],
+                    ['rate' => 0.03],
+                ],
+            ], JSON_THROW_ON_ERROR),
+            'working_hours' => json_encode([
+                'overtime_rate_first' => 1.5,
+            ], JSON_THROW_ON_ERROR),
+        ]);
+
+        AttendanceLog::query()->create([
+            'company_id' => $company->id,
+            'employee_id' => $employee->id,
+            'schedule_id' => $employee->schedule_id,
+            'date' => '2026-04-06',
+            'session_number' => 1,
+            'check_in' => Carbon::parse('2026-04-06 09:00:00', 'UTC'),
+            'check_out' => Carbon::parse('2026-04-06 18:00:00', 'UTC'),
+            'hours_worked' => 9,
+            'overtime_hours' => 1,
+            'method' => 'mobile',
+            'status' => 'ontime',
+        ]);
+
+        $estimate = app(EstimationService::class)->quickEstimate($employee, '2026-04-06', '2026-04-06');
+
+        $this->assertSame(950.0, $estimate['totals']['gross']);
+        $this->assertSame(92.53, $estimate['totals']['deductions']);
+        $this->assertSame(857.47, $estimate['totals']['net']);
+        $this->assertFalse($estimate['flags']['deduction_rate_unavailable']);
+    }
+
     private function seedEmployee(array $employeeOverrides = [], array $scheduleOverrides = []): array
     {
         $company = Company::query()->create([
@@ -176,6 +227,7 @@ class EstimationServiceTest extends TestCase
                     $table->id();
                     $table->char('country_code', 2)->unique();
                     $table->json('cotisations')->nullable();
+                    $table->json('working_hours')->nullable();
                     $table->timestamps();
                 });
             } finally {
@@ -193,6 +245,7 @@ class EstimationServiceTest extends TestCase
             $table->id();
             $table->char('country_code', 2)->unique();
             $table->json('cotisations')->nullable();
+            $table->json('working_hours')->nullable();
             $table->timestamps();
         });
     }

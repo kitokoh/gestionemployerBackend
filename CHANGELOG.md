@@ -2,6 +2,15 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.58] - 2026-04-19
+### Lot B post-MVP : corrections de pointage, RH pays et light mode
+
+- T19 ajoute une correction manuelle de pointage cote API avec PATCH /api/v1/attendance/{attendance}, note obligatoire, trace du correcteur et journalisation d audit pour les managers / RH
+- T19 couvre le cas metier ou un manager ou RH regularise une entree / sortie employee sans permettre aux employes de modifier eux-memes leurs journaux
+- T27 renforce l exploitation des modeles RH pays en calculant les cotisations salariales a partir des details salariales quand total_salarial n est pas renseigne et en reutilisant le taux d heures supplementaires defini par pays
+- T27 etend les tests d estimation pour verifier un pays non DZ avec cotisations detaillees et majoration d heures supplementaires issue du modele RH
+- T32 ajoute un vrai mode clair mobile avec theme automatique / clair / sombre et persistance locale de la preference utilisateur
+
 ## [4.1.57] - 2026-04-19
 ### Borne ZKTeco offline-first et synchronisation differee
 
@@ -955,3 +964,5 @@ docs(erd): unify manager_id and remove supervisor_id from employees
 - Analyse du rapport externe `T19-T34` ajoutee avec tri des recommandations vraiment pertinentes, des points deja couverts et du plan d'integration priorise.
 - Debut du lot A securite avec revocation des autres tokens apres changement de mot de passe et premier `PlanFeatureGate` pour biometrie / exports.
 - Lot A poursuivi avec audit logs plateforme, chiffrement des champs RH sensibles employe et durcissement de la redirection mobile sur session expiree.
+
+

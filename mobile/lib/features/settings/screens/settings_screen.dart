@@ -38,6 +38,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _fingerprintEnabled = false;
   bool _faceEnabled = false;
   bool _attendanceConsent = false;
+  ThemeMode _selectedThemeMode = ThemeMode.system;
   File? _selectedFaceImage;
   BiometricEnrollment? _latestEnrollment;
 
@@ -62,6 +63,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _faceEnabled = settings.faceEnabled;
       _attendanceConsent = settings.attendanceConsent;
       _biometricNoteController.text = settings.biometricNote;
+      _selectedThemeMode = ref.read(themeModeProvider);
     });
   }
 
@@ -112,6 +114,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _buildProfileSection(context, authState),
           const SizedBox(height: 20),
           _buildPasswordSection(context, authState),
+          const SizedBox(height: 20),
+          _buildAppearanceSection(context),
           if (!isManager) ...[
             const SizedBox(height: 20),
             _buildBiometricSection(context),
@@ -264,6 +268,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAppearanceSection(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Apparence',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Choisissez le mode clair, sombre ou automatique selon votre appareil.',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<ThemeMode>(
+            value: _selectedThemeMode,
+            decoration: const InputDecoration(labelText: 'Theme'),
+            items: const [
+              DropdownMenuItem(value: ThemeMode.system, child: Text('Automatique')),
+              DropdownMenuItem(value: ThemeMode.light, child: Text('Clair')),
+              DropdownMenuItem(value: ThemeMode.dark, child: Text('Sombre')),
+            ],
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() {
+                _selectedThemeMode = value;
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+          FilledButton.tonal(
+            onPressed: _preferencesSaving ? null : _saveAppearance,
+            child: Text(_preferencesSaving ? 'Enregistrement...' : 'Enregistrer l apparence'),
+          ),
+        ],
       ),
     );
   }
@@ -461,6 +510,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() => _preferencesSaving = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Preparation biometrie enregistree localement.')),
+    );
+  }
+
+  Future<void> _saveAppearance() async {
+    setState(() => _preferencesSaving = true);
+
+    await ref.read(themeModeProvider.notifier).setThemeMode(_selectedThemeMode);
+
+    if (!mounted) return;
+    setState(() => _preferencesSaving = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Theme de l application mis a jour.')),
     );
   }
 

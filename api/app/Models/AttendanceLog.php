@@ -33,6 +33,8 @@ class AttendanceLog extends Model
         'late_minutes',
         'gps_lat',
         'gps_lng',
+        'corrected_by',
+        'correction_note',
     ];
 
     protected $casts = [
@@ -45,6 +47,7 @@ class AttendanceLog extends Model
         'late_minutes' => 'integer',
         'gps_lat' => 'decimal:8',
         'gps_lng' => 'decimal:8',
+        'corrected_by' => 'integer',
     ];
 
     public function employee(): BelongsTo

@@ -7,6 +7,7 @@ class AppPreferences {
   static const String _faceEnabledKey = 'settings_face_enabled';
   static const String _attendanceConsentKey = 'settings_attendance_consent';
   static const String _biometricNoteKey = 'settings_biometric_note';
+  static const String _themeModeKey = 'settings_theme_mode';
 
   Box<dynamic> get _box => Hive.box(_boxName);
 
@@ -15,6 +16,7 @@ class AppPreferences {
   bool get faceEnabled => _box.get(_faceEnabledKey, defaultValue: false) as bool;
   bool get attendanceConsent => _box.get(_attendanceConsentKey, defaultValue: false) as bool;
   String get biometricNote => (_box.get(_biometricNoteKey, defaultValue: '') as String).trim();
+  String get themeMode => (_box.get(_themeModeKey, defaultValue: 'system') as String).trim();
 
   Future<void> saveBiometricSettings({
     required bool biometricEnabled,
@@ -28,5 +30,9 @@ class AppPreferences {
     await _box.put(_faceEnabledKey, faceEnabled);
     await _box.put(_attendanceConsentKey, attendanceConsent);
     await _box.put(_biometricNoteKey, biometricNote.trim());
+  }
+
+  Future<void> saveThemeMode(String themeMode) async {
+    await _box.put(_themeModeKey, themeMode.trim());
   }
 }

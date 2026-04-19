@@ -47,6 +47,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/attendance/today', [AttendanceController::class, 'today']);
         Route::get('/attendance/team-overview', [AttendanceController::class, 'teamOverview']);
         Route::get('/attendance', [AttendanceController::class, 'index']);
+        Route::patch('/attendance/{attendance}', [AttendanceController::class, 'update']);
 
         Route::get('/biometric-enrollment-requests', [BiometricEnrollmentController::class, 'index']);
         Route::post('/biometric-enrollment-requests/{id}/approve', [BiometricEnrollmentController::class, 'approve']);

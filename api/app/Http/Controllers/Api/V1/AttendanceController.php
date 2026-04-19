@@ -7,9 +7,11 @@ use App\Http\Requests\Api\V1\Attendance\AttendanceIndexRequest;
 use App\Http\Requests\Api\V1\Attendance\AttendanceTodayRequest;
 use App\Http\Requests\Api\V1\Attendance\CheckInRequest;
 use App\Http\Requests\Api\V1\Attendance\CheckOutRequest;
+use App\Http\Requests\Api\V1\Attendance\UpdateAttendanceRequest;
 use App\Models\AttendanceLog;
 use App\Models\Employee;
 use App\Services\AttendanceService;
+use App\Services\AuditLogger;
 use App\Services\EstimationService;
 use Illuminate\Http\JsonResponse;
 
@@ -163,6 +165,33 @@ class AttendanceController extends Controller
         ]);
     }
 
+    public function update(UpdateAttendanceRequest $request, AttendanceLog $attendance): JsonResponse
+    {
+        $this->authorize('update', $attendance);
+
+        /** @var Employee $actor */
+        $actor = $request->user();
+
+        $log = $this->attendanceService->correct($attendance, $request->validated(), $actor);
+
+        AuditLogger::log(
+            actorType: 'employee',
+            actorId: $actor->id,
+            companyId: (string) $actor->company_id,
+            action: 'attendance.corrected',
+            request: $request,
+            metadata: [
+                'attendance_id' => $log->id,
+                'target_employee_id' => $log->employee_id,
+                'status' => $log->status,
+            ],
+        );
+
+        return new JsonResponse([
+            'data' => $this->serializeLog($log),
+        ]);
+    }
+
     private function serializeLog(AttendanceLog $log): array
     {
         return [
@@ -177,6 +206,8 @@ class AttendanceController extends Controller
             'overtime_hours' => $log->overtime_hours,
             'status' => $log->status,
             'late_minutes' => $log->late_minutes,
+            'corrected_by' => $log->corrected_by,
+            'correction_note' => $log->correction_note,
         ];
     }
 
