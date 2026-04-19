@@ -27,6 +27,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (authState.isLoading) return null;
 
       final loggingIn = state.matchedLocation == '/login';
+      if (authState.sessionExpired && !loggingIn) return '/login';
       if (!isAuth && !loggingIn) return '/login';
       if (isAuth && loggingIn) return '/';
       return null;

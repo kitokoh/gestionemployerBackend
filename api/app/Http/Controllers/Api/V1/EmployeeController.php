@@ -67,6 +67,9 @@ class EmployeeController extends Controller
     public function show(string $employeeId, Request $request): JsonResponse
     {
         $employee = Employee::query()->findOrFail($employeeId);
+        /** @var Employee $actor */
+        $actor = $request->user();
+        $canSeeSensitiveFields = $actor->isManager();
 
         $this->authorize('view', $employee);
 
@@ -83,6 +86,9 @@ class EmployeeController extends Controller
                 'personal_email' => $employee->personal_email,
                 'address_line' => $employee->address_line,
                 'postal_code' => $employee->postal_code,
+                'iban' => $canSeeSensitiveFields ? $employee->iban : null,
+                'bank_account' => $canSeeSensitiveFields ? $employee->bank_account : null,
+                'national_id' => $canSeeSensitiveFields ? $employee->national_id : null,
                 'emergency_contact_name' => $employee->emergency_contact_name,
                 'emergency_contact_phone' => $employee->emergency_contact_phone,
                 'biometric_face_enabled' => $employee->biometric_face_enabled,

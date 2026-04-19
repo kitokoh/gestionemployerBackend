@@ -58,6 +58,9 @@ class Employee extends Authenticatable
         'emergency_contact_name',
         'emergency_contact_phone',
         'emergency_contact_relation',
+        'iban',
+        'bank_account',
+        'national_id',
         'extra_data',
     ];
 
@@ -75,6 +78,9 @@ class Employee extends Authenticatable
         'biometric_consent_at' => 'datetime',
         'invitation_accepted_at' => 'datetime',
         'extra_data' => 'array',
+        'iban' => 'encrypted',
+        'bank_account' => 'encrypted',
+        'national_id' => 'encrypted',
     ];
 
     protected static function booted(): void

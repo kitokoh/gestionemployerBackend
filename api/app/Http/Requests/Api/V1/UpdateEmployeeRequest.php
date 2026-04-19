@@ -55,6 +55,9 @@ class UpdateEmployeeRequest extends FormRequest
             'marital_status' => ['sometimes', 'nullable', 'string', 'max:30'],
             'address_line' => ['sometimes', 'nullable', 'string', 'max:255'],
             'postal_code' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'iban' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'bank_account' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'national_id' => ['sometimes', 'nullable', 'string', 'max:50'],
             'emergency_contact_name' => ['sometimes', 'nullable', 'string', 'max:150'],
             'emergency_contact_phone' => ['sometimes', 'nullable', 'string', 'max:30'],
             'emergency_contact_relation' => ['sometimes', 'nullable', 'string', 'max:60'],
@@ -86,28 +89,6 @@ class UpdateEmployeeRequest extends FormRequest
         }
 
         return $allRules;
-    }
-
-    protected function prepareForValidation(): void
-    {
-        if (DB::getDriverName() !== 'pgsql') {
-            return;
-        }
-
-        $company = $this->user()?->company
-            ?? (app()->bound('current_company') ? app('current_company') : null);
-
-        if (! $company) {
-            return;
-        }
-
-        if ($company->tenancy_type === 'schema' && $company->schema_name) {
-            DB::statement('SET search_path TO '.$company->schema_name.',public');
-
-            return;
-        }
-
-        DB::statement('SET search_path TO shared_tenants,public');
     }
 
     protected function prepareForValidation(): void

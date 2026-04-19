@@ -105,5 +105,10 @@ class PlatformCompanyProvisioningTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('data.email', 'admin@leopardo-rh.com');
         $response->assertJsonPath('token_type', 'Bearer');
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_type' => 'super_admin',
+            'actor_id' => $superAdmin->id,
+            'action' => 'platform.auth.login',
+        ]);
     }
 }

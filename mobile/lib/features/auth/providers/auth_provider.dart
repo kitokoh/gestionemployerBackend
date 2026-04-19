@@ -48,9 +48,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true);
     final data = await _repository.checkAuth();
     if (data != null) {
-      state = state.copyWith(isLoading: false, employee: data['employee']);
+      state = state.copyWith(
+        isLoading: false,
+        employee: data['employee'],
+        sessionExpired: false,
+      );
     } else {
-      state = state.copyWith(isLoading: false);
+      state = AuthState(isLoading: false);
     }
   }
 
@@ -58,7 +62,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final data = await _repository.login(email, password);
-      state = state.copyWith(isLoading: false, employee: data['employee']);
+      state = state.copyWith(
+        isLoading: false,
+        employee: data['employee'],
+        sessionExpired: false,
+      );
       return true;
     } catch (e) {
       if (e is ApiException) {

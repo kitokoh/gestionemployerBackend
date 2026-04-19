@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\SuperAdmin;
+use App\Services\AuditLogger;
 use App\Services\CompanyProvisioningService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +24,11 @@ class PlatformCompanyController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         DB::statement('SET search_path TO public');
+        /** @var SuperAdmin|null $superAdmin */
+        $superAdmin = $request->user('super_admin_web') ?? $request->user('super_admin_api');
+        if ($superAdmin) {
+            AuditLogger::log('super_admin', $superAdmin->id, null, 'platform.companies.index', $request);
+        }
 
         $companies = Company::query()->latest()->limit(50)->get();
 
@@ -80,6 +86,11 @@ class PlatformCompanyController extends Controller
         $superAdmin = $request->user('super_admin_web') ?? $request->user('super_admin_api');
 
         $result = $this->companyProvisioningService->provisionSharedCompany($validated, $superAdmin);
+
+        AuditLogger::log('super_admin', $superAdmin->id, $result['company']->id, 'platform.companies.store', $request, [
+            'manager_email' => $result['manager']->email,
+            'plan_id' => $result['company']->plan_id,
+        ]);
 
         if ($request->expectsJson()) {
             return new JsonResponse([
