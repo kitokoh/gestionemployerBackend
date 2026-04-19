@@ -43,7 +43,7 @@ class AuthService
             }
         }
 
-        if (!$employee) {
+        if (! $employee) {
             // Fallback: try all relevant schemas if lookup failed but we are in public
             // For MVP shared mode, we just try shared_tenants
             $originalPath = DB::selectOne('SHOW search_path')->search_path;
@@ -56,12 +56,12 @@ class AuthService
             }
         }
 
-        if (!$employee || !Hash::check($password, $employee->password_hash)) {
+        if (! $employee || ! Hash::check($password, $employee->password_hash)) {
             throw new InvalidCredentialsException;
         }
 
         $company = $this->resolveCompany($employee);
-        if (!$company) {
+        if (! $company) {
             throw new CompanyNotFoundException;
         }
 
@@ -110,7 +110,7 @@ class AuthService
             return $employee->company;
         }
 
-        if (!$employee->company_id) {
+        if (! $employee->company_id) {
             return null;
         }
 
