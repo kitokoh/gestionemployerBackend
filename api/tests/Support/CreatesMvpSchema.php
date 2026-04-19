@@ -321,6 +321,7 @@ trait CreatesMvpSchema
     {
         if (DB::getDriverName() === 'pgsql') {
             DB::statement('DROP TABLE IF EXISTS public.audit_logs CASCADE');
+            DB::statement('DROP TABLE IF EXISTS public.platform_settings CASCADE');
             DB::statement('DROP TABLE IF EXISTS public.user_lookups CASCADE');
             DB::statement('DROP TABLE IF EXISTS public.user_invitations CASCADE');
             DB::statement('DROP TABLE IF EXISTS public.super_admins CASCADE');
@@ -335,6 +336,7 @@ trait CreatesMvpSchema
 
         DB::statement('DROP TABLE IF EXISTS "user_invitations" CASCADE');
         DB::statement('DROP TABLE IF EXISTS "super_admins" CASCADE');
+        DB::statement('DROP TABLE IF EXISTS "platform_settings" CASCADE');
         DB::statement('DROP TABLE IF EXISTS "personal_access_tokens" CASCADE');
         DB::statement('DROP TABLE IF EXISTS "notifications" CASCADE');
         DB::statement('DROP TABLE IF EXISTS "attendance_kiosks" CASCADE');
