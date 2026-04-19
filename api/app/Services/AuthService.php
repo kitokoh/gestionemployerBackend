@@ -21,7 +21,8 @@ class AuthService
     {
         $lookup = null;
         if ($this->lookupTableExists()) {
-            $lookup = DB::table($this->lookupTable())
+            $lookup = DB::connection('platform')
+                ->table('user_lookups')
                 ->where('email', $email)
                 ->first();
         }
@@ -37,8 +38,9 @@ class AuthService
         }
 
         if (! $employee) {
-            // Fallback: try all relevant schemas if lookup failed but we are in public
-            // For MVP shared mode, we just try shared_tenants
+            // Fallback: try all relevant schemas if lookup failed.
+            // Since Employee doesn't have a fixed connection, it uses the default one
+            // which has search_path=shared_tenants,public.
             $employee = Employee::withoutGlobalScopes()
                 ->where('email', $email)
                 ->first();
@@ -77,20 +79,9 @@ class AuthService
         ];
     }
 
-    private function lookupTable(): string
-    {
-        return DB::getDriverName() === 'pgsql' ? 'public.user_lookups' : 'user_lookups';
-    }
-
     private function lookupTableExists(): bool
     {
-        if (DB::getDriverName() !== 'pgsql') {
-            return Schema::hasTable('user_lookups');
-        }
-
-        $table = DB::selectOne("select to_regclass('public.user_lookups') as table_name");
-
-        return $table?->table_name !== null;
+        return Schema::connection('platform')->hasTable('user_lookups');
     }
 
     private function resolveCompany(Employee $employee): ?Company
@@ -103,13 +94,8 @@ class AuthService
             return null;
         }
 
-        if (DB::getDriverName() === 'pgsql') {
-            return Company::query()
-                ->from('public.companies')
-                ->whereKey($employee->company_id)
-                ->first();
-        }
-
+        // Company model is ALREADY on the 'platform' connection.
+        // So we just use standard Eloquent.
         return Company::query()->find($employee->company_id);
     }
 }

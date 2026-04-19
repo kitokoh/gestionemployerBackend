@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 
 class AuditLog extends Model
 {
+    protected $connection = 'platform';
+    protected $table = 'audit_logs';
+
     public $timestamps = false; // Manually handled by AuditLogger
 
     protected $fillable = [
@@ -24,11 +26,6 @@ class AuditLog extends Model
         'metadata' => 'array',
         'created_at' => 'datetime',
     ];
-
-    public function getTable(): string
-    {
-        return DB::getDriverName() === 'pgsql' ? 'public.audit_logs' : 'audit_logs';
-    }
 
     /**
      * Relationship with company (if specified)

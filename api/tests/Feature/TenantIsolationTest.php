@@ -14,10 +14,10 @@ class TenantIsolationTest extends TestCase
     {
         parent::setUp();
 
+        Schema::connection('platform')->dropIfExists('companies');
         Schema::dropIfExists('employees');
-        Schema::dropIfExists('companies');
 
-        Schema::create('companies', function (Blueprint $table): void {
+        Schema::connection('platform')->create('companies', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('slug');
@@ -55,7 +55,7 @@ class TenantIsolationTest extends TestCase
     {
         app()->forgetInstance('current_company');
         Schema::dropIfExists('employees');
-        Schema::dropIfExists('companies');
+        Schema::connection('platform')->dropIfExists('companies');
         parent::tearDown();
     }
 

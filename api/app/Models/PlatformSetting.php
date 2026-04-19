@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Schema;
 
 class PlatformSetting extends Model
 {
+    protected $connection = 'platform';
+    protected $table = 'platform_settings';
+
     protected $fillable = [
         'key',
         'value',
@@ -29,8 +32,7 @@ class PlatformSetting extends Model
         }
 
         return Cache::rememberForever("platform_setting_{$key}", function () use ($key, $default) {
-            $tableName = DB::getDriverName() === 'pgsql' ? 'public.platform_settings' : 'platform_settings';
-            $setting = DB::table($tableName)->where('key', $key)->first();
+            $setting = self::query()->where('key', $key)->first();
 
             if (! $setting) {
                 return $default;
@@ -72,20 +74,9 @@ class PlatformSetting extends Model
         };
     }
 
-    public function getTable(): string
-    {
-        return DB::getDriverName() === 'pgsql' ? 'public.platform_settings' : 'platform_settings';
-    }
-
     private static function tableExists(): bool
     {
-        if (DB::getDriverName() !== 'pgsql') {
-            return Schema::hasTable('platform_settings');
-        }
-
-        $table = DB::selectOne("select to_regclass('public.platform_settings') as table_name");
-
-        return $table?->table_name !== null;
+        return Schema::connection('platform')->hasTable('platform_settings');
     }
 
     private static function inferCategory(string $key): string

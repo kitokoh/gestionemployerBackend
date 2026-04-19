@@ -18,7 +18,8 @@ class Company extends Model
 
     protected $keyType = 'string';
 
-    protected $table = 'public.companies';
+    protected $connection = 'platform';
+    protected $table = 'companies';
 
     protected $fillable = [
         'name',

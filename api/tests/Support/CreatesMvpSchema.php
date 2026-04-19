@@ -13,7 +13,7 @@ trait CreatesMvpSchema
         $this->preparePostgresSchemas();
         $this->dropMvpTables();
 
-        Schema::connection('public')->create('plans', function (Blueprint $table): void {
+        Schema::connection('platform')->create('plans', function (Blueprint $table): void {
             $table->increments('id');
             $table->string('name', 50);
             $table->decimal('price_monthly', 10, 2)->default(0);
@@ -24,7 +24,7 @@ trait CreatesMvpSchema
             $table->boolean('is_active')->default(true);
         });
 
-        Schema::connection('public')->create('companies', function (Blueprint $table): void {
+        Schema::connection('platform')->create('companies', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('slug');
@@ -45,6 +45,64 @@ trait CreatesMvpSchema
             $table->char('currency', 3)->default('DZD');
             $table->text('notes')->nullable();
             $table->timestamps();
+        });
+
+        Schema::connection('platform')->create('user_lookups', function (Blueprint $table): void {
+            $table->string('email', 150)->primary();
+            $table->uuid('company_id');
+            $table->string('schema_name', 63);
+            $table->unsignedInteger('employee_id');
+            $table->string('role', 20);
+        });
+
+        Schema::connection('platform')->create('super_admins', function (Blueprint $table): void {
+            $table->increments('id');
+            $table->string('name', 100);
+            $table->string('email', 150)->unique();
+            $table->string('password_hash', 255);
+            $table->string('two_fa_secret', 32)->nullable();
+            $table->timestampTz('last_login_at')->nullable();
+            $table->timestampTz('created_at')->nullable();
+        });
+
+        Schema::connection('platform')->create('platform_settings', function (Blueprint $table): void {
+            $table->increments('id');
+            $table->string('key', 100)->unique();
+            $table->text('value')->nullable();
+            $table->string('label', 150);
+            $table->string('category', 50)->default('general');
+            $table->string('type', 20)->default('string');
+            $table->timestamps();
+        });
+
+        Schema::connection('platform')->create('user_invitations', function (Blueprint $table): void {
+            $table->uuid('id')->primary();
+            $table->uuid('company_id');
+            $table->string('schema_name', 63);
+            $table->unsignedInteger('employee_id');
+            $table->string('email', 150);
+            $table->string('role', 20);
+            $table->string('manager_role', 30)->nullable();
+            $table->string('invited_by_type', 20);
+            $table->string('invited_by_email', 150);
+            $table->string('token_hash', 64)->unique();
+            $table->timestampTz('expires_at');
+            $table->timestampTz('accepted_at')->nullable();
+            $table->timestampTz('last_sent_at')->nullable();
+            $table->json('metadata')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::connection('platform')->create('audit_logs', function (Blueprint $table): void {
+            $table->bigIncrements('id');
+            $table->string('actor_type', 50);
+            $table->unsignedBigInteger('actor_id');
+            $table->uuid('company_id')->nullable();
+            $table->string('action', 120);
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->json('metadata')->nullable();
+            $table->timestampTz('created_at')->nullable();
         });
 
         if (DB::getDriverName() === 'pgsql') {
@@ -201,98 +259,6 @@ trait CreatesMvpSchema
             $table->timestamps();
         });
 
-        if (DB::getDriverName() === 'pgsql') {
-            DB::statement('CREATE TABLE public.user_lookups (
-                email varchar(150) primary key,
-                company_id uuid not null,
-                schema_name varchar(63) not null,
-                employee_id integer not null,
-                role varchar(20) not null
-            )');
-            DB::statement('CREATE TABLE public.super_admins (
-                id serial primary key,
-                name varchar(100) not null,
-                email varchar(150) not null unique,
-                password_hash varchar(255) not null,
-                two_fa_secret varchar(32) null,
-                last_login_at timestamp with time zone null,
-                created_at timestamp with time zone null
-            )');
-            DB::statement('CREATE TABLE public.platform_settings (
-                id serial primary key,
-                key varchar(100) not null unique,
-                value text null,
-                label varchar(150) not null,
-                category varchar(50) not null default \'general\',
-                type varchar(20) not null default \'string\',
-                created_at timestamp with time zone null,
-                updated_at timestamp with time zone null
-            )');
-            DB::statement('CREATE TABLE public.user_invitations (
-                id uuid primary key,
-                company_id uuid not null,
-                schema_name varchar(63) not null,
-                employee_id integer not null,
-                email varchar(150) not null,
-                role varchar(20) not null,
-                manager_role varchar(30) null,
-                invited_by_type varchar(20) not null,
-                invited_by_email varchar(150) not null,
-                token_hash varchar(64) not null unique,
-                expires_at timestamp with time zone not null,
-                accepted_at timestamp with time zone null,
-                last_sent_at timestamp with time zone null,
-                metadata jsonb null,
-                created_at timestamp with time zone null,
-                updated_at timestamp with time zone null
-            )');
-            DB::statement('CREATE TABLE public.audit_logs (
-                id bigserial primary key,
-                actor_type varchar(50) not null,
-                actor_id bigint not null,
-                company_id uuid null,
-                action varchar(120) not null,
-                ip_address varchar(45) null,
-                user_agent text null,
-                metadata jsonb null,
-                created_at timestamp with time zone null
-            )');
-        } else {
-            Schema::create('user_lookups', function (Blueprint $table): void {
-                $table->string('email', 150)->primary();
-                $table->uuid('company_id');
-                $table->string('schema_name', 63);
-                $table->unsignedInteger('employee_id');
-                $table->string('role', 20);
-            });
-            Schema::create('super_admins', function (Blueprint $table): void {
-                $table->increments('id');
-                $table->string('name', 100);
-                $table->string('email', 150)->unique();
-                $table->string('password_hash', 255);
-                $table->string('two_fa_secret', 32)->nullable();
-                $table->timestampTz('last_login_at')->nullable();
-                $table->timestampTz('created_at')->nullable();
-            });
-            Schema::create('user_invitations', function (Blueprint $table): void {
-                $table->uuid('id')->primary();
-                $table->uuid('company_id');
-                $table->string('schema_name', 63);
-                $table->unsignedInteger('employee_id');
-                $table->string('email', 150);
-                $table->string('role', 20);
-                $table->string('manager_role', 30)->nullable();
-                $table->string('invited_by_type', 20);
-                $table->string('invited_by_email', 150);
-                $table->string('token_hash', 64)->unique();
-                $table->timestampTz('expires_at');
-                $table->timestampTz('accepted_at')->nullable();
-                $table->timestampTz('last_sent_at')->nullable();
-                $table->json('metadata')->nullable();
-                $table->timestamps();
-            });
-        }
-
         $this->restoreDefaultSearchPath();
     }
 
@@ -315,36 +281,45 @@ trait CreatesMvpSchema
 
     private function dropMvpTables(): void
     {
-        if (DB::getDriverName() === 'pgsql') {
-            $tables = [
-                'public.audit_logs',
-                'public.platform_settings',
-                'public.user_lookups',
-                'public.user_invitations',
-                'public.super_admins',
-                'public.hr_model_templates',
-                'public.companies',
-                'public.plans',
-                'shared_tenants.personal_access_tokens',
-                'shared_tenants.attendance_logs',
-                'shared_tenants.employees',
-                'shared_tenants.schedules',
-            ];
-
-            foreach ($tables as $table) {
-                DB::statement("DROP TABLE IF EXISTS {$table} CASCADE");
-            }
-        }
-
-        // Also drop unqualified names to be safe in other drivers or if search_path was generic
-        $unprefixed = [
-            'user_invitations', 'super_admins', 'platform_settings', 'personal_access_tokens',
-            'notifications', 'attendance_kiosks', 'biometric_enrollment_requests', 'user_lookups',
-            'attendance_logs', 'employees', 'schedules', 'companies', 'plans', 'hr_model_templates',
+        // Nettoyage de la connexion platform
+        $sharedTables = [
+            'audit_logs',
+            'platform_settings',
+            'user_lookups',
+            'user_invitations',
+            'super_admins',
+            'companies',
+            'plans',
+            'hr_model_templates',
         ];
 
-        foreach ($unprefixed as $table) {
-            DB::statement("DROP TABLE IF EXISTS \"{$table}\" CASCADE");
+        foreach ($sharedTables as $table) {
+            Schema::connection('platform')->dropIfExists($table);
+        }
+
+        // Nettoyage de la connexion par défaut
+        $tenantTables = [
+            'personal_access_tokens',
+            'notifications',
+            'attendance_kiosks',
+            'biometric_enrollment_requests',
+            'attendance_logs',
+            'employees',
+            'schedules',
+        ];
+
+        foreach ($tenantTables as $table) {
+            Schema::dropIfExists($table);
+        }
+        
+        // Sécurité supplémentaire pour pgsql (CASCADE)
+        if (DB::getDriverName() === 'pgsql') {
+             foreach ($sharedTables as $table) {
+                 DB::connection('platform')->statement("DROP TABLE IF EXISTS public.{$table} CASCADE");
+             }
+             foreach ($tenantTables as $table) {
+                 DB::statement("DROP TABLE IF EXISTS {$table} CASCADE");
+             }
         }
     }
 

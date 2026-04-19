@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\DB;
 
 class UserInvitation extends Model
 {
     use HasUuids;
+
+    protected $connection = 'platform';
+    protected $table = 'user_invitations';
 
     public $incrementing = false;
 
@@ -41,12 +43,5 @@ class UserInvitation extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
-    }
-
-    public function getTable(): string
-    {
-        return DB::getDriverName() === 'pgsql'
-            ? 'public.user_invitations'
-            : 'user_invitations';
     }
 }

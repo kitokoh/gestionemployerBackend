@@ -10,7 +10,8 @@ class Plan extends Model
 {
     use HasFactory;
 
-    protected $table = 'public.plans';
+    protected $connection = 'platform';
+    protected $table = 'plans';
 
     public $timestamps = false;
 
