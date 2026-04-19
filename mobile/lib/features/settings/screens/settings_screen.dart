@@ -76,7 +76,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (!mounted) return;
     }
   }
-
   @override
   void dispose() {
     _firstNameController.dispose();
@@ -270,7 +269,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildBiometricSection(BuildContext context) {
     final employee = ref.read(authProvider).employee;
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -376,8 +374,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.file(_selectedFaceImage!, height: 180, fit: BoxFit.cover),
-              ),
             ),
+          ),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _preferencesSaving ? null : _savePreferences,
