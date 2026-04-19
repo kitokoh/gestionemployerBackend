@@ -17,7 +17,7 @@ class Employee extends Authenticatable
     use HasApiTokens;
     use HasFactory;
 
-    protected $connection = 'default';
+    protected $connection = 'pgsql';
 
     protected $table = 'employees';
 
