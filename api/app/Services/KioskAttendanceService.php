@@ -51,7 +51,7 @@ class KioskAttendanceService
 
     public function syncPunches(AttendanceKiosk $kiosk, array $events): array
     {
-        return DB::transaction(function () use ($kiosk, $events) {
+        return DB::transaction(function () use ($kiosk, $events): array {
             $searchPath = $kiosk->company?->tenancy_type === 'schema'
                 ? $kiosk->company->schema_name.',public'
                 : 'shared_tenants,public';

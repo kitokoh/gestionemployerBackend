@@ -109,4 +109,26 @@ class UpdateEmployeeRequest extends FormRequest
 
         DB::statement('SET search_path TO shared_tenants,public');
     }
+
+    protected function prepareForValidation(): void
+    {
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+
+        $company = $this->user()?->company
+            ?? (app()->bound('current_company') ? app('current_company') : null);
+
+        if (! $company) {
+            return;
+        }
+
+        if ($company->tenancy_type === 'schema' && $company->schema_name) {
+            DB::statement('SET search_path TO '.$company->schema_name.',public');
+
+            return;
+        }
+
+        DB::statement('SET search_path TO shared_tenants,public');
+    }
 }

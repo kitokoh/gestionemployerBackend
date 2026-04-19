@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Employee;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -16,25 +17,21 @@ class EmployeeService
 
     public function create(array $payload, ?Employee $actor = null): Employee
     {
-        return DB::transaction(function () use ($payload, $actor) {
+        return DB::transaction(function () use ($payload, $actor): Employee {
             $sendInvitation = (bool) Arr::pull($payload, 'send_invitation', false);
             $providedPassword = Arr::pull($payload, 'password');
             $companyId = $payload['company_id']
                 ?? $actor?->company_id
                 ?? (app()->bound('current_company') ? app('current_company')->id : null);
             $password = $providedPassword ?: Str::random(32);
+
             $payload['password_hash'] = Hash::make($password);
             $payload['contract_start'] = $payload['contract_start'] ?? now()->toDateString();
-
-            // Remove company_id from payload — it's set explicitly below (not mass-assignable)
-            unset($payload['company_id']);
-
-            if (empty($payload['role'])) {
-                $payload['role'] = 'employee';
-            }
-
+            $payload['role'] = $payload['role'] ?? 'employee';
             $payload['status'] = $payload['status'] ?? 'active';
             $payload['extra_data'] = $this->normalizeExtraData($payload['extra_data'] ?? []);
+
+            unset($payload['company_id']);
 
             if ($actor?->isManager() && empty($payload['manager_id'])) {
                 $payload['manager_id'] = $actor->id;
