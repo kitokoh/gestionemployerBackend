@@ -29,7 +29,7 @@ class PlatformCompanyProvisioningTest extends TestCase
     {
         Mail::fake();
 
-        DB::table('plans')->insert([
+        DB::connection('platform')->table('plans')->insert([
             'id' => 1,
             'name' => 'Starter',
             'price_monthly' => 29,
@@ -67,7 +67,7 @@ class PlatformCompanyProvisioningTest extends TestCase
         $this->assertDatabaseHas('companies', [
             'name' => 'Nouvelle Societe',
             'schema_name' => 'shared_tenants',
-        ]);
+        ], 'platform');
 
         DB::statement('SET search_path TO shared_tenants,public');
 
@@ -83,7 +83,7 @@ class PlatformCompanyProvisioningTest extends TestCase
         $this->assertDatabaseHas('user_invitations', [
             'email' => 'salim.kaci@nouvelle-societe.dz',
             'invited_by_type' => 'super_admin',
-        ]);
+        ], 'platform');
 
         Mail::assertSentCount(1);
     }
@@ -109,6 +109,6 @@ class PlatformCompanyProvisioningTest extends TestCase
             'actor_type' => 'super_admin',
             'actor_id' => $superAdmin->id,
             'action' => 'platform.auth.login',
-        ]);
+        ], 'platform');
     }
 }

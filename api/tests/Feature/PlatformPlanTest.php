@@ -103,7 +103,7 @@ class PlatformPlanTest extends TestCase
         ]);
 
         $this->expectException(DomainException::class);
-        $this->expectExceptionMessage("Quota d'employes atteint");
+        $this->expectExceptionMessage("Quota d'employés atteint");
 
         $service = app(EmployeeService::class);
         $service->create([

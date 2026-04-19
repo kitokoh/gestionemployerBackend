@@ -82,7 +82,7 @@ trait CreatesMvpSchema
 
         Schema::connection('platform')->create('user_invitations', function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->unsignedBigInteger('company_id')->nullable();
+            $table->uuid('company_id')->nullable();
             $table->string('schema_name')->nullable();
             $table->unsignedBigInteger('employee_id')->nullable();
             $table->string('email');
