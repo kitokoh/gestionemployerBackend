@@ -76,6 +76,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (!mounted) return;
     }
   }
+
   @override
   void dispose() {
     _firstNameController.dispose();
@@ -373,9 +374,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               padding: const EdgeInsets.only(top: 12),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(_selectedFaceImage!, height: 180, fit: BoxFit.cover),
+                child: Image.file(
+                  _selectedFaceImage!,
+                  height: 180,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
-          ),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _preferencesSaving ? null : _savePreferences,
