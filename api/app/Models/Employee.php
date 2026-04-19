@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Models\PersonalAccessToken;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
@@ -105,7 +107,7 @@ class Employee extends Authenticatable
         return $this->role === 'manager';
     }
 
-    public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
@@ -118,19 +120,19 @@ class Employee extends Authenticatable
         return $this->morphMany(PersonalAccessToken::class, 'tokenable');
     }
 
-    public function schedule(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function schedule(): BelongsTo
     {
         return $this->belongsTo(Schedule::class, 'schedule_id');
     }
 
-    public function biometricEnrollmentRequests(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function biometricEnrollmentRequests(): HasMany
     {
         return $this->hasMany(BiometricEnrollmentRequest::class, 'employee_id');
     }
 
     public function syncUserLookup(): void
     {
-        if (! $this->canSyncUserLookup()) {
+        if (!$this->canSyncUserLookup()) {
             return;
         }
 
@@ -153,7 +155,7 @@ class Employee extends Authenticatable
 
     public function deleteUserLookup(): void
     {
-        if (! $this->canSyncUserLookup()) {
+        if (!$this->canSyncUserLookup()) {
             return;
         }
 
@@ -165,7 +167,7 @@ class Employee extends Authenticatable
 
     private function canSyncUserLookup(): bool
     {
-        if (! $this->email || ! $this->company_id) {
+        if (!$this->email || !$this->company_id) {
             return false;
         }
 
