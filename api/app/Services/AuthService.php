@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\AccountSuspendedException;
 use App\Exceptions\CompanyNotFoundException;
 use App\Exceptions\EmployeeNotActiveException;
+use App\Models\Company;
 use App\Exceptions\InvalidCredentialsException;
 use App\Models\Employee;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +60,7 @@ class AuthService
             throw new InvalidCredentialsException;
         }
 
-        $company = $employee->company;
+        $company = $this->resolveCompany($employee);
         if (! $company) {
             throw new CompanyNotFoundException;
         }
@@ -101,5 +102,25 @@ class AuthService
         $table = DB::selectOne("select to_regclass('public.user_lookups') as table_name");
 
         return $table?->table_name !== null;
+    }
+
+    private function resolveCompany(Employee $employee): ?Company
+    {
+        if ($employee->relationLoaded('company') && $employee->company) {
+            return $employee->company;
+        }
+
+        if (! $employee->company_id) {
+            return null;
+        }
+
+        if (DB::getDriverName() === 'pgsql') {
+            return Company::query()
+                ->from('public.companies')
+                ->whereKey($employee->company_id)
+                ->first();
+        }
+
+        return Company::query()->find($employee->company_id);
     }
 }
