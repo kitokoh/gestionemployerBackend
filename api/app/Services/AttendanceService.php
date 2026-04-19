@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 
 class AttendanceService
 {
-    public function checkIn(Employee $employee, ?float $gpsLat = null, ?float $gpsLng = null): AttendanceLog
+    public function checkIn(Employee $employee, ?float $gpsLat = null, ?float $gpsLng = null, string $method = 'mobile'): AttendanceLog
     {
         $company = app('current_company');
 
@@ -48,7 +48,7 @@ class AttendanceService
             'date' => $today,
             'session_number' => 1,
             'check_in' => $nowUtc,
-            'method' => 'mobile',
+            'method' => $method,
             'status' => $status,
             'late_minutes' => $lateMinutes,
             'gps_lat' => $gpsLat,
@@ -56,7 +56,7 @@ class AttendanceService
         ]);
     }
 
-    public function checkOut(Employee $employee, ?float $gpsLat = null, ?float $gpsLng = null): AttendanceLog
+    public function checkOut(Employee $employee, ?float $gpsLat = null, ?float $gpsLng = null, string $method = 'mobile'): AttendanceLog
     {
         $company = app('current_company');
 
@@ -89,6 +89,7 @@ class AttendanceService
         $log->overtime_hours = $overtime;
         $log->gps_lat = $gpsLat ?? $log->gps_lat;
         $log->gps_lng = $gpsLng ?? $log->gps_lng;
+        $log->method = $method;
 
         if ($log->status === 'incomplete' && $schedule) {
             $checkInLocal = $log->check_in->copy()->setTimezone($company->timezone);

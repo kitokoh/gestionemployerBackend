@@ -2,6 +2,24 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.56] - 2026-04-19
+### Biometrie approuvee et borne d entree entreprise
+
+- Ajout du workflow complet de demande biometrie employe avec validation manager / RH avant activation effective des donnees visage / empreinte
+- Ajout d une borne de pointage entreprise configurable cote manager avec code appareil, interface web dediee et endpoint API de pointage a l entree
+- L application mobile permet maintenant de soumettre une capture visage reelle et une demande d activation biometrie; toute modification ou premiere activation reste en attente d approbation
+- Pour l empreinte mobile, le systeme s appuie sur une verification biometrie locale de l appareil puis laisse l activation effective etre approuvee et exploitee cote borne / lecteur entreprise
+- Ajout d un dossier racine `zkteco-kiosk/` pour servir de socle au poste d entree ZKTeco / HID cote client
+
+## [4.1.55] - 2026-04-19
+### Onboarding plateforme, invitations et profils enrichis
+
+- Le super admin plateforme peut maintenant creer une nouvelle societe depuis le web ou l API, provisionner son manager principal et declencher automatiquement une invitation email personnalisee avec lien d activation
+- Les managers peuvent creer des comptes RH et employes sans saisir de mot de passe initial, le systeme rattachant automatiquement le nouveau compte a la bonne societe et a son manager createur
+- Les invitations sont suivies dans `public.user_invitations`, avec expiration, acceptation, traces d envoi et activation du mot de passe via un ecran web dedie
+- Les profils employes gagnent des donnees metier et RH plus riches: email perso, telephone, adresse, urgence, poste, departement, site, identite, biometrie visage / empreinte et consentement associe
+- Le web dispose maintenant d un espace plateforme pour l onboarding des societes, d un formulaire manager pour creer RH / employes et d une fiche collaborateur enrichie pour preparer les prochaines etapes de pointage modernise
+
 ## [4.1.54] - 2026-04-19
 ### Stabilisation CodeQL GitHub Actions
 

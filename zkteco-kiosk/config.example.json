@@ -1,0 +1,7 @@
+{
+  "apiBaseUrl": "https://gestionemployerbackend.onrender.com/api/v1",
+  "deviceCode": "KIOSK001",
+  "companyName": "Leopardo RH Client",
+  "locationLabel": "Entree principale",
+  "defaultAction": "check_in"
+}
