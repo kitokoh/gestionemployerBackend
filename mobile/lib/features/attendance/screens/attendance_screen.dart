@@ -13,6 +13,7 @@ class AttendanceScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final attState = ref.watch(attendanceProvider);
+    final isManager = authState.employee?.isManager == true || attState.context?['mode'] == 'collection';
 
     return Scaffold(
       body: SafeArea(
@@ -23,13 +24,19 @@ class AttendanceScreen extends ConsumerWidget {
                 child: ListView(
                   padding: const EdgeInsets.all(24.0),
                   children: [
-                    _buildHeader(context, authState),
+                    _buildHeader(context, authState, isManager),
                     const SizedBox(height: 32),
-                    _buildActionCard(context, ref, attState),
+                    isManager
+                        ? _buildManagerOverviewCard(context, ref, attState)
+                        : _buildActionCard(context, ref, attState),
                     const SizedBox(height: 32),
-                    _buildSummaryCard(context, attState),
+                    if (!isManager) _buildSummaryCard(context, attState),
+                    if (attState.notice != null) ...[
+                      _buildNoticeCard(context, attState.notice!),
+                      const SizedBox(height: 32),
+                    ],
                     const SizedBox(height: 32),
-                    _buildActions(context, ref, attState),
+                    _buildActions(context, ref, attState, isManager),
                   ],
                 ),
               ),
@@ -64,7 +71,7 @@ class AttendanceScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, AuthState state) {
+  Widget _buildHeader(BuildContext context, AuthState state, bool isManager) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -77,7 +84,10 @@ class AttendanceScreen extends ConsumerWidget {
           Text('Bonjour ${state.employee?.firstName ?? ''}',
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          const Text('Leopardo RH', style: TextStyle(color: Colors.grey)),
+          Text(
+            isManager ? 'Espace RH / manager' : 'Espace employe',
+            style: const TextStyle(color: Colors.grey),
+          ),
         ],
       ),
     );
@@ -94,27 +104,38 @@ class AttendanceScreen extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          PulseButton(
-            isCheckedIn: isCheckedIn,
-            isLoading: state.isLoading,
-            onTap: () {
-              if (isCheckedIn) {
-                ref.read(attendanceProvider.notifier).checkOut();
-              } else {
-                ref.read(attendanceProvider.notifier).checkIn();
-              }
-            },
-          ),
+          if (state.isLoading && state.todayLog == null)
+            Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
+              ),
+              child: const Center(
+                child: SizedBox(
+                  height: 28,
+                  width: 28,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else
+            PulseButton(
+              isCheckedIn: isCheckedIn,
+              isLoading: state.isLoading,
+              onTap: () {
+                if (isCheckedIn) {
+                  ref.read(attendanceProvider.notifier).checkOut();
+                } else {
+                  ref.read(attendanceProvider.notifier).checkIn();
+                }
+              },
+            ),
           const SizedBox(height: 32),
           if (state.isLoading && state.todayLog == null) ...[
-            const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(height: 16),
             const Text(
-              'Chargement de votre pointage du jour...',
+              'Chargement de votre presence du jour...',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey),
             ),
@@ -140,6 +161,63 @@ class AttendanceScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildManagerOverviewCard(BuildContext context, WidgetRef ref, AttendanceState state) {
+    final items = state.context?['items'];
+    final employees = items is List ? items : const [];
+    final checkedInCount = employees.whereType<Map>().where((item) {
+      final status = item['status']?.toString();
+      return status != null && status != 'absent';
+    }).length;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Suivi de l’equipe',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          if (state.isLoading && employees.isEmpty) ...[
+            const Row(
+              children: [
+                SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Chargement du suivi d’equipe...',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            Text(
+              employees.isEmpty
+                  ? 'Le suivi du jour sera disponible apres actualisation.'
+                  : '${employees.length} collaborateurs charges, $checkedInCount deja pointes aujourd’hui.',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: () => ref.read(attendanceProvider.notifier).loadTodayData(),
+              child: const Text('Actualiser le suivi'),
+            ),
+          ],
         ],
       ),
     );
@@ -178,11 +256,35 @@ class AttendanceScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActions(BuildContext context, WidgetRef ref, AttendanceState state) {
+  Widget _buildNoticeCard(BuildContext context, String notice) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, color: Colors.amber),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              notice,
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActions(BuildContext context, WidgetRef ref, AttendanceState state, bool isManager) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (state.isLoading && state.todayLog == null) ...[
+        if (!isManager && state.isLoading && state.todayLog == null) ...[
           const Text(
             'L ecran est disponible pendant le chargement. Vous pouvez attendre quelques secondes ou tirer pour actualiser.',
             textAlign: TextAlign.center,
@@ -194,6 +296,12 @@ class AttendanceScreen extends ConsumerWidget {
           onPressed: () => context.push('/history'),
           style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
           child: const Text('Voir historique'),
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton(
+          onPressed: () => context.push('/settings'),
+          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+          child: const Text('Parametres'),
         ),
         const SizedBox(height: 16),
         TextButton(
