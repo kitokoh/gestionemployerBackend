@@ -51,13 +51,13 @@ class AttendanceScreen extends ConsumerWidget {
         children: [
           const Icon(Icons.build_circle_outlined, size: 64, color: Colors.grey),
           const SizedBox(height: 16),
-          const Text('Fonction bientôt disponible', style: TextStyle(fontSize: 20)),
+          const Text('Fonction bientot disponible', style: TextStyle(fontSize: 20)),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
               ref.read(attendanceProvider.notifier).loadTodayData();
             },
-            child: const Text('Réessayer'),
+            child: const Text('Reessayer'),
           ),
           const SizedBox(height: 16),
           TextButton(
@@ -81,8 +81,10 @@ class AttendanceScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Bonjour ${state.employee?.firstName ?? ''}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          Text(
+            'Bonjour ${state.employee?.firstName ?? ''}',
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
           Text(
             isManager ? 'Espace RH / manager' : 'Espace employe',
@@ -95,7 +97,7 @@ class AttendanceScreen extends ConsumerWidget {
 
   Widget _buildActionCard(BuildContext context, WidgetRef ref, AttendanceState state) {
     final isCheckedIn = state.todayLog?.checkIn != null && state.todayLog?.checkOut == null;
-    
+
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -184,7 +186,7 @@ class AttendanceScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Suivi de l’equipe',
+            'Suivi de l equipe',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
@@ -199,7 +201,7 @@ class AttendanceScreen extends ConsumerWidget {
                 SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Chargement du suivi d’equipe...',
+                    'Chargement du suivi d equipe...',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
@@ -209,7 +211,7 @@ class AttendanceScreen extends ConsumerWidget {
             Text(
               employees.isEmpty
                   ? 'Le suivi du jour sera disponible apres actualisation.'
-                  : '${employees.length} collaborateurs charges, $checkedInCount deja pointes aujourd’hui.',
+                  : '${employees.length} collaborateurs charges, $checkedInCount deja pointes aujourd hui.',
               style: const TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 16),
@@ -225,9 +227,13 @@ class AttendanceScreen extends ConsumerWidget {
 
   Widget _buildSummaryCard(BuildContext context, AttendanceState state) {
     if (state.summary == null) return const SizedBox.shrink();
-    
-    final currencyFormat = NumberFormat.currency(locale: 'fr_DZ', symbol: state.summary!.currency, decimalDigits: 2);
-    
+
+    final currencyFormat = NumberFormat.currency(
+      locale: 'fr_DZ',
+      symbol: state.summary!.currency,
+      decimalDigits: 2,
+    );
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -241,16 +247,26 @@ class AttendanceScreen extends ConsumerWidget {
             children: [
               const Text('Gain estime aujourd\'hui', style: TextStyle(fontSize: 16)),
               const Spacer(),
-              Text(currencyFormat.format(state.summary!.totalEstimated),
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
+              Text(
+                currencyFormat.format(state.summary!.totalEstimated),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
-          Text('Heures sup : ${state.summary!.overtimeGain > 0 ? (state.summary!.overtimeGain).toStringAsFixed(0) : "0h"}',
-              style: const TextStyle(color: Colors.grey)),
+          Text(
+            'Heures sup : ${state.summary!.overtimeGain > 0 ? (state.summary!.overtimeGain).toStringAsFixed(0) : "0h"}',
+            style: const TextStyle(color: Colors.grey),
+          ),
           const SizedBox(height: 8),
-          const Text('Estimation - net final calcule en fin de mois',
-              style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
+          const Text(
+            'Estimation - net final calcule en fin de mois',
+            style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
+          ),
         ],
       ),
     );
