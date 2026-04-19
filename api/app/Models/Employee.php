@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\HasApiTokens;
 
 class Employee extends Authenticatable
@@ -133,7 +132,7 @@ class Employee extends Authenticatable
 
     public function syncUserLookup(): void
     {
-        if (! $this->canSyncUserLookup()) {
+        if (!$this->canSyncUserLookup()) {
             return;
         }
 
@@ -156,7 +155,7 @@ class Employee extends Authenticatable
 
     public function deleteUserLookup(): void
     {
-        if (! $this->canSyncUserLookup()) {
+        if (!$this->canSyncUserLookup()) {
             return;
         }
 
@@ -168,17 +167,17 @@ class Employee extends Authenticatable
 
     private function canSyncUserLookup(): bool
     {
-        if (! $this->email || ! $this->company_id) {
+        if (!$this->email || !$this->company_id) {
             return false;
         }
 
         if (DB::getDriverName() !== 'pgsql') {
-            return Schema::hasTable('user_lookups');
+            return DB::connection('platform')->getSchemaBuilder()->hasTable('user_lookups');
         }
 
         $table = DB::selectOne("select to_regclass('public.user_lookups') as table_name");
 
-        return $table?->table_name !== null;
+        return $table->table_name !== null;
     }
 
     private function userLookupTable(): string
