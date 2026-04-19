@@ -281,7 +281,6 @@ trait CreatesMvpSchema
 
     private function dropMvpTables(): void
     {
-        // Nettoyage de la connexion platform
         $sharedTables = [
             'audit_logs',
             'platform_settings',
@@ -293,11 +292,6 @@ trait CreatesMvpSchema
             'hr_model_templates',
         ];
 
-        foreach ($sharedTables as $table) {
-            Schema::connection('platform')->dropIfExists($table);
-        }
-
-        // Nettoyage de la connexion par défaut
         $tenantTables = [
             'personal_access_tokens',
             'notifications',
@@ -308,16 +302,19 @@ trait CreatesMvpSchema
             'schedules',
         ];
 
-        foreach ($tenantTables as $table) {
-            Schema::dropIfExists($table);
-        }
-        // Sécurité supplémentaire pour pgsql (CASCADE)
         if (DB::getDriverName() === 'pgsql') {
             foreach ($sharedTables as $table) {
                 DB::connection('platform')->statement("DROP TABLE IF EXISTS public.{$table} CASCADE");
             }
             foreach ($tenantTables as $table) {
                 DB::statement("DROP TABLE IF EXISTS {$table} CASCADE");
+            }
+        } else {
+            foreach ($sharedTables as $table) {
+                Schema::connection('platform')->dropIfExists($table);
+            }
+            foreach ($tenantTables as $table) {
+                Schema::dropIfExists($table);
             }
         }
     }
