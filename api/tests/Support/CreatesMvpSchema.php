@@ -13,11 +13,7 @@ trait CreatesMvpSchema
         $this->preparePostgresSchemas();
         $this->dropMvpTables();
 
-        if (DB::getDriverName() === 'pgsql') {
-            DB::statement('SET search_path TO public');
-        }
-
-        Schema::create('plans', function (Blueprint $table): void {
+        Schema::connection('public')->create('plans', function (Blueprint $table): void {
             $table->increments('id');
             $table->string('name', 50);
             $table->decimal('price_monthly', 10, 2)->default(0);
@@ -28,7 +24,7 @@ trait CreatesMvpSchema
             $table->boolean('is_active')->default(true);
         });
 
-        Schema::create('companies', function (Blueprint $table): void {
+        Schema::connection('public')->create('companies', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('slug');
@@ -320,34 +316,36 @@ trait CreatesMvpSchema
     private function dropMvpTables(): void
     {
         if (DB::getDriverName() === 'pgsql') {
-            DB::statement('DROP TABLE IF EXISTS public.audit_logs CASCADE');
-            DB::statement('DROP TABLE IF EXISTS public.platform_settings CASCADE');
-            DB::statement('DROP TABLE IF EXISTS public.user_lookups CASCADE');
-            DB::statement('DROP TABLE IF EXISTS public.user_invitations CASCADE');
-            DB::statement('DROP TABLE IF EXISTS public.super_admins CASCADE');
-            DB::statement('DROP TABLE IF EXISTS public.hr_model_templates CASCADE');
-            DB::statement('DROP TABLE IF EXISTS public.companies CASCADE');
-            DB::statement('DROP TABLE IF EXISTS public.plans CASCADE');
-            DB::statement('DROP TABLE IF EXISTS shared_tenants.personal_access_tokens CASCADE');
-            DB::statement('DROP TABLE IF EXISTS shared_tenants.attendance_logs CASCADE');
-            DB::statement('DROP TABLE IF EXISTS shared_tenants.employees CASCADE');
-            DB::statement('DROP TABLE IF EXISTS shared_tenants.schedules CASCADE');
+            $tables = [
+                'public.audit_logs',
+                'public.platform_settings',
+                'public.user_lookups',
+                'public.user_invitations',
+                'public.super_admins',
+                'public.hr_model_templates',
+                'public.companies',
+                'public.plans',
+                'shared_tenants.personal_access_tokens',
+                'shared_tenants.attendance_logs',
+                'shared_tenants.employees',
+                'shared_tenants.schedules',
+            ];
+
+            foreach ($tables as $table) {
+                DB::statement("DROP TABLE IF EXISTS {$table} CASCADE");
+            }
         }
 
-        DB::statement('DROP TABLE IF EXISTS "user_invitations" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "super_admins" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "platform_settings" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "personal_access_tokens" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "notifications" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "attendance_kiosks" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "biometric_enrollment_requests" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "user_lookups" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "attendance_logs" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "employees" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "schedules" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "companies" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "plans" CASCADE');
-        DB::statement('DROP TABLE IF EXISTS "hr_model_templates" CASCADE');
+        // Also drop unqualified names to be safe in other drivers or if search_path was generic
+        $unprefixed = [
+            'user_invitations', 'super_admins', 'platform_settings', 'personal_access_tokens',
+            'notifications', 'attendance_kiosks', 'biometric_enrollment_requests', 'user_lookups',
+            'attendance_logs', 'employees', 'schedules', 'companies', 'plans', 'hr_model_templates'
+        ];
+
+        foreach ($unprefixed as $table) {
+             DB::statement("DROP TABLE IF EXISTS \"{$table}\" CASCADE");
+        }
     }
 
     private function restoreDefaultSearchPath(): void

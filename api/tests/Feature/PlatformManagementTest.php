@@ -66,7 +66,6 @@ class PlatformManagementTest extends TestCase
         ]);
 
         // Fake inserting employee inside shared_tenants
-        DB::statement('SET search_path TO shared_tenants, public');
         DB::table('shared_tenants.employees')->insert([
             'id' => 99,
             'company_id' => $this->company->id,
@@ -78,7 +77,6 @@ class PlatformManagementTest extends TestCase
             'status' => 'active',
             'salary_base' => 50000,
         ]);
-        DB::statement('SET search_path TO public');
     }
 
     protected function tearDown(): void

@@ -30,30 +30,19 @@ class AuthService
         $employee = null;
 
         if ($lookup) {
-            $originalPath = DB::selectOne('SHOW search_path')->search_path;
-            try {
-                DB::statement("SET search_path TO {$lookup->schema_name}, public");
-
-                $employee = Employee::withoutGlobalScopes()
-                    ->where('company_id', $lookup->company_id)
-                    ->where('id', $lookup->employee_id)
-                    ->first();
-            } finally {
-                DB::statement("SET search_path TO {$originalPath}");
-            }
+            $employee = Employee::withoutGlobalScopes()
+                ->where('company_id', $lookup->company_id)
+                ->where('id', $lookup->employee_id)
+                ->first();
         }
 
         if (! $employee) {
             // Fallback: try all relevant schemas if lookup failed but we are in public
             // For MVP shared mode, we just try shared_tenants
-            $originalPath = DB::selectOne('SHOW search_path')->search_path;
-            try {
-                DB::statement('SET search_path TO shared_tenants, public');
-                $employee = Employee::withoutGlobalScopes()->where('email', $email)->first();
-                $employee?->syncUserLookup();
-            } finally {
-                DB::statement("SET search_path TO {$originalPath}");
-            }
+            $employee = Employee::withoutGlobalScopes()
+                ->where('email', $email)
+                ->first();
+            $employee?->syncUserLookup();
         }
 
         if (! $employee || ! Hash::check($password, $employee->password_hash)) {

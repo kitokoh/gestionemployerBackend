@@ -17,17 +17,15 @@ class AuditLogger
         Request $request,
         array $metadata = [],
     ): void {
-        $tableName = DB::getDriverName() === 'pgsql' ? 'public.audit_logs' : 'audit_logs';
-
         try {
-            DB::table($tableName)->insert([
+            \App\Models\AuditLog::create([
                 'actor_type' => $actorType,
                 'actor_id' => $actorId,
                 'company_id' => $companyId,
                 'action' => $action,
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
-                'metadata' => json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'metadata' => $metadata, // Cast handled by model
                 'created_at' => now(),
             ]);
         } catch (Throwable $e) {

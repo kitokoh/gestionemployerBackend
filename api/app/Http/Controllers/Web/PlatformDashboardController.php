@@ -13,9 +13,7 @@ class PlatformDashboardController extends Controller
 {
     public function index(Request $request): View
     {
-        DB::statement('SET search_path TO public');
-
-        /** @var SuperAdmin|null $superAdmin */
+        /** @var \App\Models\SuperAdmin|null $superAdmin */
         $superAdmin = $request->user('super_admin_web') ?? $request->user('super_admin_api');
 
         if ($superAdmin) {
@@ -23,29 +21,27 @@ class PlatformDashboardController extends Controller
         }
 
         $stats = [
-            'total_companies' => DB::table('companies')->count(),
-            'active_companies' => DB::table('companies')->where('status', 'active')->count(),
-            'trial_companies' => DB::table('companies')->where('status', 'trial')->count(),
-            'suspended_companies' => DB::table('companies')->whereIn('status', ['suspended', 'expired'])->count(),
+            'total_companies' => \App\Models\Company::count(),
+            'active_companies' => \App\Models\Company::where('status', 'active')->count(),
+            'trial_companies' => \App\Models\Company::where('status', 'trial')->count(),
+            'suspended_companies' => \App\Models\Company::whereIn('status', ['suspended', 'expired'])->count(),
             'total_employees' => 0,
             'mrr' => 0,
         ];
 
         // Global Employee Count
         try {
-            DB::statement('SET search_path TO shared_tenants, public');
             $stats['total_employees'] = DB::table('shared_tenants.employees')->count();
         } catch (\Throwable $e) {
+            // Log if needed
         }
-        DB::statement('SET search_path TO public');
 
         // MRR calculation (Total monthly price of all active companies)
-        // Explicitly qualified to avoid search_path or join ambiguity issues
         try {
-            $mrrData = DB::selectOne("
+            $mrrData = DB::connection('public')->selectOne("
                 SELECT SUM(p.price_monthly) as total 
-                FROM public.companies c 
-                JOIN public.plans p ON c.plan_id = p.id 
+                FROM companies c 
+                JOIN plans p ON c.plan_id = p.id 
                 WHERE c.status = 'active'
             ");
             $stats['mrr'] = $mrrData->total ?? 0;
@@ -53,7 +49,7 @@ class PlatformDashboardController extends Controller
             $stats['mrr'] = 0;
         }
 
-        $recentCompanies = DB::table('companies')
+        $recentCompanies = \App\Models\Company::query()
             ->select('id', 'name', 'city', 'country', 'created_at')
             ->orderBy('created_at', 'desc')
             ->limit(5)

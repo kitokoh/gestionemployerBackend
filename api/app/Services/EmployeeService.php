@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\DomainException;
 use App\Models\Company;
+use App\Models\Employee;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
