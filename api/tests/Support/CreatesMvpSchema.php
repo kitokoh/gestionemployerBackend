@@ -106,11 +106,10 @@ trait CreatesMvpSchema
         });
 
         Schema::connection('platform')->create('hr_model_templates', function (Blueprint $table): void {
-            $table->increments('id');
-            $table->char('country', 2)->unique();
-            $table->decimal('dz_deduction_rate', 5, 2)->default(0);
-            $table->decimal('overtime_rate', 4, 3)->default(1.5);
-            $table->json('contributions')->nullable();
+            $table->id();
+            $table->char('country_code', 2)->unique();
+            $table->json('cotisations')->nullable();
+            $table->json('working_hours')->nullable();
             $table->timestamps();
         });
 
