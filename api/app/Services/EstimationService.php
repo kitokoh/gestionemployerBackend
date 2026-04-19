@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\AttendanceLog;
 use App\Models\Employee;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 

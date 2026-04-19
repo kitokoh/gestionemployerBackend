@@ -6,7 +6,7 @@ use App\Models\Company;
 use App\Models\Employee;
 use App\Models\Schedule;
 use App\Services\EstimationService;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Tests\Support\CreatesMvpSchema;
 use Tests\TestCase;
 
