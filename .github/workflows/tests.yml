@@ -129,6 +129,10 @@ jobs:
         working-directory: ./api
         run: ./vendor/bin/pint --test
 
+      - name: Run backend smoke health test
+        working-directory: ./api
+        run: php artisan test --filter=HealthEndpointTest
+
       - name: Run backend unit tests
         working-directory: ./api
         run: php artisan test --testsuite=Unit --log-junit=storage/test-results/unit.xml

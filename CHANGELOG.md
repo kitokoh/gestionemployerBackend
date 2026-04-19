@@ -10,6 +10,7 @@
 - T27 renforce l exploitation des modeles RH pays en calculant les cotisations salariales a partir des details salariales quand total_salarial n est pas renseigne et en reutilisant le taux d heures supplementaires defini par pays
 - T27 etend les tests d estimation pour verifier un pays non DZ avec cotisations detaillees et majoration d heures supplementaires issue du modele RH
 - T32 ajoute un vrai mode clair mobile avec theme automatique / clair / sombre et persistance locale de la preference utilisateur
+- Durcissement complementaire avant beta : le roster kiosque ne renvoie plus l email des employes, le listing API des employes retire l email par defaut, la CI ajoute un smoke test sante explicite, et le safety guard migrations est maintenant versionne dans le depot
 
 ## [4.1.57] - 2026-04-19
 ### Borne ZKTeco offline-first et synchronisation differee

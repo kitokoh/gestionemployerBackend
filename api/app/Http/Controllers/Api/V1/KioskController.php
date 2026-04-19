@@ -106,9 +106,9 @@ class KioskController extends Controller
             ->map(fn (Employee $employee) => [
                 'employee_id' => $employee->id,
                 'name' => trim(($employee->first_name ?? '').' '.($employee->last_name ?? '')),
-                'email' => $employee->email,
                 'matricule' => $employee->matricule,
                 'zkteco_id' => $employee->zkteco_id,
+                'public_identifier' => $employee->matricule ?: $employee->zkteco_id ?: (string) $employee->id,
                 'face_enabled' => $employee->biometric_face_enabled,
                 'fingerprint_enabled' => $employee->biometric_fingerprint_enabled,
             ])
