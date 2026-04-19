@@ -1,66 +1,108 @@
 # ZKTeco Kiosk Bridge
 
-Ce dossier contient le socle du poste de pointage a placer a l entree d une entreprise cliente.
+Ce dossier contient le code de la **borne d entree entreprise** et du **bridge desktop local**.
 
-## Objectif
+L objectif est simple :
 
-Le poste d entree joue 3 roles :
+- l employe peut pointer avec son doigt ou son visage a l entree
+- si internet est present, la synchronisation vers Leopardo RH est immediate
+- si internet est absent, les pointages sont gardes en local puis synchronises plus tard
 
-1. afficher une interface de pointage simple et visible sur un ecran tactile
-2. recevoir un identifiant employe depuis un lecteur ZKTeco ou un scanner HID
-3. transmettre l evenement au backend Leopardo RH via l endpoint kiosque
+## Architecture recommandee
 
-## Parcours produit vise
+```text
+Lecteur ZKTeco / capteur visage
+          |
+          v
+   PC local / mini-PC client
+          |
+          +--> bridge desktop local (Python stdlib + SQLite)
+          |        |
+          |        +--> stocke la file offline
+          |        +--> expose une UI locale a la borne
+          |        +--> synchronise avec l API quand internet revient
+          |
+          +--> navigateur plein ecran sur la page kiosk
+```
 
-1. Le manager / RH cree un employe dans Leopardo RH
-2. L employe recoit un email d invitation
-3. L employe telecharge l application mobile et se connecte
-4. L employe soumet ses donnees biometrie depuis le mobile
-5. Le manager ou le RH approuve
-6. L employe peut alors pointer :
-   - via son mobile
-   - ou via la borne d entree ZKTeco
+## Parcours metier
 
-## Fichiers
+1. Manager / RH cree l employe
+2. L employe recoit un email d invitation pour l app mobile
+3. L employe se connecte sur mobile
+4. L employe soumet ses donnees biometrie
+5. Manager / RH approuve
+6. L employe peut ensuite pointer :
+   - depuis son mobile
+   - ou depuis la borne ZKTeco de l entreprise
 
-- `index.html` : interface locale de borne
-- `app.js` : logique d interaction et envoi vers l API
-- `config.example.json` : configuration a copier en `config.json`
+## Contenu du dossier
 
-## Integration ZKTeco
+- `index.html` : interface kiosque tactile
+- `admin.html` : interface locale manager / RH pour synchroniser
+- `app.js` : logique front kiosque
+- `admin.js` : logique front administration locale
+- `config.example.json` : configuration de depart
+- `desktop-bridge/bridge.py` : serveur local offline-first
 
-La plupart des lecteurs ZKTeco sur PC / mini-PC exposent soit :
+## Lancement simple
 
-- une sortie clavier HID
-- un SDK local / service local
-- ou un webhook / push cote reseau selon le modele
-
-Le socle ici supporte 2 approches :
-
-1. **HID clavier**
-   - le lecteur injecte directement le matricule / zkteco_id dans le champ
-   - l agent appuie automatiquement sur entree ou l operateur clique sur le bouton
-
-2. **Bridge JS local**
-   - un service local peut appeler :
-   - `window.ZKTecoBridge.submitIdentifier("FP-00042", "check_in")`
-
-## Configuration
-
-1. Copier `config.example.json` vers `config.json`
+1. Copier `config.example.json` en `config.json`
 2. Renseigner :
    - `apiBaseUrl`
    - `deviceCode`
+   - `kioskToken`
    - `companyName`
-3. Servir le dossier en local sur la machine de la borne
+3. Sur le PC local :
 
-## Important
+```bash
+python desktop-bridge/bridge.py
+```
 
-Le gabarit biometrie brut ne doit pas etre gere par ce dossier si le lecteur ZKTeco le conserve deja.
-Leopardo RH travaille ici avec :
+4. Ouvrir :
+   - borne : [http://127.0.0.1:8037/index.html](http://127.0.0.1:8037/index.html)
+   - admin local : [http://127.0.0.1:8037/admin.html](http://127.0.0.1:8037/admin.html)
 
-- `zkteco_id`
-- etat d approbation biometrie
-- evenement de pointage
+## Mode sans internet
 
-Ce dossier est donc le **poste d interface et de transmission**, pas un remplacement du firmware ZKTeco.
+Quand il n y a pas de connexion :
+
+- les pointages sont sauvegardes dans `desktop-bridge/data/kiosk.db`
+- l interface continue de fonctionner
+- le manager ou le RH peut synchroniser plus tard depuis `admin.html`
+
+Tu peux donc garder :
+
+- une journee
+- une semaine
+- ou meme un mois de pointages
+
+en local avant envoi vers l API.
+
+## Integration ZKTeco
+
+Deux modes reels sont prevus :
+
+1. **Clavier HID / keyboard wedge**
+   - le lecteur ou terminal injecte le `zkteco_id` ou le matricule
+   - la borne l envoie au bridge local
+
+2. **Bridge local / SDK**
+   - un service local peut appeler :
+   - `POST /local/punch`
+   - ou dans le navigateur :
+   - `window.ZKTecoBridge.submitIdentifier("FP-00042", "check_in", "fingerprint")`
+
+## Important sur la biometrie
+
+Le matériel ZKTeco reste responsable de la capture / matching brut de l empreinte ou du visage.
+
+Leopardo RH gere ici :
+
+- l autorisation metier
+- le lien employe <-> identifiant ZKTeco
+- la file offline
+- la synchronisation API
+- l affichage mobile une fois les donnees synchronisees
+
+Donc oui, la borne supporte bien le doigt et le visage, mais le **matching biometrie reel** depend du terminal / SDK ZKTeco branché sur le PC local.

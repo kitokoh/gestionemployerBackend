@@ -11,6 +11,15 @@
             </div>
         </div>
 
+        @if (session('kiosk_credentials'))
+            <div class="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-emerald-100">
+                <div class="text-sm font-semibold uppercase tracking-wide">Nouveaux identifiants borne</div>
+                <div class="mt-3 text-sm">Code appareil: <strong>{{ session('kiosk_credentials.device_code') }}</strong></div>
+                <div class="mt-2 text-sm">Token de sync: <strong>{{ session('kiosk_credentials.sync_token') }}</strong></div>
+                <div class="mt-3 text-sm text-emerald-200/90">Conserve ce token tout de suite dans `zkteco-kiosk/config.json`. Il ne sera plus re-affiche en clair apres cette page.</div>
+            </div>
+        @endif
+
         <div class="grid gap-6 lg:grid-cols-3">
             <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6 lg:col-span-2">
                 <h2 class="text-lg font-semibold">Demandes en attente</h2>

@@ -2,6 +2,15 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.57] - 2026-04-19
+### Borne ZKTeco offline-first et synchronisation differee
+
+- Ajout d un mode de synchronisation offline-first pour les bornes d entree entreprise avec file locale, reprise automatique et synchronisation manuelle ou des le retour du reseau
+- `zkteco-kiosk/desktop-bridge/bridge.py` fournit un pont local PC <-> API avec stockage SQLite des evenements, cache roster collaborateurs et endpoints `/local/*` pour une borne exploitable sans internet
+- L API expose maintenant un roster borne et un endpoint de synchronisation batch pour reimporter les pointages visage / empreinte collectes hors ligne sans doublons grace aux `external_event_id`
+- Les journaux de pointage conservent desormais la provenance borne, le type biometrie et le statut de synchronisation offline afin que le mobile et le back-office retrouvent les donnees apres sync
+- Les interfaces web borne / biometrie manager couvrent maintenant la creation de la borne, l affichage des identifiants de synchronisation et le suivi des demandes biometrie approuvees avant activation effective
+
 ## [4.1.56] - 2026-04-19
 ### Biometrie approuvee et borne d entree entreprise
 

@@ -130,6 +130,10 @@ trait CreatesMvpSchema
             $table->timestampTz('check_in')->nullable();
             $table->timestampTz('check_out')->nullable();
             $table->string('method', 20)->default('mobile');
+            $table->string('source_device_code', 40)->nullable();
+            $table->string('external_event_id', 100)->nullable()->unique();
+            $table->string('biometric_type', 20)->nullable();
+            $table->boolean('synced_from_offline')->default(false);
             $table->string('status', 20)->default('incomplete');
             $table->decimal('hours_worked', 5, 2)->nullable();
             $table->decimal('overtime_hours', 5, 2)->default(0);
@@ -168,10 +172,12 @@ trait CreatesMvpSchema
             $table->string('name', 100);
             $table->string('location_label', 120)->nullable();
             $table->string('device_code', 40)->unique();
+            $table->string('sync_token_hash', 255)->nullable();
             $table->string('status', 20)->default('active');
             $table->string('biometric_mode', 30)->default('fingerprint');
             $table->string('trusted_device_label', 120)->nullable();
             $table->timestampTz('last_seen_at')->nullable();
+            $table->timestampTz('last_sync_at')->nullable();
             $table->timestamps();
         });
 

@@ -53,7 +53,9 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/kiosks', [KioskController::class, 'register']);
     });
 
+    Route::get('/kiosks/{deviceCode}/roster', [KioskController::class, 'roster']);
     Route::post('/kiosks/{deviceCode}/punch', [KioskController::class, 'punch']);
+    Route::post('/kiosks/{deviceCode}/sync', [KioskController::class, 'sync']);
 
     Route::middleware(['auth:super_admin_api'])->prefix('platform')->group(function (): void {
         Route::get('/auth/me', [PlatformAuthController::class, 'me']);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ZKTeco Kiosk Bridge</title>
+  <title>Leopardo RH - Borne ZKTeco</title>
   <style>
     :root {
       color-scheme: dark;
@@ -28,7 +28,7 @@
       padding: 24px;
     }
     .app {
-      width: min(900px, 100%);
+      width: min(960px, 100%);
       background: rgba(15, 23, 42, 0.96);
       border: 1px solid var(--line);
       border-radius: 28px;
@@ -72,6 +72,20 @@
       border-color: rgba(244, 63, 94, 0.3);
       color: #fecdd3;
     }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(2, 6, 23, 0.72);
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 999px; background: #fbbf24; }
+    .dot.ok { background: #34d399; }
+    .dot.bad { background: #fb7185; }
     .meta dt { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
     .meta dd { margin: 0 0 16px; font-weight: 600; }
     @media (max-width: 760px) {
@@ -84,11 +98,19 @@
     <div class="eyebrow">ZKTeco Door Kiosk</div>
     <h1 id="companyName">Chargement...</h1>
     <p id="locationLabel">Initialisation de la borne d entree...</p>
+    <div class="pill"><span id="syncDot" class="dot"></span><span id="syncLabel">Verification de l etat reseau...</span></div>
 
     <div class="grid">
       <section class="card">
         <label for="identifier">Identifiant employe / zkteco_id / matricule</label>
-        <input id="identifier" name="identifier" autocomplete="off" placeholder="Scanner le doigt ou saisir l identifiant">
+        <input id="identifier" name="identifier" autocomplete="off" placeholder="Scanner le doigt ou le visage, ou saisir l identifiant">
+
+        <label for="biometricType" style="margin-top: 16px;">Type biometrie</label>
+        <select id="biometricType">
+          <option value="fingerprint">Empreinte</option>
+          <option value="face">Visage</option>
+          <option value="mixed">Mixte</option>
+        </select>
 
         <div class="actions">
           <button class="primary" id="checkInButton">Pointer entree</button>
@@ -103,9 +125,11 @@
           <dt>Code appareil</dt>
           <dd id="deviceCode">-</dd>
           <dt>Mode</dt>
-          <dd>ZKTeco / HID / bridge local</dd>
+          <dd>ZKTeco / HID / bridge local offline-first</dd>
+          <dt>File locale</dt>
+          <dd id="queueCount">0 evenement en attente</dd>
           <dt>Workflow</dt>
-          <dd>Pointage autorise seulement pour les employes dont la biometrie a ete validee par le manager ou le RH.</dd>
+          <dd>Le pointage est accepte localement meme sans internet, puis synchronise des que possible.</dd>
         </dl>
       </aside>
     </div>

@@ -17,14 +17,17 @@ class AttendanceKiosk extends Model
         'name',
         'location_label',
         'device_code',
+        'sync_token_hash',
         'status',
         'biometric_mode',
         'trusted_device_label',
         'last_seen_at',
+        'last_sync_at',
     ];
 
     protected $casts = [
         'last_seen_at' => 'datetime',
+        'last_sync_at' => 'datetime',
     ];
 
     public function company(): BelongsTo
