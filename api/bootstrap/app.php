@@ -1,13 +1,15 @@
 <?php
 
-use App\Http\Middleware\TenantMiddleware;
+use App\Exceptions\DomainException;
+use App\Http\Middleware\PlatformMaintenanceMiddleware;
 use App\Http\Middleware\RestoreSearchPathMiddleware;
+use App\Http\Middleware\TenantMiddleware;
 use App\Http\Middleware\Web\EnsureManagerMiddleware;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -21,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->append(App\Http\Middleware\PlatformMaintenanceMiddleware::class);
+        $middleware->append(PlatformMaintenanceMiddleware::class);
         $middleware->append(RestoreSearchPathMiddleware::class);
         $middleware->alias([
             'tenant' => TenantMiddleware::class,
@@ -29,7 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (App\Exceptions\DomainException $exception, Request $request) {
+        $exceptions->render(function (DomainException $exception, Request $request) {
             if (! ($request->expectsJson() || $request->is('api/*'))) {
                 return null;
             }

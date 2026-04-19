@@ -32,7 +32,7 @@ class AuthService
             $originalPath = DB::selectOne('SHOW search_path')->search_path;
             try {
                 DB::statement("SET search_path TO {$lookup->schema_name}, public");
-                
+
                 $employee = Employee::withoutGlobalScopes()
                     ->where('company_id', $lookup->company_id)
                     ->where('id', $lookup->employee_id)
@@ -56,20 +56,20 @@ class AuthService
         }
 
         if (! $employee || ! Hash::check($password, $employee->password_hash)) {
-            throw new InvalidCredentialsException();
+            throw new InvalidCredentialsException;
         }
 
         $company = $employee->company;
         if (! $company) {
-            throw new CompanyNotFoundException();
+            throw new CompanyNotFoundException;
         }
 
         if (in_array($company->status, ['suspended', 'expired'], true)) {
-            throw new AccountSuspendedException();
+            throw new AccountSuspendedException;
         }
 
         if ($employee->status !== 'active') {
-            throw new EmployeeNotActiveException();
+            throw new EmployeeNotActiveException;
         }
 
         $employee->forceFill(['last_login_at' => now()])->saveQuietly();

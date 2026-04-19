@@ -20,8 +20,7 @@ class AttendanceAlertMail extends Mailable
         public readonly string $thresholdTime,
         public readonly array $items,
         public readonly string $localDate,
-    ) {
-    }
+    ) {}
 
     public function build(): self
     {

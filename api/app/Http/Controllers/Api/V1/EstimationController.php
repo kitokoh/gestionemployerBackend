@@ -16,9 +16,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EstimationController extends Controller
 {
-    public function __construct(private readonly EstimationService $estimationService)
-    {
-    }
+    public function __construct(private readonly EstimationService $estimationService) {}
 
     public function dailySummary(DailySummaryRequest $request, string $employeeId): JsonResponse
     {

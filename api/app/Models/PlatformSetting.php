@@ -31,8 +31,8 @@ class PlatformSetting extends Model
         return Cache::rememberForever("platform_setting_{$key}", function () use ($key, $default) {
             DB::statement('SET search_path TO public');
             $setting = DB::table('platform_settings')->where('key', $key)->first();
-            
-            if (!$setting) {
+
+            if (! $setting) {
                 return $default;
             }
 

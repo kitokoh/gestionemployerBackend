@@ -14,8 +14,7 @@ class BiometricEnrollmentController extends Controller
 {
     public function __construct(
         private readonly BiometricEnrollmentService $biometricEnrollmentService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): JsonResponse
     {

@@ -7,9 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
 use Illuminate\Support\Facades\DB;
-use App\Models\Employee;
 
 class Company extends Model
 {
@@ -49,7 +47,7 @@ class Company extends Model
             }
 
             $originalPath = DB::selectOne('SHOW search_path')->search_path;
-            
+
             try {
                 if ($company->tenancy_type === 'shared') {
                     DB::statement('SET search_path TO shared_tenants, public');

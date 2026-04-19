@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\DomainException;
 use App\Models\Company;
 use App\Models\Employee;
 use App\Models\Plan;
 use App\Models\SuperAdmin;
+use App\Services\EmployeeService;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tests\Support\CreatesMvpSchema;
 use Tests\TestCase;
 
@@ -15,14 +19,16 @@ class PlatformPlanTest extends TestCase
     use CreatesMvpSchema;
 
     private SuperAdmin $superAdmin;
+
     private Plan $limitedPlan;
+
     private Company $company;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+        $this->withoutMiddleware([ValidateCsrfToken::class]);
         $this->setUpMvpSchema();
 
         $this->superAdmin = SuperAdmin::create([
@@ -42,7 +48,7 @@ class PlatformPlanTest extends TestCase
         ]);
 
         $this->company = Company::create([
-            'id' => \Illuminate\Support\Str::uuid(),
+            'id' => Str::uuid(),
             'name' => 'Limited Co',
             'slug' => 'limited-co',
             'email' => 'contact@limited.com',
@@ -96,10 +102,10 @@ class PlatformPlanTest extends TestCase
             'password_hash' => 'hash',
         ]);
 
-        $this->expectException(\App\Exceptions\DomainException::class);
+        $this->expectException(DomainException::class);
         $this->expectExceptionMessage("Quota d'employes atteint");
 
-        $service = app(\App\Services\EmployeeService::class);
+        $service = app(EmployeeService::class);
         $service->create([
             'first_name' => 'E3',
             'last_name' => 'L3',

@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Company;
 use App\Exceptions\DomainException;
+use App\Models\Company;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -13,8 +13,7 @@ class EmployeeService
 {
     public function __construct(
         private readonly UserInvitationService $userInvitationService,
-    ) {
-    }
+    ) {}
 
     public function create(array $payload, ?Employee $actor = null): Employee
     {

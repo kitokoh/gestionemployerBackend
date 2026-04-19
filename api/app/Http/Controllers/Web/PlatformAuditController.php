@@ -17,7 +17,7 @@ class PlatformAuditController extends Controller
         $query = AuditLog::query()->latest('created_at');
 
         if ($request->filled('action')) {
-            $query->where('action', 'like', '%' . $request->action . '%');
+            $query->where('action', 'like', '%'.$request->action.'%');
         }
 
         if ($request->filled('actor_type')) {

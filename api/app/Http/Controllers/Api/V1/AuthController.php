@@ -14,9 +14,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function __construct(private readonly AuthService $authService)
-    {
-    }
+    public function __construct(private readonly AuthService $authService) {}
 
     public function login(LoginRequest $request): JsonResponse
     {
@@ -47,7 +45,7 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        /** @var \App\Models\Employee $employee */
+        /** @var Employee $employee */
         $employee = $request->user();
 
         return new JsonResponse([

@@ -35,7 +35,8 @@ class PlatformDashboardController extends Controller
         try {
             DB::statement('SET search_path TO shared_tenants, public');
             $stats['total_employees'] = DB::table('shared_tenants.employees')->count();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
         DB::statement('SET search_path TO public');
 
         // MRR calculation (Total monthly price of all active companies)

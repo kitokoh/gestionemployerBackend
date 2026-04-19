@@ -10,7 +10,7 @@ class MigrationSafetyTest extends TestCase
 {
     /**
      * Scan migration files for destructive operations.
-     * Dangerous operations must explicitly include "// SAFETY: approved" on the same line or line before 
+     * Dangerous operations must explicitly include "// SAFETY: approved" on the same line or line before
      * to prevent accidental drops on production.
      */
     public function test_migrations_are_safe_from_accidental_drops(): void
@@ -90,7 +90,7 @@ class MigrationSafetyTest extends TestCase
                 $upStart = $i;
             }
         }
-        
+
         if ($downStart === -1) {
             return false;
         }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
+use App\Models\SuperAdmin;
 use App\Services\AuditLogger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +17,7 @@ class PlatformPlanController extends Controller
     {
         DB::statement('SET search_path TO public');
         $plans = Plan::all()->sortBy('price_monthly');
-        
+
         return view('platform.plans.index', compact('plans'));
     }
 
@@ -44,7 +45,7 @@ class PlatformPlanController extends Controller
 
         $plan = Plan::create($validated);
 
-        /** @var \App\Models\SuperAdmin $superAdmin */
+        /** @var SuperAdmin $superAdmin */
         $superAdmin = $request->user('super_admin_web');
         AuditLogger::log('super_admin', $superAdmin->id, null, 'platform.plans.create', $request, ['plan_id' => $plan->id, 'name' => $plan->name]);
 
@@ -61,7 +62,7 @@ class PlatformPlanController extends Controller
         DB::statement('SET search_path TO public');
 
         $validated = $request->validate([
-            'name' => 'required|string|max:50|unique:plans,name,' . $plan->id,
+            'name' => 'required|string|max:50|unique:plans,name,'.$plan->id,
             'price_monthly' => 'required|numeric|min:0',
             'price_yearly' => 'required|numeric|min:0',
             'max_employees' => 'nullable|integer|min:1',
@@ -75,7 +76,7 @@ class PlatformPlanController extends Controller
 
         $plan->update($validated);
 
-        /** @var \App\Models\SuperAdmin $superAdmin */
+        /** @var SuperAdmin $superAdmin */
         $superAdmin = $request->user('super_admin_web');
         AuditLogger::log('super_admin', $superAdmin->id, null, 'platform.plans.update', $request, ['plan_id' => $plan->id]);
 

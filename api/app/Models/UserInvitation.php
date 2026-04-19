@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class UserInvitation extends Model
 {
@@ -36,14 +38,14 @@ class UserInvitation extends Model
         'metadata' => 'array',
     ];
 
-    public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
 
     public function getTable(): string
     {
-        return \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql'
+        return DB::getDriverName() === 'pgsql'
             ? 'public.user_invitations'
             : 'user_invitations';
     }

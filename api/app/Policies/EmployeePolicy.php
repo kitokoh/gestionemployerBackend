@@ -35,4 +35,3 @@ class EmployeePolicy
         return $actor->id !== $employee->id;
     }
 }
-

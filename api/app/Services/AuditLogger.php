@@ -19,7 +19,8 @@ class AuditLogger
         try {
             $pathResult = DB::selectOne('SHOW search_path');
             $originalPath = $pathResult->search_path;
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+        }
 
         DB::statement('SET search_path TO public');
 

@@ -4,27 +4,28 @@ namespace Tests\Feature;
 
 use App\Models\Company;
 use App\Models\SuperAdmin;
-use Illuminate\Foundation\Testing\WithoutMiddleware;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Tests\TestCase;
 use Tests\Support\CreatesMvpSchema;
+use Tests\TestCase;
 
 class PlatformManagementTest extends TestCase
 {
     use CreatesMvpSchema;
 
     private SuperAdmin $superAdmin;
+
     private Company $company;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
-        $this->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
-        
+
+        $this->withoutMiddleware([ValidateCsrfToken::class]);
+
         $this->setUpMvpSchema();
-        
+
         // Ensure plans exist
         if (DB::table('plans')->count() === 0) {
             DB::table('plans')->insert([
@@ -54,7 +55,7 @@ class PlatformManagementTest extends TestCase
             'subscription_start' => now()->toDateString(),
             'subscription_end' => now()->addYear()->toDateString(),
         ]);
-        
+
         // Add a fake employee in user_lookups so we can test the blocked access
         DB::table('public.user_lookups')->insert([
             'email' => 'employee@testco.com',
@@ -63,7 +64,7 @@ class PlatformManagementTest extends TestCase
             'employee_id' => 99,
             'role' => 'employee',
         ]);
-        
+
         // Fake inserting employee inside shared_tenants
         DB::statement('SET search_path TO shared_tenants, public');
         DB::table('shared_tenants.employees')->insert([
@@ -115,7 +116,7 @@ class PlatformManagementTest extends TestCase
             ]);
 
         $response->assertRedirect(route('platform.companies.show', $this->company));
-        
+
         $this->company->refresh();
         $this->assertEquals('Updated Test Company', $this->company->name);
         $this->assertEquals(2, $this->company->plan_id);
@@ -130,7 +131,7 @@ class PlatformManagementTest extends TestCase
             ->post(route('platform.companies.suspend', $this->company));
 
         $response->assertRedirect();
-        
+
         $this->company->refresh();
         $this->assertEquals('suspended', $this->company->status);
     }
@@ -176,7 +177,7 @@ class PlatformManagementTest extends TestCase
             ->get(route('platform.companies.export'));
 
         $response->assertStatus(200);
-        $response->assertHeader('Content-Disposition', 'attachment; filename=leopardo_companies_export_' . date('Y-m-d') . '.csv');
+        $response->assertHeader('Content-Disposition', 'attachment; filename=leopardo_companies_export_'.date('Y-m-d').'.csv');
         $this->assertStringContainsString('text/csv', $response->headers->get('Content-type'));
     }
 }

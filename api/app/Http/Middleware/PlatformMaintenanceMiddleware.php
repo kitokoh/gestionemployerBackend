@@ -5,8 +5,8 @@ namespace App\Http\Middleware;
 use App\Models\PlatformSetting;
 use Closure;
 use Illuminate\Http\Request;
-use Throwable;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class PlatformMaintenanceMiddleware
 {

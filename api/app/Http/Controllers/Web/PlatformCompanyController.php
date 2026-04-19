@@ -19,8 +19,7 @@ class PlatformCompanyController extends Controller
 {
     public function __construct(
         private readonly CompanyProvisioningService $companyProvisioningService,
-    ) {
-    }
+    ) {}
 
     public function export(Request $request): StreamedResponse
     {

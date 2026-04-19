@@ -32,7 +32,7 @@ class AttendanceService
             );
 
             if ($open) {
-                throw new AlreadyCheckedInException();
+                throw new AlreadyCheckedInException;
             }
 
             $status = 'incomplete';
@@ -79,7 +79,7 @@ class AttendanceService
             );
 
             if (! $log) {
-                throw new MissingCheckInException();
+                throw new MissingCheckInException;
             }
 
             $schedule = $log->schedule_id
@@ -139,7 +139,7 @@ class AttendanceService
                 );
 
                 if (! $log) {
-                    throw new MissingCheckInException();
+                    throw new MissingCheckInException;
                 }
 
                 $schedule = $log->schedule_id

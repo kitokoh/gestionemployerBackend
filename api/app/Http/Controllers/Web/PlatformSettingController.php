@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\PlatformSetting;
+use App\Models\SuperAdmin;
 use App\Services\AuditLogger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -31,7 +32,7 @@ class PlatformSettingController extends Controller
             PlatformSetting::set($key, $value);
         }
 
-        /** @var \App\Models\SuperAdmin $superAdmin */
+        /** @var SuperAdmin $superAdmin */
         $superAdmin = $request->user('super_admin_web');
         AuditLogger::log('super_admin', $superAdmin->id, null, 'platform.settings.update_batch', $request, ['keys' => array_keys($data)]);
 

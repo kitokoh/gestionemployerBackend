@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\SuperAdmin;
 use App\Models\UserInvitation;
 use App\Services\AuditLogger;
 use App\Services\UserInvitationService;
@@ -13,9 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class PlatformInvitationController extends Controller
 {
-    public function __construct(private readonly UserInvitationService $userInvitationService)
-    {
-    }
+    public function __construct(private readonly UserInvitationService $userInvitationService) {}
 
     public function index(Request $request): View
     {
@@ -38,7 +37,7 @@ class PlatformInvitationController extends Controller
             return redirect()->back()->with('error', 'Cette invitation a deja ete acceptee.');
         }
 
-        /** @var \App\Models\SuperAdmin $superAdmin */
+        /** @var SuperAdmin $superAdmin */
         $superAdmin = $request->user('super_admin_web');
         $this->userInvitationService->resend($invitation, $superAdmin->email);
 
