@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -18,7 +18,7 @@ class AuditLogger
         array $metadata = [],
     ): void {
         try {
-            \App\Models\AuditLog::create([
+            AuditLog::create([
                 'actor_type' => $actorType,
                 'actor_id' => $actorId,
                 'company_id' => $companyId,

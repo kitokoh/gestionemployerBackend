@@ -340,11 +340,11 @@ trait CreatesMvpSchema
         $unprefixed = [
             'user_invitations', 'super_admins', 'platform_settings', 'personal_access_tokens',
             'notifications', 'attendance_kiosks', 'biometric_enrollment_requests', 'user_lookups',
-            'attendance_logs', 'employees', 'schedules', 'companies', 'plans', 'hr_model_templates'
+            'attendance_logs', 'employees', 'schedules', 'companies', 'plans', 'hr_model_templates',
         ];
 
         foreach ($unprefixed as $table) {
-             DB::statement("DROP TABLE IF EXISTS \"{$table}\" CASCADE");
+            DB::statement("DROP TABLE IF EXISTS \"{$table}\" CASCADE");
         }
     }
 

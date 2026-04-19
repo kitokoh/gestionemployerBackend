@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\SuperAdmin;
 use App\Services\AuditLogger;
 use Illuminate\Contracts\View\View;
@@ -13,7 +14,7 @@ class PlatformDashboardController extends Controller
 {
     public function index(Request $request): View
     {
-        /** @var \App\Models\SuperAdmin|null $superAdmin */
+        /** @var SuperAdmin|null $superAdmin */
         $superAdmin = $request->user('super_admin_web') ?? $request->user('super_admin_api');
 
         if ($superAdmin) {
@@ -21,10 +22,10 @@ class PlatformDashboardController extends Controller
         }
 
         $stats = [
-            'total_companies' => \App\Models\Company::count(),
-            'active_companies' => \App\Models\Company::where('status', 'active')->count(),
-            'trial_companies' => \App\Models\Company::where('status', 'trial')->count(),
-            'suspended_companies' => \App\Models\Company::whereIn('status', ['suspended', 'expired'])->count(),
+            'total_companies' => Company::count(),
+            'active_companies' => Company::where('status', 'active')->count(),
+            'trial_companies' => Company::where('status', 'trial')->count(),
+            'suspended_companies' => Company::whereIn('status', ['suspended', 'expired'])->count(),
             'total_employees' => 0,
             'mrr' => 0,
         ];
@@ -49,7 +50,7 @@ class PlatformDashboardController extends Controller
             $stats['mrr'] = 0;
         }
 
-        $recentCompanies = \App\Models\Company::query()
+        $recentCompanies = Company::query()
             ->select('id', 'name', 'city', 'country', 'created_at')
             ->orderBy('created_at', 'desc')
             ->limit(5)
