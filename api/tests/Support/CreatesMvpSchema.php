@@ -65,6 +65,43 @@ trait CreatesMvpSchema
             $table->timestampTz('created_at')->nullable();
         });
 
+        Schema::connection('platform')->create('audit_logs', function (Blueprint $table): void {
+            $table->id();
+            $table->string('actor_type')->nullable();
+            $table->unsignedBigInteger('actor_id')->nullable();
+            $table->unsignedBigInteger('company_id')->nullable();
+            $table->string('action');
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->json('metadata')->nullable();
+            $table->timestamp('created_at')->nullable();
+
+            $table->index(['actor_type', 'actor_id']);
+            $table->index('company_id');
+        });
+
+        Schema::connection('platform')->create('user_invitations', function (Blueprint $table): void {
+            $table->uuid('id')->primary();
+            $table->unsignedBigInteger('company_id')->nullable();
+            $table->string('schema_name')->nullable();
+            $table->unsignedBigInteger('employee_id')->nullable();
+            $table->string('email');
+            $table->string('role')->default('employee');
+            $table->string('manager_role')->nullable();
+            $table->string('invited_by_type')->nullable();
+            $table->string('invited_by_email')->nullable();
+            $table->string('token_hash');
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamp('accepted_at')->nullable();
+            $table->timestamp('last_sent_at')->nullable();
+            $table->json('metadata')->nullable();
+            $table->timestamps();
+
+            $table->index('company_id');
+            $table->index('email');
+            $table->index('token_hash');
+        });
+
         Schema::connection('platform')->create('platform_settings', function (Blueprint $table): void {
             $table->increments('id');
             $table->string('key', 100)->unique();
@@ -75,36 +112,6 @@ trait CreatesMvpSchema
             $table->timestamps();
         });
 
-        Schema::connection('platform')->create('user_invitations', function (Blueprint $table): void {
-            $table->uuid('id')->primary();
-            $table->uuid('company_id');
-            $table->string('schema_name', 63);
-            $table->unsignedInteger('employee_id');
-            $table->string('email', 150);
-            $table->string('role', 20);
-            $table->string('manager_role', 30)->nullable();
-            $table->string('invited_by_type', 20);
-            $table->string('invited_by_email', 150);
-            $table->string('token_hash', 64)->unique();
-            $table->timestampTz('expires_at');
-            $table->timestampTz('accepted_at')->nullable();
-            $table->timestampTz('last_sent_at')->nullable();
-            $table->json('metadata')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::connection('platform')->create('audit_logs', function (Blueprint $table): void {
-            $table->bigIncrements('id');
-            $table->string('actor_type', 50);
-            $table->unsignedBigInteger('actor_id');
-            $table->uuid('company_id')->nullable()->index();
-            $table->string('action', 120);
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->json('metadata')->nullable();
-            $table->timestampTz('created_at')->nullable();
-        });
-
         Schema::connection('platform')->create('hr_model_templates', function (Blueprint $table): void {
             $table->id();
             $table->char('country_code', 2)->unique();
@@ -113,7 +120,6 @@ trait CreatesMvpSchema
             $table->timestamps();
         });
 
-        // CENTRALIZED Sanctum table
         Schema::connection('platform')->create('personal_access_tokens', function (Blueprint $table): void {
             $table->id();
             $table->morphs('tokenable');

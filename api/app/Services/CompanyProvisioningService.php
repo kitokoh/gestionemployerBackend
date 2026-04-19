@@ -21,8 +21,8 @@ class CompanyProvisioningService
     {
         DB::statement('SET search_path TO public');
 
-        $result = DB::transaction(function () use ($payload): array {
-            $plan = DB::table('plans')->where('id', $payload['plan_id'])->first();
+        $result = DB::connection('platform')->transaction(function () use ($payload): array {
+            $plan = DB::connection('platform')->table('plans')->where('id', $payload['plan_id'])->first();
             $trialDays = (int) ($plan->trial_days ?? 14);
             $slug = $this->resolveUniqueSlug($payload['slug'] ?? Str::slug($payload['name']));
 
