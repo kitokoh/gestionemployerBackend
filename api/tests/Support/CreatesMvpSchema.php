@@ -72,7 +72,7 @@ trait CreatesMvpSchema
 
         Schema::create('employees', function (Blueprint $table): void {
             $table->increments('id');
-            $table->uuid('company_id');
+            $table->uuid('company_id')->nullable();
             $table->unsignedInteger('schedule_id')->nullable();
             $table->string('matricule', 20)->nullable();
             $table->string('zkteco_id', 50)->nullable();
