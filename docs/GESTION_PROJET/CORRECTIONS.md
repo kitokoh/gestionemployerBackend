@@ -74,10 +74,10 @@ Utiliser `app('current_company')` au lieu d'une variable `static` (risque de fui
 
 | # | Correction | Appliquée ? |
 |---|-----------|:-----------:|
-| C-1 | `/auth/refresh` OpenAPI | ⬜ |
-| C-2 | `is_active` → `status` | ⬜ |
-| C-3 | `user_lookups` PK | ⬜ |
-| C-4 | Starter prix | ⬜ |
-| C-5 | Trait double boot | ⬜ |
-| C-6 | Audit archive | ⬜ |
-| C-7 | `bon-fixed/` supprimé | ⬜ |
+| C-1 | `/auth/refresh` OpenAPI | ✅ |
+| C-2 | `is_active` → `status` | ✅ |
+| C-3 | `user_lookups` PK | ✅ |
+| C-4 | Starter prix | ✅ |
+| C-5 | Trait double boot | ✅ |
+| C-6 | Audit archive | ✅ |
+| C-7 | `bon-fixed/` supprimé | ✅ |

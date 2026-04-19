@@ -29,8 +29,8 @@ class PlatformSetting extends Model
         }
 
         return Cache::rememberForever("platform_setting_{$key}", function () use ($key, $default) {
-            DB::statement('SET search_path TO public');
-            $setting = DB::table('platform_settings')->where('key', $key)->first();
+            $tableName = DB::getDriverName() === 'pgsql' ? 'public.platform_settings' : 'platform_settings';
+            $setting = DB::table($tableName)->where('key', $key)->first();
 
             if (! $setting) {
                 return $default;
@@ -48,8 +48,6 @@ class PlatformSetting extends Model
         if (! self::tableExists()) {
             return;
         }
-
-        DB::statement('SET search_path TO public');
 
         self::query()->updateOrCreate(
             ['key' => $key],

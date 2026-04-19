@@ -15,17 +15,10 @@ class AuditLogger
         Request $request,
         array $metadata = [],
     ): void {
-        $originalPath = 'shared_tenants,public';
-        try {
-            $pathResult = DB::selectOne('SHOW search_path');
-            $originalPath = $pathResult->search_path;
-        } catch (\Throwable) {
-        }
-
-        DB::statement('SET search_path TO public');
+        $tableName = DB::getDriverName() === 'pgsql' ? 'public.audit_logs' : 'audit_logs';
 
         try {
-            DB::table('audit_logs')->insert([
+            DB::table($tableName)->insert([
                 'actor_type' => $actorType,
                 'actor_id' => $actorId,
                 'company_id' => $companyId,
@@ -35,8 +28,9 @@ class AuditLogger
                 'metadata' => json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
                 'created_at' => now(),
             ]);
-        } finally {
-            DB::statement("SET search_path TO {$originalPath}");
+        } catch (\Throwable $e) {
+            // Log error to system log but don't crash the request for an audit failure
+            \Illuminate\Support\Facades\Log::error("Failed to write audit log: " . $e->getMessage());
         }
     }
 }
