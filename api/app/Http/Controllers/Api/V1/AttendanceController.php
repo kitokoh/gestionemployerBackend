@@ -63,21 +63,13 @@ class AttendanceController extends Controller
         /** @var Employee $actor */
         $actor = $request->user();
 
-        $company = app('current_company');
-        $today = now('UTC')->setTimezone($company->timezone)->toDateString();
-
         $employeeId = $request->validated('employee_id');
 
         if ($employeeId) {
             $target = Employee::query()->findOrFail($employeeId);
             $this->authorize('viewForEmployee', [AttendanceLog::class, $target]);
 
-            $log = AttendanceLog::query()
-                ->where('employee_id', $target->id)
-                ->where('date', $today)
-                ->where('session_number', 1)
-                ->orderByDesc('id')
-                ->first();
+            $log = $this->attendanceService->resolveCurrentLog($target);
 
             return new JsonResponse([
                 'data' => [
@@ -89,12 +81,7 @@ class AttendanceController extends Controller
 
         $this->authorize('viewForEmployee', [AttendanceLog::class, $actor]);
 
-        $log = AttendanceLog::query()
-            ->where('employee_id', $actor->id)
-            ->where('date', $today)
-            ->where('session_number', 1)
-            ->orderByDesc('id')
-            ->first();
+        $log = $this->attendanceService->resolveCurrentLog($actor);
 
         return new JsonResponse([
             'data' => [
@@ -237,6 +224,7 @@ class AttendanceController extends Controller
                 'role',
                 'manager_role',
                 'status',
+                'schedule_id',
                 'salary_type',
                 'salary_base',
                 'hourly_rate',
@@ -248,14 +236,19 @@ class AttendanceController extends Controller
         $employeeIds = $employees->pluck('id')->all();
 
         $logsByEmployee = AttendanceLog::query()
-            ->where('date', $today)
+            ->whereIn('date', [$today, now('UTC')->setTimezone(app('current_company')->timezone)->subDay()->toDateString()])
             ->where('session_number', 1)
             ->whereIn('employee_id', $employeeIds)
             ->get()
-            ->keyBy('employee_id');
+            ->groupBy('employee_id');
 
         $items = $employees->map(function (Employee $employee) use ($logsByEmployee, $today) {
-            return $this->serializeTeamOverviewItem($employee, $logsByEmployee->get($employee->id), $today);
+            $log = $this->attendanceService->resolveCurrentLog(
+                employee: $employee,
+                candidateLogs: $logsByEmployee->get($employee->id)?->values()
+            );
+
+            return $this->serializeTeamOverviewItem($employee, $log, $today);
         })->values();
 
         return [
@@ -271,7 +264,11 @@ class AttendanceController extends Controller
 
     private function serializeTeamOverviewItem(Employee $employee, ?AttendanceLog $log, string $today): array
     {
-        $summary = $this->estimationService->dailySummaryFromLog($employee, $log, $today);
+        $summary = $this->estimationService->dailySummaryFromLog(
+            $employee,
+            $log,
+            $log?->date?->format('Y-m-d') ?? $today
+        );
 
         return [
             'employee_id' => $employee->id,

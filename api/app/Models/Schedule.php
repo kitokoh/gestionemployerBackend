@@ -34,4 +34,9 @@ class Schedule extends Model
         'overtime_threshold_weekly' => 'decimal:2',
         'is_default' => 'boolean',
     ];
+
+    public function crossesMidnight(): bool
+    {
+        return $this->end_time <= $this->start_time;
+    }
 }

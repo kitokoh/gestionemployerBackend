@@ -12,6 +12,7 @@ use App\Services\PlanFeatureGate;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EstimationController extends Controller
 {
@@ -76,5 +77,51 @@ class EstimationController extends Controller
         );
 
         return $pdf->download($fileName);
+    }
+
+    public function attendanceExport(QuickEstimateRequest $request, string $employeeId): StreamedResponse
+    {
+        $this->authorize('viewAny', Employee::class);
+        PlanFeatureGate::check(app('current_company'), 'excel_export');
+
+        $employee = Employee::query()->findOrFail($employeeId);
+        $rows = $this->estimationService->exportRows(
+            employee: $employee,
+            from: $request->validated('from'),
+            to: $request->validated('to')
+        );
+
+        $fileName = sprintf(
+            'attendance_export_employee_%s_%s_%s.csv',
+            $employee->id,
+            $request->validated('from'),
+            $request->validated('to')
+        );
+
+        return response()->streamDownload(function () use ($rows): void {
+            $handle = fopen('php://output', 'wb');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, [
+                'date',
+                'employee_name',
+                'check_in',
+                'check_out',
+                'hours_worked',
+                'overtime_hours',
+                'base_gain',
+                'overtime_gain',
+                'total_estimated',
+                'currency',
+                'status',
+            ]);
+
+            foreach ($rows as $row) {
+                fputcsv($handle, $row);
+            }
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 }

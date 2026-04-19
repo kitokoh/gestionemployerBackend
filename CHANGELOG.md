@@ -2,6 +2,16 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.59] - 2026-04-19
+### Phase 2 terrain : shifts de nuit, alertes RH et export comptable
+
+- P2-13 ajoute la prise en charge des shifts de nuit dans le moteur de pointage : une entree avant minuit reste visible apres minuit et la sortie peut etre enregistree le lendemain sans marquer l employe absent
+- P2-13 couvre aussi le dashboard de suivi equipe afin que les superviseurs voient correctement les shifts transverses sur minuit
+- P2-14 ajoute une commande `attendance:notify-missing-punches` planifiee toutes les 30 minutes pour remonter par email les arrivees ou sorties manquantes aux managers / RH
+- P2-14 journalise chaque alerte envoyee dans la table `notifications` pour eviter les doublons et preparer une future inbox RH
+- P2-15 ajoute un export CSV compatible Excel sur `/api/v1/employees/{employee}/attendance-export` pour la comptabilite et les rapprochements de paie
+- Ajout des tests `NightShiftAttendanceTest`, `MissingPunchAlertsCommandTest` et `AttendanceExportTest` pour verrouiller ces retours terrain prioritaires
+
 ## [4.1.58] - 2026-04-19
 ### Lot B post-MVP : corrections de pointage, RH pays et light mode
 
@@ -11,6 +21,8 @@
 - T27 etend les tests d estimation pour verifier un pays non DZ avec cotisations detaillees et majoration d heures supplementaires issue du modele RH
 - T32 ajoute un vrai mode clair mobile avec theme automatique / clair / sombre et persistance locale de la preference utilisateur
 - Durcissement complementaire avant beta : le roster kiosque ne renvoie plus l email des employes, le listing API des employes retire l email par defaut, la CI ajoute un smoke test sante explicite, et le safety guard migrations est maintenant versionne dans le depot
+- Ajout de `docs/GESTION_PROJET/AUDIT_BETA_READY_ET_RETOURS_CLIENTS.md` pour consolider le verdict Beta-ready et traduire les retours des 3 premiers clients en priorites produit concretes
+- `docs/GESTION_PROJET/BACKLOG_PHASE_2_POST_MVP.md` integre maintenant les nouvelles priorites terrain : shifts de nuit, alertes RH, export Excel/CSV, francisation UX web, pagination, PDF enrichi, estimation stabilisee, self-service et facturation multi-devise
 
 ## [4.1.57] - 2026-04-19
 ### Borne ZKTeco offline-first et synchronisation differee

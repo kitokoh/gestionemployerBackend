@@ -301,3 +301,117 @@ Pourquoi :
 
 - cela transforme directement le mobile en vrai outil de terrain pour tous les roles
 - cela donne rapidement une valeur visible au client
+
+## 6. Backlog terrain issu des 3 premiers clients
+
+## P2-13 - Shifts de nuit et changement de date
+
+### Objectif
+
+Gerer correctement les pointages qui traversent minuit.
+
+### Taches
+
+- ajouter une logique de shift cross-midnight
+- recalculer presence / absence sur la plage du shift et non sur la seule date civile
+- couvrir check-in/check-out de nuit
+- tester pharmacie / securite / horaires decales
+
+## P2-14 - Alertes RH automatiques
+
+### Objectif
+
+Prevenir les superviseurs quand une anomalie de pointage survient.
+
+### Taches
+
+- alerte absence a heure seuil (ex. 9h30)
+- alerte oubli de check-out (ex. 18h)
+- choix canal email / push
+- parametrage par entreprise
+
+## P2-15 - Export Excel / CSV comptable
+
+### Objectif
+
+Permettre l exploitation comptable des pointages hors PDF.
+
+### Taches
+
+- export Excel / CSV par periode
+- colonnes heures normales / supp / statut / employe
+- acces RH / manager selon droits
+
+## P2-16 - Francisation et professionnalisation UX web
+
+### Objectif
+
+Supprimer les incoherences visibles de langue et de libelles.
+
+### Taches
+
+- harmoniser FR web
+- revoir CTA et libelles metier
+- corriger les boutons non professionnels
+
+## P2-17 - Pagination, filtres et recherche employes
+
+### Objectif
+
+Eviter les listes lourdes et lentes chez les clients de taille moyenne.
+
+### Taches
+
+- pagination par defaut
+- recherche nom / email / matricule
+- filtres par role / statut / equipe
+
+## P2-18 - PDF pre-paie enrichi
+
+### Objectif
+
+Rendre le PDF reellement exploitable par DRH / compta.
+
+### Taches
+
+- heures normales
+- heures supplementaires
+- base brute
+- cotisations detaillees
+- net estime
+
+## P2-19 - Stabilisation du total estime
+
+### Objectif
+
+Rendre l estimation plus stable et comprehensible pour l utilisateur.
+
+### Taches
+
+- figer les hypotheses de calcul
+- afficher date / mode de calcul
+- distinguer estimation temps reel et cloturee
+
+## P2-20 - Onboarding self-service entreprise
+
+### Objectif
+
+Reduire la dependance a la creation manuelle de comptes clients.
+
+### Taches
+
+- inscription entreprise
+- creation espace essai
+- invitation initiale admin/manager
+
+## P2-21 - Facturation multi-devise
+
+### Objectif
+
+Dissocier devise de paiement et devise de facturation.
+
+### Taches
+
+- paiement en devise plateforme
+- facture en devise client
+- affichage comptable clair

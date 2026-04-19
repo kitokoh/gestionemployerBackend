@@ -285,7 +285,7 @@ class MobilePayloadContractTest extends TestCase
                     'id',
                     'first_name',
                     'last_name',
-                    'email',
+                    'matricule',
                     'role',
                     'status',
                 ],

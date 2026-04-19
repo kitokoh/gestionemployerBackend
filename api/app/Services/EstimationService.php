@@ -121,6 +121,40 @@ class EstimationService
         ];
     }
 
+    public function exportRows(Employee $employee, string $from, string $to): array
+    {
+        $company = app('current_company');
+
+        $fromLocal = Carbon::createFromFormat('Y-m-d', $from, $company->timezone)->startOfDay();
+        $toLocal = Carbon::createFromFormat('Y-m-d', $to, $company->timezone)->startOfDay();
+
+        $logs = AttendanceLog::query()
+            ->where('employee_id', $employee->id)
+            ->where('date', '>=', $fromLocal->toDateString())
+            ->where('date', '<=', $toLocal->toDateString())
+            ->where('session_number', 1)
+            ->orderBy('date')
+            ->get();
+
+        return $logs->map(function (AttendanceLog $log) use ($employee): array {
+            $summary = $this->dailySummaryFromLog($employee, $log, $log->date->format('Y-m-d'));
+
+            return [
+                'date' => $summary['date'],
+                'employee_name' => $summary['name'],
+                'check_in' => $summary['check_in'],
+                'check_out' => $summary['check_out'],
+                'hours_worked' => $summary['hours_worked'],
+                'overtime_hours' => $summary['overtime_hours'],
+                'base_gain' => $summary['base_gain'],
+                'overtime_gain' => $summary['overtime_gain'],
+                'total_estimated' => $summary['total_estimated'],
+                'currency' => $summary['currency'],
+                'status' => $summary['status'],
+            ];
+        })->all();
+    }
+
     public function dailySummaryFromLog(Employee $employee, ?AttendanceLog $log, ?string $date = null): array
     {
         $company = app('current_company');

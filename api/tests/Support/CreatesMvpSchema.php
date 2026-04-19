@@ -181,6 +181,19 @@ trait CreatesMvpSchema
             $table->timestamps();
         });
 
+        Schema::create('notifications', function (Blueprint $table): void {
+            $table->increments('id');
+            $table->uuid('company_id')->nullable()->index();
+            $table->unsignedInteger('employee_id');
+            $table->string('type', 100);
+            $table->string('title', 200);
+            $table->text('body');
+            $table->json('data')->nullable();
+            $table->boolean('is_read')->default(false);
+            $table->timestampTz('read_at')->nullable();
+            $table->timestampTz('created_at')->nullable();
+        });
+
         Schema::create('personal_access_tokens', function (Blueprint $table): void {
             $table->id();
             $table->morphs('tokenable');
@@ -209,6 +222,16 @@ trait CreatesMvpSchema
                 last_login_at timestamp with time zone null,
                 created_at timestamp with time zone null
             )');
+            DB::statement('CREATE TABLE public.platform_settings (
+                id serial primary key,
+                key varchar(100) not null unique,
+                value text null,
+                label varchar(150) not null,
+                category varchar(50) not null default \'general\',
+                type varchar(20) not null default \'string\',
+                created_at timestamp with time zone null,
+                updated_at timestamp with time zone null
+            )');
             DB::statement('CREATE TABLE public.user_invitations (
                 id uuid primary key,
                 company_id uuid not null,
@@ -226,6 +249,17 @@ trait CreatesMvpSchema
                 metadata jsonb null,
                 created_at timestamp with time zone null,
                 updated_at timestamp with time zone null
+            )');
+            DB::statement('CREATE TABLE public.audit_logs (
+                id bigserial primary key,
+                actor_type varchar(50) not null,
+                actor_id bigint not null,
+                company_id uuid null,
+                action varchar(120) not null,
+                ip_address varchar(45) null,
+                user_agent text null,
+                metadata jsonb null,
+                created_at timestamp with time zone null
             )');
         } else {
             Schema::create('user_lookups', function (Blueprint $table): void {
@@ -286,6 +320,7 @@ trait CreatesMvpSchema
     private function dropMvpTables(): void
     {
         if (DB::getDriverName() === 'pgsql') {
+            DB::statement('DROP TABLE IF EXISTS public.audit_logs CASCADE');
             DB::statement('DROP TABLE IF EXISTS public.user_lookups CASCADE');
             DB::statement('DROP TABLE IF EXISTS public.user_invitations CASCADE');
             DB::statement('DROP TABLE IF EXISTS public.super_admins CASCADE');
@@ -301,6 +336,7 @@ trait CreatesMvpSchema
         DB::statement('DROP TABLE IF EXISTS "user_invitations" CASCADE');
         DB::statement('DROP TABLE IF EXISTS "super_admins" CASCADE');
         DB::statement('DROP TABLE IF EXISTS "personal_access_tokens" CASCADE');
+        DB::statement('DROP TABLE IF EXISTS "notifications" CASCADE');
         DB::statement('DROP TABLE IF EXISTS "attendance_kiosks" CASCADE');
         DB::statement('DROP TABLE IF EXISTS "biometric_enrollment_requests" CASCADE');
         DB::statement('DROP TABLE IF EXISTS "user_lookups" CASCADE');

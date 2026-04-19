@@ -8,6 +8,7 @@ use App\Models\AttendanceLog;
 use App\Models\Employee;
 use App\Models\Schedule;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -19,21 +20,21 @@ class AttendanceService
             $company = app('current_company');
 
             $nowUtc = now('UTC');
-            $today = $nowUtc->copy()->setTimezone($company->timezone)->toDateString();
+            $schedule = $this->resolveSchedule($employee);
+            $today = $this->resolveShiftDate($nowUtc, $schedule, $company->timezone);
 
-            $open = AttendanceLog::query()
-                ->where('employee_id', $employee->id)
-                ->where('date', $today)
-                ->where('session_number', 1)
-                ->whereNull('check_out')
-                ->lockForUpdate()
-                ->first();
+            $open = $this->findOpenLogForMoment(
+                employee: $employee,
+                occurredAtUtc: $nowUtc,
+                schedule: $schedule,
+                timezone: $company->timezone,
+                lockForUpdate: true,
+            );
 
             if ($open) {
                 throw new AlreadyCheckedInException();
             }
 
-            $schedule = $this->resolveSchedule($employee);
             $status = 'incomplete';
             $lateMinutes = 0;
 
@@ -67,15 +68,15 @@ class AttendanceService
             $company = app('current_company');
 
             $nowUtc = now('UTC');
-            $today = $nowUtc->copy()->setTimezone($company->timezone)->toDateString();
+            $schedule = $this->resolveSchedule($employee);
 
-            $log = AttendanceLog::query()
-                ->where('employee_id', $employee->id)
-                ->where('date', $today)
-                ->where('session_number', 1)
-                ->whereNull('check_out')
-                ->lockForUpdate()
-                ->first();
+            $log = $this->findOpenLogForMoment(
+                employee: $employee,
+                occurredAtUtc: $nowUtc,
+                schedule: $schedule,
+                timezone: $company->timezone,
+                lockForUpdate: true,
+            );
 
             if (! $log) {
                 throw new MissingCheckInException();
@@ -83,7 +84,7 @@ class AttendanceService
 
             $schedule = $log->schedule_id
                 ? Schedule::query()->find($log->schedule_id)
-                : $this->resolveSchedule($employee);
+                : $schedule;
 
             $seconds = $log->check_in?->diffInSeconds($nowUtc) ?? 0;
             $hours = round($seconds / 3600, 2);
@@ -99,7 +100,7 @@ class AttendanceService
 
             if ($log->status === 'incomplete' && $schedule) {
                 $checkInLocal = $log->check_in->copy()->setTimezone($company->timezone);
-                $startLocal = Carbon::parse($today.' '.$schedule->start_time, $company->timezone);
+                $startLocal = Carbon::parse($log->date->format('Y-m-d').' '.$schedule->start_time, $company->timezone);
                 $diffMinutes = $startLocal->diffInMinutes($checkInLocal, false);
                 $log->late_minutes = max(0, $diffMinutes);
                 $log->status = $diffMinutes > (int) $schedule->late_tolerance_minutes ? 'late' : 'ontime';
@@ -116,9 +117,10 @@ class AttendanceService
         return DB::transaction(function () use ($employee, $payload): AttendanceLog {
             $company = app('current_company');
             $occurredAt = Carbon::parse($payload['occurred_at'] ?? now('UTC'))->utc();
-            $today = $occurredAt->copy()->setTimezone($company->timezone)->toDateString();
             $action = $payload['action'] ?? 'check_in';
             $externalEventId = $payload['external_event_id'] ?? null;
+            $schedule = $this->resolveSchedule($employee);
+            $today = $this->resolveShiftDate($occurredAt, $schedule, $company->timezone);
 
             if ($externalEventId) {
                 $existing = AttendanceLog::query()->where('external_event_id', $externalEventId)->lockForUpdate()->first();
@@ -128,13 +130,13 @@ class AttendanceService
             }
 
             if ($action === 'check_out') {
-                $log = AttendanceLog::query()
-                    ->where('employee_id', $employee->id)
-                    ->where('date', $today)
-                    ->where('session_number', 1)
-                    ->whereNull('check_out')
-                    ->lockForUpdate()
-                    ->first();
+                $log = $this->findOpenLogForMoment(
+                    employee: $employee,
+                    occurredAtUtc: $occurredAt,
+                    schedule: $schedule,
+                    timezone: $company->timezone,
+                    lockForUpdate: true,
+                );
 
                 if (! $log) {
                     throw new MissingCheckInException();
@@ -142,7 +144,7 @@ class AttendanceService
 
                 $schedule = $log->schedule_id
                     ? Schedule::query()->find($log->schedule_id)
-                    : $this->resolveSchedule($employee);
+                    : $schedule;
 
                 $seconds = $log->check_in?->diffInSeconds($occurredAt) ?? 0;
                 $hours = round($seconds / 3600, 2);
@@ -163,19 +165,18 @@ class AttendanceService
                 return $log;
             }
 
-            $open = AttendanceLog::query()
-                ->where('employee_id', $employee->id)
-                ->where('date', $today)
-                ->where('session_number', 1)
-                ->whereNull('check_out')
-                ->lockForUpdate()
-                ->first();
+            $open = $this->findOpenLogForMoment(
+                employee: $employee,
+                occurredAtUtc: $occurredAt,
+                schedule: $schedule,
+                timezone: $company->timezone,
+                lockForUpdate: true,
+            );
 
             if ($open) {
                 return $open;
             }
 
-            $schedule = $this->resolveSchedule($employee);
             $status = 'incomplete';
             $lateMinutes = 0;
 
@@ -284,6 +285,55 @@ class AttendanceService
         });
     }
 
+    public function resolveCurrentLog(Employee $employee, ?Carbon $momentUtc = null, ?Collection $candidateLogs = null): ?AttendanceLog
+    {
+        $company = app('current_company');
+        $momentUtc ??= now('UTC');
+        $schedule = $this->resolveSchedule($employee);
+        $dates = [$momentUtc->copy()->setTimezone($company->timezone)->toDateString()];
+
+        if ($schedule?->crossesMidnight()) {
+            $localMoment = $momentUtc->copy()->setTimezone($company->timezone);
+            $endBoundary = Carbon::parse($localMoment->toDateString().' '.$schedule->end_time, $company->timezone);
+
+            if ($localMoment->lt($endBoundary)) {
+                $dates = [
+                    $localMoment->copy()->subDay()->toDateString(),
+                    $localMoment->toDateString(),
+                ];
+            }
+        }
+
+        if ($candidateLogs !== null) {
+            $logsByDate = $candidateLogs
+                ->sortByDesc('id')
+                ->keyBy(fn (AttendanceLog $log) => $log->date->format('Y-m-d'));
+
+            foreach ($dates as $date) {
+                if ($logsByDate->has($date)) {
+                    return $logsByDate->get($date);
+                }
+            }
+
+            return null;
+        }
+
+        foreach ($dates as $date) {
+            $log = AttendanceLog::query()
+                ->where('employee_id', $employee->id)
+                ->where('date', $date)
+                ->where('session_number', 1)
+                ->orderByDesc('id')
+                ->first();
+
+            if ($log) {
+                return $log;
+            }
+        }
+
+        return null;
+    }
+
     private function resolveSchedule(Employee $employee): ?Schedule
     {
         if ($employee->schedule_id) {
@@ -291,5 +341,61 @@ class AttendanceService
         }
 
         return null;
+    }
+
+    private function findOpenLogForMoment(
+        Employee $employee,
+        Carbon $occurredAtUtc,
+        ?Schedule $schedule,
+        string $timezone,
+        bool $lockForUpdate = false,
+    ): ?AttendanceLog {
+        foreach ($this->candidateDatesForMoment($occurredAtUtc, $schedule, $timezone) as $date) {
+            $query = AttendanceLog::query()
+                ->where('employee_id', $employee->id)
+                ->where('date', $date)
+                ->where('session_number', 1)
+                ->whereNull('check_out');
+
+            if ($lockForUpdate) {
+                $query->lockForUpdate();
+            }
+
+            $log = $query->orderByDesc('id')->first();
+
+            if ($log) {
+                return $log;
+            }
+        }
+
+        return null;
+    }
+
+    private function candidateDatesForMoment(Carbon $occurredAtUtc, ?Schedule $schedule, string $timezone): array
+    {
+        $localMoment = $occurredAtUtc->copy()->setTimezone($timezone);
+        $currentDate = $localMoment->toDateString();
+
+        if (! $schedule?->crossesMidnight()) {
+            return [$currentDate];
+        }
+
+        $endBoundary = Carbon::parse($currentDate.' '.$schedule->end_time, $timezone);
+        if ($localMoment->lt($endBoundary)) {
+            return [
+                $localMoment->copy()->subDay()->toDateString(),
+                $currentDate,
+            ];
+        }
+
+        return [
+            $currentDate,
+            $localMoment->copy()->subDay()->toDateString(),
+        ];
+    }
+
+    private function resolveShiftDate(Carbon $occurredAtUtc, ?Schedule $schedule, string $timezone): string
+    {
+        return $this->candidateDatesForMoment($occurredAtUtc, $schedule, $timezone)[0];
     }
 }

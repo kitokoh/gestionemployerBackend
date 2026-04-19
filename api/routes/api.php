@@ -41,6 +41,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/employees/{employee}/daily-summary', [EstimationController::class, 'dailySummary']);
         Route::get('/employees/{employee}/quick-estimate', [EstimationController::class, 'quickEstimate']);
         Route::get('/employees/{employee}/receipt', [EstimationController::class, 'receipt']);
+        Route::get('/employees/{employee}/attendance-export', [EstimationController::class, 'attendanceExport']);
 
         Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn']);
         Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut']);
