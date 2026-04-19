@@ -97,12 +97,33 @@ trait CreatesMvpSchema
             $table->bigIncrements('id');
             $table->string('actor_type', 50);
             $table->unsignedBigInteger('actor_id');
-            $table->uuid('company_id')->nullable();
+            $table->uuid('company_id')->nullable()->index();
             $table->string('action', 120);
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->json('metadata')->nullable();
             $table->timestampTz('created_at')->nullable();
+        });
+
+        Schema::connection('platform')->create('hr_model_templates', function (Blueprint $table): void {
+            $table->increments('id');
+            $table->char('country', 2)->unique();
+            $table->decimal('dz_deduction_rate', 5, 2)->default(0);
+            $table->decimal('overtime_rate', 4, 3)->default(1.5);
+            $table->json('contributions')->nullable();
+            $table->timestamps();
+        });
+
+        // CENTRALIZED Sanctum table
+        Schema::connection('platform')->create('personal_access_tokens', function (Blueprint $table): void {
+            $table->id();
+            $table->morphs('tokenable');
+            $table->string('name');
+            $table->string('token', 64)->unique();
+            $table->text('abilities')->nullable();
+            $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamps();
         });
 
         if (DB::getDriverName() === 'pgsql') {
@@ -248,17 +269,6 @@ trait CreatesMvpSchema
             $table->timestampTz('created_at')->nullable();
         });
 
-        Schema::create('personal_access_tokens', function (Blueprint $table): void {
-            $table->id();
-            $table->morphs('tokenable');
-            $table->string('name');
-            $table->string('token', 64)->unique();
-            $table->text('abilities')->nullable();
-            $table->timestamp('last_used_at')->nullable();
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamps();
-        });
-
         $this->restoreDefaultSearchPath();
     }
 
@@ -281,7 +291,8 @@ trait CreatesMvpSchema
 
     private function dropMvpTables(): void
     {
-        $sharedTables = [
+        $platformTables = [
+            'personal_access_tokens',
             'audit_logs',
             'platform_settings',
             'user_lookups',
@@ -293,7 +304,6 @@ trait CreatesMvpSchema
         ];
 
         $tenantTables = [
-            'personal_access_tokens',
             'notifications',
             'attendance_kiosks',
             'biometric_enrollment_requests',
@@ -303,14 +313,14 @@ trait CreatesMvpSchema
         ];
 
         if (DB::getDriverName() === 'pgsql') {
-            foreach ($sharedTables as $table) {
+            foreach ($platformTables as $table) {
                 DB::connection('platform')->statement("DROP TABLE IF EXISTS public.{$table} CASCADE");
             }
             foreach ($tenantTables as $table) {
                 DB::statement("DROP TABLE IF EXISTS {$table} CASCADE");
             }
         } else {
-            foreach ($sharedTables as $table) {
+            foreach ($platformTables as $table) {
                 Schema::connection('platform')->dropIfExists($table);
             }
             foreach ($tenantTables as $table) {

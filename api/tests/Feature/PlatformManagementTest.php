@@ -57,7 +57,7 @@ class PlatformManagementTest extends TestCase
         ]);
 
         // Add a fake employee in user_lookups so we can test the blocked access
-        DB::table('public.user_lookups')->insert([
+        DB::connection('platform')->table('user_lookups')->insert([
             'email' => 'employee@testco.com',
             'company_id' => $this->company->id,
             'schema_name' => 'shared_tenants',

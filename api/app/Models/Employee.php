@@ -17,6 +17,8 @@ class Employee extends Authenticatable
     use HasApiTokens;
     use HasFactory;
 
+    protected $connection = 'default';
+
     protected $table = 'employees';
 
     protected $fillable = [

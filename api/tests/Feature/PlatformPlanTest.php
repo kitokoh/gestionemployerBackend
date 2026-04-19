@@ -82,7 +82,7 @@ class PlatformPlanTest extends TestCase
             ]);
 
         $response->assertRedirect(route('platform.plans.index'));
-        $this->assertDatabaseHas('plans', ['name' => 'Business Plus'], 'public');
+        $this->assertDatabaseHas('plans', ['name' => 'Business Plus'], 'platform');
     }
 
     public function test_quota_is_enforced_on_employee_creation(): void

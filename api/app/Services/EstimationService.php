@@ -287,7 +287,7 @@ class EstimationService
             return $defaultRate;
         }
 
-        $row = DB::table(DB::getDriverName() === 'pgsql' ? 'public.hr_model_templates' : 'hr_model_templates')
+        $row = DB::connection('platform')->table('hr_model_templates')
             ->where('country_code', $countryCode)
             ->first();
 
@@ -318,7 +318,7 @@ class EstimationService
             return self::DEFAULT_OVERTIME_RATE_1;
         }
 
-        $row = DB::table(DB::getDriverName() === 'pgsql' ? 'public.hr_model_templates' : 'hr_model_templates')
+        $row = DB::connection('platform')->table('hr_model_templates')
             ->select('working_hours')
             ->where('country_code', $countryCode)
             ->first();
@@ -336,12 +336,6 @@ class EstimationService
 
     private function hrModelTemplatesTableExists(): bool
     {
-        if (DB::getDriverName() !== 'pgsql') {
-            return Schema::hasTable('hr_model_templates');
-        }
-
-        $table = DB::selectOne("select to_regclass('public.hr_model_templates') as table_name");
-
-        return $table?->table_name !== null;
+        return Schema::connection('platform')->hasTable('hr_model_templates');
     }
 }

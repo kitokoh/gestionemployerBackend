@@ -20,6 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Model::preventLazyLoading(app()->isLocal());
+        \Laravel\Sanctum\Sanctum::usePersonalAccessTokenModel(\App\Models\PersonalAccessToken::class);
+        
+        \Illuminate\Database\Eloquent\Model::preventLazyLoading(app()->isLocal());
     }
 }

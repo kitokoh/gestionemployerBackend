@@ -7,11 +7,9 @@ use App\Models\Company;
 use App\Models\Employee;
 use App\Models\Schedule;
 use App\Services\EstimationService;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Tests\Support\CreatesMvpSchema;
 use Tests\TestCase;
 
@@ -27,12 +25,6 @@ class EstimationServiceTest extends TestCase
 
     protected function tearDown(): void
     {
-        if (DB::getDriverName() === 'pgsql') {
-            DB::statement('DROP TABLE IF EXISTS public.hr_model_templates CASCADE');
-        } else {
-            Schema::dropIfExists('hr_model_templates');
-        }
-
         $this->tearDownMvpSchema();
         parent::tearDown();
     }
@@ -91,9 +83,8 @@ class EstimationServiceTest extends TestCase
             'hourly_rate' => 100,
         ]);
         app()->instance('current_company', $company);
-        $this->createHrModelTemplatesTable();
 
-        DB::table(DB::getDriverName() === 'pgsql' ? 'public.hr_model_templates' : 'hr_model_templates')->insert([
+        DB::connection('platform')->table('hr_model_templates')->insert([
             'country_code' => 'DZ',
             'cotisations' => json_encode(['total_salarial' => 0.12], JSON_THROW_ON_ERROR),
         ]);
@@ -132,9 +123,8 @@ class EstimationServiceTest extends TestCase
         ])->save();
 
         app()->instance('current_company', $company->fresh());
-        $this->createHrModelTemplatesTable();
 
-        DB::table(DB::getDriverName() === 'pgsql' ? 'public.hr_model_templates' : 'hr_model_templates')->insert([
+        DB::connection('platform')->table('hr_model_templates')->insert([
             'country_code' => 'MA',
             'cotisations' => json_encode([
                 'salariales' => [
@@ -212,41 +202,5 @@ class EstimationServiceTest extends TestCase
         ], $employeeOverrides));
 
         return [$company, $employee];
-    }
-
-    private function createHrModelTemplatesTable(): void
-    {
-        if (DB::getDriverName() === 'pgsql') {
-            if (DB::selectOne("select to_regclass('public.hr_model_templates') as table_name")?->table_name !== null) {
-                return;
-            }
-
-            DB::statement('SET search_path TO public');
-            try {
-                Schema::create('hr_model_templates', function (Blueprint $table): void {
-                    $table->id();
-                    $table->char('country_code', 2)->unique();
-                    $table->json('cotisations')->nullable();
-                    $table->json('working_hours')->nullable();
-                    $table->timestamps();
-                });
-            } finally {
-                DB::statement('SET search_path TO shared_tenants,public');
-            }
-
-            return;
-        }
-
-        if (Schema::hasTable('hr_model_templates')) {
-            return;
-        }
-
-        Schema::create('hr_model_templates', function (Blueprint $table): void {
-            $table->id();
-            $table->char('country_code', 2)->unique();
-            $table->json('cotisations')->nullable();
-            $table->json('working_hours')->nullable();
-            $table->timestamps();
-        });
     }
 }
