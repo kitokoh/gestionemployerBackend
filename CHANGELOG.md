@@ -2,6 +2,13 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.54] - 2026-04-19
+### Stabilisation CodeQL GitHub Actions
+
+- `.github/workflows/codeql.yml` bascule l analyse CodeQL vers le langage `actions`, qui est pris en charge par GitHub CodeQL, au lieu de `php` qui etait rejete
+- Le workflow CodeQL passe de `github/codeql-action@v3` a `@v4` pour supprimer les avertissements de deprecation Node 20 / v3
+- Les etapes PHP inutiles sont retirees du workflow CodeQL afin d eviter un echec d initialisation avant publication du statut
+
 ## [4.1.53] - 2026-04-19
 ### Parametres mobile, acces par role et preparation biometrie
 
