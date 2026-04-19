@@ -11,6 +11,7 @@ class Plan extends Model
     use HasFactory;
 
     protected $connection = 'platform';
+
     protected $table = 'plans';
 
     public $timestamps = false;

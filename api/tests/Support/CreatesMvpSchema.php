@@ -311,15 +311,14 @@ trait CreatesMvpSchema
         foreach ($tenantTables as $table) {
             Schema::dropIfExists($table);
         }
-        
         // Sécurité supplémentaire pour pgsql (CASCADE)
         if (DB::getDriverName() === 'pgsql') {
-             foreach ($sharedTables as $table) {
-                 DB::connection('platform')->statement("DROP TABLE IF EXISTS public.{$table} CASCADE");
-             }
-             foreach ($tenantTables as $table) {
-                 DB::statement("DROP TABLE IF EXISTS {$table} CASCADE");
-             }
+            foreach ($sharedTables as $table) {
+                DB::connection('platform')->statement("DROP TABLE IF EXISTS public.{$table} CASCADE");
+            }
+            foreach ($tenantTables as $table) {
+                DB::statement("DROP TABLE IF EXISTS {$table} CASCADE");
+            }
         }
     }
 

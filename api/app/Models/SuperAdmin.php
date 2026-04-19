@@ -10,6 +10,7 @@ class SuperAdmin extends Authenticatable
     use HasApiTokens;
 
     protected $connection = 'platform';
+
     protected $table = 'super_admins';
 
     public $timestamps = false;

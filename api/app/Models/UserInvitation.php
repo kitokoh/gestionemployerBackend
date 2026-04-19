@@ -11,6 +11,7 @@ class UserInvitation extends Model
     use HasUuids;
 
     protected $connection = 'platform';
+
     protected $table = 'user_invitations';
 
     public $incrementing = false;

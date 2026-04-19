@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Schema;
 class PlatformSetting extends Model
 {
     protected $connection = 'platform';
+
     protected $table = 'platform_settings';
 
     protected $fillable = [
@@ -27,7 +28,7 @@ class PlatformSetting extends Model
      */
     public static function get(string $key, $default = null)
     {
-        if (! self::tableExists()) {
+        if (!self::tableExists()) {
             return $default;
         }
 
