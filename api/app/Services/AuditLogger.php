@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class AuditLogger
 {
@@ -28,9 +30,9 @@ class AuditLogger
                 'metadata' => json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
                 'created_at' => now(),
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Log error to system log but don't crash the request for an audit failure
-            \Illuminate\Support\Facades\Log::error("Failed to write audit log: " . $e->getMessage());
+            Log::error('Failed to write audit log: '.$e->getMessage());
         }
     }
 }
