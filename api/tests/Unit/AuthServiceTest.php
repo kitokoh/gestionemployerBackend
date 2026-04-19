@@ -44,7 +44,7 @@ class AuthServiceTest extends TestCase
             'status' => 'active',
         ]);
 
-        $employee = Employee::query()->create([
+        $employee = Employee::query()->forceCreate([
             'company_id' => $company->id,
             'email' => 'manager@a.test',
             'password_hash' => Hash::make('password123'),
@@ -80,7 +80,7 @@ class AuthServiceTest extends TestCase
             'status' => 'active',
         ]);
 
-        Employee::query()->create([
+        Employee::query()->forceCreate([
             'company_id' => $company->id,
             'email' => 'employee@a.test',
             'password_hash' => Hash::make('password123'),
@@ -107,7 +107,7 @@ class AuthServiceTest extends TestCase
             'status' => 'suspended',
         ]);
 
-        Employee::query()->create([
+        Employee::query()->forceCreate([
             'company_id' => $company->id,
             'email' => 'employee@a.test',
             'password_hash' => Hash::make('password123'),
@@ -134,7 +134,7 @@ class AuthServiceTest extends TestCase
             'status' => 'active',
         ]);
 
-        Employee::query()->create([
+        Employee::query()->forceCreate([
             'company_id' => $company->id,
             'email' => 'employee@a.test',
             'password_hash' => Hash::make('password123'),

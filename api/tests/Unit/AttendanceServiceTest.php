@@ -120,7 +120,7 @@ class AttendanceServiceTest extends TestCase
             'is_default' => true,
         ]);
 
-        $employee = Employee::query()->create([
+        $employee = Employee::query()->forceCreate([
             'company_id' => $company->id,
             'schedule_id' => $schedule->id,
             'email' => 'employee@a.test',
