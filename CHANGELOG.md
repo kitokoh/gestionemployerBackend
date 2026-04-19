@@ -12,6 +12,7 @@
 - Les interfaces web borne / biometrie manager couvrent maintenant la creation de la borne, l affichage des identifiants de synchronisation et le suivi des demandes biometrie approuvees avant activation effective
 - `docs/GESTION_PROJET/RUNBOOK_ZKTECO_CLIENT.md` documente l installation client, le schema reseau, le mode offline, la synchronisation differee et la routine manager / RH
 - `docs/GESTION_PROJET/SCHEMA_DEPLOIEMENT_ZKTECO_CLIENT.md` ajoute un schema visuel Mermaid du deploiement client ZKTeco, du flux metier et du mode offline / connecte
+- `docs/GESTION_PROJET/SUPPORT_COMMERCIAL_ZKTECO_LEOPARDO_RH.md` fournit un support commercial simple pour presenter la solution a un prospect, un client ou un integrateur
 
 ## [4.1.56] - 2026-04-19
 ### Biometrie approuvee et borne d entree entreprise
