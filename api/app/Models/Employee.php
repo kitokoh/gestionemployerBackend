@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\PersonalAccessToken;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -112,6 +113,14 @@ class Employee extends Authenticatable
         return $this->belongsTo(Company::class, 'company_id');
     }
 
+    /**
+     * Override Sanctum tokens to ensure they use the platform connection model.
+     */
+    public function tokens()
+    {
+        return $this->morphMany(PersonalAccessToken::class, 'tokenable');
+    }
+
     public function schedule(): BelongsTo
     {
         return $this->belongsTo(Schedule::class, 'schedule_id');
@@ -128,13 +137,13 @@ class Employee extends Authenticatable
             return;
         }
 
-        DB::table($this->userLookupTable())
+        DB::connection('platform')->table($this->userLookupTable())
             ->where('employee_id', $this->id)
             ->where('company_id', $this->company_id)
             ->where('email', '!=', $this->email)
             ->delete();
 
-        DB::table($this->userLookupTable())->updateOrInsert(
+        DB::connection('platform')->table($this->userLookupTable())->updateOrInsert(
             ['email' => $this->email],
             [
                 'company_id' => $this->company_id,
@@ -151,7 +160,7 @@ class Employee extends Authenticatable
             return;
         }
 
-        DB::table($this->userLookupTable())
+        DB::connection('platform')->table($this->userLookupTable())
             ->where('employee_id', $this->id)
             ->where('company_id', $this->company_id)
             ->delete();
@@ -174,6 +183,6 @@ class Employee extends Authenticatable
 
     private function userLookupTable(): string
     {
-        return DB::getDriverName() === 'pgsql' ? 'public.user_lookups' : 'user_lookups';
+        return 'user_lookups';
     }
 }

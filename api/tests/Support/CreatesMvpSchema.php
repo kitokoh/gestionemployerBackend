@@ -24,6 +24,19 @@ trait CreatesMvpSchema
             $table->boolean('is_active')->default(true);
         });
 
+        DB::connection('platform')->table('plans')->insert([
+            'id' => 1,
+            'name' => 'Test Unlimited',
+            'features' => json_encode([
+                'biometric' => true,
+                'excel_export' => true,
+                'advanced_reports' => true,
+                'api_access' => true,
+            ]),
+            'max_employees' => 999,
+            'is_active' => true,
+        ]);
+
         Schema::connection('platform')->create('companies', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('name');
@@ -193,6 +206,9 @@ trait CreatesMvpSchema
             $table->string('emergency_contact_relation', 60)->nullable();
             $table->timestampTz('last_login_at')->nullable();
             $table->timestampTz('email_verified_at')->nullable();
+            $table->string('iban', 255)->nullable();
+            $table->string('bank_account', 255)->nullable();
+            $table->string('national_id', 255)->nullable();
             $table->json('extra_data')->nullable();
             $table->timestamps();
 
@@ -220,6 +236,8 @@ trait CreatesMvpSchema
             $table->unsignedSmallInteger('late_minutes')->default(0);
             $table->decimal('gps_lat', 10, 8)->nullable();
             $table->decimal('gps_lng', 11, 8)->nullable();
+            $table->unsignedInteger('corrected_by')->nullable();
+            $table->text('correction_note')->nullable();
             $table->timestamps();
 
             $table->unique(['employee_id', 'date', 'session_number']);

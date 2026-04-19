@@ -88,12 +88,12 @@ class AttendanceExportTest extends TestCase
 
         Sanctum::actingAs($manager);
 
-        $response = $this->get("/api/v1/employees/{$employee->id}/attendance-export?from=2026-04-01&to=2026-04-30");
+        $response = $this->get("/api/v1/employees/{$employee->id}/attendance-export?from=2026-04-01&to=2026-04-19");
 
         $response->assertOk();
         $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
         $this->assertStringContainsString(
-            'attendance_export_employee_'.$employee->id.'_2026-04-01_2026-04-30.csv',
+            'attendance_export_employee_'.$employee->id.'_2026-04-01_2026-04-19.csv',
             (string) $response->headers->get('content-disposition')
         );
         $response->assertSee('employee_name', false);
