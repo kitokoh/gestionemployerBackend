@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class PlatformSetting extends Model
@@ -28,7 +27,7 @@ class PlatformSetting extends Model
      */
     public static function get(string $key, $default = null)
     {
-        if (!self::tableExists()) {
+        if (! self::tableExists()) {
             return $default;
         }
 

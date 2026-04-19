@@ -94,7 +94,7 @@ class Company extends Model
      */
     public function canAddMoreEmployees(): bool
     {
-        if (!$this->plan || $this->plan->hasUnlimitedEmployees()) {
+        if (! $this->plan || $this->plan->hasUnlimitedEmployees()) {
             return true;
         }
 

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class AuditLog extends Model
 {
     protected $connection = 'platform';
-    
+
     protected $table = 'audit_logs';
 
     public $timestamps = false; // Manually handled by AuditLogger
