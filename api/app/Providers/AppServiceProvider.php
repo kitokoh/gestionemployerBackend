@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\PersonalAccessToken;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 
@@ -24,6 +25,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
-        Model::preventLazyLoading(app()->isLocal());
+        Model::preventLazyLoading(App::isLocal());
     }
 }
