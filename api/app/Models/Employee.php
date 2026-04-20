@@ -6,6 +6,7 @@ use App\Models\PersonalAccessToken;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
@@ -124,7 +125,7 @@ class Employee extends Authenticatable
         return $this->belongsTo(Schedule::class, 'schedule_id');
     }
 
-    public function biometricEnrollmentRequests(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function biometricEnrollmentRequests(): HasMany
     {
         return $this->hasMany(BiometricEnrollmentRequest::class, 'employee_id');
     }
