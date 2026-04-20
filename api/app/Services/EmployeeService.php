@@ -43,7 +43,7 @@ class EmployeeService
             $payload['status'] = $payload['status'] ?? 'active';
             $payload['extra_data'] = $this->normalizeExtraData($payload['extra_data'] ?? []);
 
-            unset($payload['company_id']);
+            $payload['company_id'] = $companyId;
 
             if ($actor?->isManager() && empty($payload['manager_id'])) {
                 $payload['manager_id'] = $actor->id;
@@ -51,9 +51,7 @@ class EmployeeService
 
             $this->applyBiometricConsent($payload);
 
-            $employee = new Employee($payload);
-            $employee->company_id = $companyId;
-            $employee->save();
+            $employee = Employee::query()->create($payload);
 
             if ($sendInvitation || ! $providedPassword) {
                 $company = $employee->company;
