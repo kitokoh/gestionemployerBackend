@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\HasApiTokens;
 
 class Employee extends Authenticatable
 {
-    use \App\Traits\BelongsToCompany;
-    use \Laravel\Sanctum\HasApiTokens;
-    use \Illuminate\Database\Eloquent\Factories\HasFactory;
+    use BelongsToCompany;
+    use HasApiTokens;
+    use HasFactory;
 
     protected $connection = 'pgsql';
 
@@ -135,7 +139,7 @@ class Employee extends Authenticatable
             ->where('email', '!=', $this->email)
             ->delete();
 
-        \Illuminate\Support\Facades\DB::connection('platform')->table($this->userLookupTable())->updateOrInsert(
+        DB::connection('platform')->table($this->userLookupTable())->updateOrInsert(
             ['email' => $this->email],
             [
                 'company_id' => $this->company_id,
@@ -152,7 +156,7 @@ class Employee extends Authenticatable
             return;
         }
 
-        \Illuminate\Support\Facades\DB::connection('platform')->table($this->userLookupTable())
+        DB::connection('platform')->table($this->userLookupTable())
             ->where('employee_id', $this->id)
             ->where('company_id', $this->company_id)
             ->delete();
@@ -164,11 +168,11 @@ class Employee extends Authenticatable
             return false;
         }
 
-        if (\Illuminate\Support\Facades\DB::getDriverName() !== 'pgsql') {
-            return \Illuminate\Support\Facades\DB::connection('platform')->getSchemaBuilder()->hasTable('user_lookups');
+        if (DB::getDriverName() !== 'pgsql') {
+            return DB::connection('platform')->getSchemaBuilder()->hasTable('user_lookups');
         }
 
-        $table = \Illuminate\Support\Facades\DB::selectOne("select to_regclass('public.user_lookups') as table_name");
+        $table = DB::selectOne("select to_regclass('public.user_lookups') as table_name");
 
         return $table->table_name !== null;
     }
