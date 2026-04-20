@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\BiometricEnrollmentRequest;
+use App\Models\Company;
+use App\Models\PersonalAccessToken;
+use App\Models\Schedule;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
