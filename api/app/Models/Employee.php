@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\PersonalAccessToken;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
