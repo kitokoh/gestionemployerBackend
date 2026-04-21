@@ -10,6 +10,11 @@ class PlanFeatureGate
     public static function check(Company $company, string $feature): void
     {
         $plan = $company->relationLoaded('plan') ? $company->plan : $company->plan()->first();
+
+        if (! $plan) {
+            return;
+        }
+
         $features = (array) ($plan?->features ?? []);
 
         if (! array_key_exists($feature, $features) || ! $features[$feature]) {

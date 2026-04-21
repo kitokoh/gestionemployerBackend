@@ -261,6 +261,7 @@ class AttendanceService
                     $hoursWorked = round($seconds / 3600, 2);
                     $threshold = (float) ($schedule?->overtime_threshold_daily ?? 8.0);
                     $overtimeHours = max(0.0, round($hoursWorked - $threshold, 2));
+                    $status ??= $log->status ?: 'ontime';
                 } else {
                     $status ??= 'incomplete';
                 }

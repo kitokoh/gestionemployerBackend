@@ -24,19 +24,6 @@ trait CreatesMvpSchema
             $table->boolean('is_active')->default(true);
         });
 
-        DB::connection('platform')->table('plans')->insert([
-            'id' => 1,
-            'name' => 'Test Unlimited',
-            'features' => json_encode([
-                'biometric' => true,
-                'excel_export' => true,
-                'advanced_reports' => true,
-                'api_access' => true,
-            ]),
-            'max_employees' => 999,
-            'is_active' => true,
-        ]);
-
         Schema::connection('platform')->create('companies', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('name');

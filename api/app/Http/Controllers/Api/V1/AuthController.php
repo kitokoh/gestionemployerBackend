@@ -11,6 +11,7 @@ use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -78,12 +79,20 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $currentTokenId = $employee->currentAccessToken()?->id;
+        $currentToken = $employee->currentAccessToken();
+        $currentTokenId = $currentToken?->id;
+        $bearerToken = $request->bearerToken();
+        $plainToken = $bearerToken && Str::contains($bearerToken, '|')
+            ? Str::after($bearerToken, '|')
+            : $bearerToken;
+
         $employee->password_hash = Hash::make($request->validated('new_password'));
         $employee->save();
 
         if ($currentTokenId !== null) {
             $employee->tokens()->where('id', '!=', $currentTokenId)->delete();
+        } elseif ($plainToken) {
+            $employee->tokens()->where('token', '!=', hash('sha256', $plainToken))->delete();
         } else {
             $employee->tokens()->delete();
         }
