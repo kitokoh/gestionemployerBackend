@@ -95,7 +95,6 @@ class AttendanceController extends Controller
             $employees = collect($paginator->items());
             $employeeIds = $employees->pluck('id')->all();
 
-            // BOLT: Optimize by selecting only necessary columns for the dashboard
             $logsByEmployee = AttendanceLog::query()
                 ->select(['id', 'employee_id', 'date', 'check_in', 'check_out', 'hours_worked', 'status'])
                 ->where('date', $today)
@@ -104,7 +103,6 @@ class AttendanceController extends Controller
                 ->get()
                 ->keyBy('employee_id');
 
-            // BOLT: Resolve timezone once before loop to avoid redundant container lookups
             $timezone = $company->timezone;
 
             $data = $employees->map(function (Employee $employee) use ($logsByEmployee, $timezone) {
@@ -162,7 +160,6 @@ class AttendanceController extends Controller
             }
         }
 
-        // BOLT: Optimize by selecting only necessary columns
         $query = AttendanceLog::query()
             ->select(['id', 'employee_id', 'date', 'check_in', 'check_out', 'hours_worked', 'overtime_hours', 'status', 'method', 'source_device_code', 'late_minutes'])
             ->orderByDesc('date')
