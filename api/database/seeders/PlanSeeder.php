@@ -41,6 +41,7 @@ class PlanSeeder extends Seeder
                     'api_public' => false,
                     'evaluations' => false,
                     'schema_isolation' => false,
+                    'cameras' => false,
                 ]),
             ],
             [
@@ -62,6 +63,7 @@ class PlanSeeder extends Seeder
                     'api_public' => false,
                     'evaluations' => true,
                     'schema_isolation' => false,  // Schéma partagé (shared_tenants)
+                    'cameras' => true,
                 ]),
             ],
             [
@@ -83,6 +85,7 @@ class PlanSeeder extends Seeder
                     'api_public' => true,
                     'evaluations' => true,
                     'schema_isolation' => true,   // Schéma PostgreSQL dédié
+                    'cameras' => true,
                 ]),
             ],
         ];
