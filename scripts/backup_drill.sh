@@ -128,7 +128,12 @@ for fq in "${tables[@]}"; do
   source_count=$(psql "${DATABASE_URL}" -Atc "SELECT COUNT(*) FROM ${schema}.${table};" 2>/dev/null || echo "NA")
   target_count=$(psql "${RESTORE_DB_URL}" -Atc "SELECT COUNT(*) FROM ${schema}.${table};" 2>/dev/null || echo "NA")
 
-  if [[ "${source_count}" != "${target_count}" ]]; then
+  # Les tables listees sont critiques : une absence (NA) doit echouer le drill
+  # et pas etre absorbee par la comparaison "NA == NA".
+  if [[ "${source_count}" == "NA" || "${target_count}" == "NA" ]]; then
+    log "    MISSING ${fq}: source=${source_count} target=${target_count}"
+    mismatch=$((mismatch + 1))
+  elif [[ "${source_count}" != "${target_count}" ]]; then
     log "    MISMATCH on ${fq}: source=${source_count} target=${target_count}"
     mismatch=$((mismatch + 1))
   else

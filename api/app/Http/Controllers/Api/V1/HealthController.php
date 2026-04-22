@@ -28,7 +28,7 @@ class HealthController extends Controller
 {
     public function __invoke(): JsonResponse
     {
-        $version = config('app.version', '4.1.67');
+        $version = (string) config('app.version');
 
         $database = $this->checkDatabase();
         $redis = $this->checkRedis();
