@@ -2,6 +2,21 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.65] - 2026-04-22
+### APV - Fondations design moderne + frontieres modules
+
+- Vision : 6 PDF vision (APV v1/v2, Design System v2/v3, Finance, Cameras) archives sous `docs/vision/` avec un `README.md` qui etablit la hierarchie (v2/v3 = canonique, v1/v2 = historique, Finance/Cameras = Phase 2)
+- Vision : creation des documents canoniques `docs/APV.md` (manifeste 1 page, 4 piliers, 12 Lois), `docs/ROADMAP.md` (Phase 0 MVP -> Phase 1 fondations -> Phase 2 modules a la demande), `docs/STATUTS.md` (catalogue exhaustif pointage/invitation/employe/features), `docs/COULEURS.md` (tokens couleur domaine + semantique + neutres), `docs/AUDIT_v2_v3_COMPLIANCE.md` (matrice conformite code vs vision)
+- Module boundaries (APV L.08) : extraction des routes RH dans `api/routes/modules/rh.php` (contrat URL inchange), charge depuis `routes/api.php` avec directive de preparation Phase 2 pour finance/cameras/muhasebe
+- Module boundaries (APV L.10) : nouvelle migration publique `2026_04_22_000014_add_metadata_and_features_jsonb.php` ajoute `companies.features` (JSONB, defaut `{}`) et `companies.metadata` (JSONB) + index GIN ; migration tenant `2026_04_22_000109_add_metadata_to_employees.php` ajoute `employees.metadata` (JSONB) + index GIN
+- Module boundaries : nouveau service `App\Services\FeatureFlag` (`enabled($key, $company)` et `for($company)`), modele `Company` expose `hasFeature`, `setFeature`, constante `KNOWN_MODULES` (`rh`, `finance`, `cameras`, `muhasebe`, `leo_ai`)
+- API : `/api/v1/auth/me` et `/auth/login` renvoient desormais `features` (carte resolue pour la company) pour que le client mobile/web puisse afficher ou cacher les modules sans redeployer
+- Design (APV L.05/L.07) : cote mobile `mobile/lib/core/theme/app_colors.dart` centralise les tokens couleur (rh `#10B981`, finance `#F59E0B`, security `#3B82F6`, ia `#7C3AED` + variantes light/dark + semantique success/warning/danger/info + neutres) et `mobile/lib/core/theme/app_typography.dart` impose Inter 400/600 en 6 styles
+- Design : nouveaux widgets Flutter `LeopardoBadge` (factories `present`, `late`, `absent`, `onLeave`, `forStatus`, `domain`), `EmptyState`, `AlertBanner` (niveaux success/warning/danger/info) sous `mobile/lib/core/widgets/`
+- Design : cote web `api/tailwind.config.js` etendu avec les memes tokens (rh/finance/security/ia + semantique) et font `Inter` en premier ; nouveaux composants Blade `x-attendance-badge`, `x-alert-banner`, `x-empty-state` sous `resources/views/components/`
+- Tests : nouveau `FeatureFlagTest` (5 tests, 18 assertions) couvre defaut `rh=true`, defaut `false` pour modules Phase 2, persistance `setFeature`, `for($company)` complet et company nulle. Suite verte a 89 tests / 408 assertions
+- Compat : `app_theme.dart` reference desormais `AppColors` (aucune casse cote ecran existant)
+
 ## [4.1.64] - 2026-04-22
 ### Accessibilite et navigation mobile
 
