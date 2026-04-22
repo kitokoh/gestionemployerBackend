@@ -136,10 +136,7 @@ class Employee extends Authenticatable
             return 'me.dashboard';
         }
 
-        return match ($this->manager_role) {
-            'comptable' => 'accounting.dashboard',
-            default => 'dashboard',
-        };
+        return 'dashboard';
     }
 
     public function company(): BelongsTo
