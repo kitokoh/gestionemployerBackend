@@ -43,6 +43,7 @@ class AttendanceService
         }
 
         return AttendanceLog::query()->create([
+            'company_id' => $employee->company_id,
             'employee_id' => $employee->id,
             'schedule_id' => $schedule?->id,
             'date' => $today,

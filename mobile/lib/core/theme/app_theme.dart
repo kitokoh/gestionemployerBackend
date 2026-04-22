@@ -45,4 +45,44 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get lightTheme {
+    return ThemeData(
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: AppColors.cardLight,
+      primaryColor: AppColors.rh,
+      cardColor: AppColors.bgLight,
+      colorScheme: const ColorScheme.light(
+        primary: AppColors.rh,
+        secondary: AppColors.rh,
+        surface: AppColors.bgLight,
+        error: AppColors.danger,
+      ),
+      fontFamily: AppTypography.fontFamily,
+      textTheme: AppTypography.buildTextTheme(AppColors.textLight),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.cardLight,
+        foregroundColor: AppColors.textLight,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.rh,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: AppColors.bgLight,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.borderLight),
+        ),
+      ),
+    );
+  }
 }

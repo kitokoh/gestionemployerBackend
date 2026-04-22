@@ -17,32 +17,41 @@ class DashboardController extends Controller
         $company = app('current_company');
         $today = now('UTC')->setTimezone($company->timezone)->toDateString();
 
+        $employeesTotal = Employee::query()->count();
+
         $employees = Employee::query()
             ->orderBy('last_name')
             ->orderBy('first_name')
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
+
+        $pageEmployeeIds = $employees->getCollection()->pluck('id');
+
+        $present = AttendanceLog::query()
+            ->where('date', $today)
+            ->where('session_number', 1)
+            ->where('status', '!=', 'absent')
+            ->count();
+
+        $late = AttendanceLog::query()
+            ->where('date', $today)
+            ->where('session_number', 1)
+            ->where('status', 'late')
+            ->count();
 
         $logsByEmployee = AttendanceLog::query()
             ->where('date', $today)
             ->where('session_number', 1)
+            ->whereIn('employee_id', $pageEmployeeIds)
             ->get()
             ->keyBy('employee_id');
 
         $rows = [];
-        $present = 0;
-        $late = 0;
         $totalEstimated = 0.0;
 
         foreach ($employees as $employee) {
             $log = $logsByEmployee->get($employee->id);
             $attendanceStatus = $log?->status ?? 'absent';
-
-            if ($attendanceStatus !== 'absent') {
-                $present++;
-            }
-            if ($attendanceStatus === 'late') {
-                $late++;
-            }
 
             $summary = $this->estimationService->dailySummaryFromLog($employee, $log, $today);
             $totalEstimated += (float) $summary['total_estimated'];
@@ -61,12 +70,13 @@ class DashboardController extends Controller
         return view('dashboard', [
             'company' => $company,
             'today' => $today,
-            'employeesTotal' => $employees->count(),
+            'employeesTotal' => $employeesTotal,
             'presentCount' => $present,
             'lateCount' => $late,
             'totalEstimated' => round($totalEstimated, 2),
             'currency' => $company->currency,
             'rows' => $rows,
+            'employees' => $employees,
         ]);
     }
 }

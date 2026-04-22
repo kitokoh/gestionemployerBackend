@@ -44,7 +44,7 @@ class WebManagerPagesTest extends TestCase
         $response = $this->actingAs($manager, 'web')->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Dashboard manager');
+        $response->assertSee('Tableau de bord manager');
         $response->assertSee($employee->email);
     }
 

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:leopardo_rh/core/storage/secure_storage.dart';
 import 'package:leopardo_rh/core/api/api_exceptions.dart';
 import 'package:leopardo_rh/core/api/mock_interceptor.dart';
@@ -21,13 +22,17 @@ class ApiClient {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await _storage.getToken();
-          if (token != null) {
+          final shouldAttachToken = _shouldAttachToken(options);
+          options.extra['authenticated_request'] = false;
+
+          if (shouldAttachToken && token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
+            options.extra['authenticated_request'] = true;
           }
           return handler.next(options);
         },
         onError: (DioException e, handler) async {
-          if (e.response?.statusCode == 401) {
+          if (e.response?.statusCode == 401 && _isAuthenticatedRequest(e.requestOptions)) {
             await _storage.deleteToken();
             if (onUnauthorized != null) {
               onUnauthorized!();
@@ -38,7 +43,7 @@ class ApiClient {
       ),
     );
 
-    if (const String.fromEnvironment('API_BASE_URL') == 'mock') {
+    if (kDebugMode && const String.fromEnvironment('API_BASE_URL') == 'mock') {
       importMockInterceptor();
     }
   }
@@ -48,6 +53,14 @@ class ApiClient {
   }
 
   Dio get dio => _dio;
+
+  bool _shouldAttachToken(RequestOptions options) {
+    return !options.path.endsWith('/auth/login');
+  }
+
+  bool _isAuthenticatedRequest(RequestOptions options) {
+    return options.extra['authenticated_request'] == true;
+  }
 
   static String resolveBaseUrl() {
     const configured = String.fromEnvironment('API_BASE_URL', defaultValue: '');
@@ -61,8 +74,11 @@ class ApiClient {
   DioException _handleError(DioException e) {
     String message = "Impossible de se connecter au serveur";
     String? code;
-    
-    if (e.response?.statusCode == 404 || e.response?.statusCode == 501) {
+
+    if (e.response?.statusCode == 401 && _isAuthenticatedRequest(e.requestOptions)) {
+      message = "Session expiree - reconnectez-vous pour continuer";
+      code = "UNAUTHENTICATED";
+    } else if (e.response?.statusCode == 404 || e.response?.statusCode == 501) {
       message = "Fonction bientôt disponible";
       code = "NOT_IMPLEMENTED";
     } else if (e.response?.statusCode == 403) {

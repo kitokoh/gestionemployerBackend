@@ -67,6 +67,7 @@
 - Ajout des retours pilotes Karim B., Amina T. et Sofiane M. avec priorisation produit post-GO MVP
 - Ajout d un audit T01-T18 indiquant les points deja couverts, partiels ou encore a traiter
 - Priorisation des prochains correctifs: `search_path`, pagination dashboard, lisibilite mobile, 401 mobile et recu/export paie
+- Correction des premiers points pilotes: `TenantContext` avec restauration `search_path`, `company_id` explicite au check-in, dashboard pagine par 25, libelles web professionnalises, mock mobile bloque en release, message 401 et theme clair systeme
 
 ## [4.1.64] - 2026-04-22
 ### Accessibilite et navigation mobile
@@ -1065,7 +1066,6 @@ docs(erd): unify manager_id and remove supervisor_id from employees
    
  
  
-
 
 
 

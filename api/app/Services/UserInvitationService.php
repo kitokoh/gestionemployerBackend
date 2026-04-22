@@ -6,13 +6,14 @@ use App\Mail\UserInvitationMail;
 use App\Models\Company;
 use App\Models\Employee;
 use App\Models\UserInvitation;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class UserInvitationService
 {
+    public function __construct(private readonly TenantContext $tenantContext) {}
+
     public function createAndSend(
         Company $company,
         Employee $employee,
@@ -67,20 +68,16 @@ class UserInvitationService
         abort_if($invitation->expires_at?->isPast(), 410, 'INVITATION_EXPIRED');
 
         $company = Company::query()->findOrFail($invitation->company_id);
-        $searchPath = $company->tenancy_type === 'schema'
-            ? sprintf('"%s",public', str_replace('"', '""', $company->schema_name))
-            : 'shared_tenants,public';
+        $employee = $this->tenantContext->withCompany($company, function () use ($invitation, $password): Employee {
+            /** @var Employee $employee */
+            $employee = Employee::query()->findOrFail($invitation->employee_id);
+            $employee->password_hash = Hash::make($password);
+            $employee->email_verified_at = now();
+            $employee->invitation_accepted_at = now();
+            $employee->save();
 
-        DB::statement("SET search_path TO {$searchPath}");
-
-        /** @var Employee $employee */
-        $employee = Employee::query()->findOrFail($invitation->employee_id);
-        $employee->password_hash = Hash::make($password);
-        $employee->email_verified_at = now();
-        $employee->invitation_accepted_at = now();
-        $employee->save();
-
-        DB::statement('SET search_path TO shared_tenants,public');
+            return $employee;
+        });
 
         $invitation->accepted_at = now();
         $invitation->save();

@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', 'Tableau de bord')
 
 @section('content')
     <div class="grid gap-6 lg:grid-cols-[1fr_300px]">
         <div class="flex flex-col gap-6">
             <div class="flex items-end justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-semibold tracking-tight">Dashboard manager</h1>
+                    <h1 class="text-2xl font-semibold tracking-tight">Tableau de bord manager</h1>
                     <div class="mt-1 text-sm text-slate-400">Aujourd'hui : {{ $today }}</div>
                 </div>
                 <div class="flex flex-wrap gap-3">
@@ -22,7 +22,7 @@
                             Invitations
                         </a>
                         <a href="{{ route('employees.create') }}" class="rounded-lg bg-rh px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-rh-dark">
-                            Creer RH / employe
+                            Ajouter un collaborateur
                         </a>
                     @endif
                 </div>
@@ -30,11 +30,15 @@
 
             <div class="grid gap-4 md:grid-cols-3">
                 <x-stat-card label="Employes presents" :value="sprintf('%d / %d', $presentCount, $employeesTotal)" />
-                <x-stat-card label="Total estime (jour)" :value="number_format((float) $totalEstimated, 2).' '.$currency" />
-                <x-stat-card label="En retard" :value="$lateCount.' employes'" />
+                <x-stat-card label="Total estime affiche" :value="number_format((float) $totalEstimated, 2).' '.$currency" />
+                <x-stat-card label="Retards" :value="$lateCount.' employe(s)'" />
             </div>
 
             <x-attendance-table :rows="$rows" />
+
+            <div>
+                {{ $employees->links() }}
+            </div>
         </div>
 
         <div class="hidden lg:block">

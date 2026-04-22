@@ -16,8 +16,12 @@ final appPreferencesProvider = Provider<AppPreferences>((ref) {
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.watch(secureStorageProvider);
-  return ApiClient(storage);
+  return ApiClient(storage, onUnauthorized: () {
+    ref.read(unauthorizedSessionProvider.notifier).state = true;
+  });
 });
+
+final unauthorizedSessionProvider = StateProvider<bool>((ref) => false);
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final apiClient = ref.watch(apiClientProvider);
