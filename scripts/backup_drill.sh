@@ -42,11 +42,29 @@ mkdir -p "${BACKUP_DIR}"
 timestamp="$(date -u +%Y%m%d-%H%M%S)"
 dump_file="${BACKUP_DIR}/leopardo-${timestamp}.dump"
 log_file="${BACKUP_DIR}/last-drill.log"
+decrypted_tmp=""
 
 log() {
   local msg="$1"
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] ${msg}" | tee -a "${log_file}"
 }
+
+# Nettoyage toujours execute (succes, echec, SIGINT). But :
+#   1. Ne jamais laisser de donnees sensibles (restore de prod) dans la base
+#      scratch apres un drill, meme si pg_restore ou psql ont echoue.
+#   2. Supprimer le dump dechiffre temporaire si on a decrypte un .age.
+# On utilise `|| true` partout pour que le cleanup lui-meme ne masque pas le
+# code de sortie original.
+cleanup() {
+  local rc=$?
+  if [[ -n "${decrypted_tmp}" && -f "${decrypted_tmp}" ]]; then
+    rm -f "${decrypted_tmp}" || true
+  fi
+  psql "${RESTORE_DB_URL}" -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" >/dev/null 2>&1 || true
+  psql "${RESTORE_DB_URL}" -c "DROP SCHEMA IF EXISTS shared_tenants CASCADE;" >/dev/null 2>&1 || true
+  exit "${rc}"
+}
+trap cleanup EXIT INT TERM
 
 log "=== Leopardo RH backup drill ${timestamp} ==="
 
@@ -92,9 +110,11 @@ psql "${RESTORE_DB_URL}" -v ON_ERROR_STOP=1 -c "DROP SCHEMA IF EXISTS shared_ten
 restore_input="${dump_file}"
 if [[ "${dump_file}" == *.age ]]; then
   # Restaurer depuis un dump chiffre : on le dechiffre a la volee.
+  # Le fichier dechiffre est enregistre dans `decrypted_tmp` pour etre
+  # supprime par le trap de cleanup (qui tourne aussi si la suite echoue).
   : "${BACKUP_AGE_IDENTITY_FILE:?BACKUP_AGE_IDENTITY_FILE required to restore age dump}"
-  restore_input="$(mktemp)"
-  trap 'rm -f "${restore_input}"' EXIT
+  decrypted_tmp="$(mktemp)"
+  restore_input="${decrypted_tmp}"
   age --decrypt --identity "${BACKUP_AGE_IDENTITY_FILE}" --output "${restore_input}" "${dump_file}"
 fi
 
@@ -141,9 +161,10 @@ for fq in "${tables[@]}"; do
   fi
 done
 
-# Nettoyage de la base scratch pour ne pas garder de donnees sensibles.
-psql "${RESTORE_DB_URL}" -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" >/dev/null 2>&1 || true
-psql "${RESTORE_DB_URL}" -c "DROP SCHEMA IF EXISTS shared_tenants CASCADE;" >/dev/null 2>&1 || true
+# Le nettoyage de la base scratch est desormais fait dans le trap EXIT
+# (cf. fonction `cleanup` en haut du script). Il tourne systematiquement,
+# y compris si pg_restore/psql ont echoue, pour ne jamais laisser de
+# donnees sensibles dans la base scratch.
 
 if [[ "${mismatch}" -gt 0 ]]; then
   log "DRILL FAILED: ${mismatch} table(s) out of sync"
