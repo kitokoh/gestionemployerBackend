@@ -149,7 +149,7 @@ class KioskController extends Controller
 
     private function resolveAuthorizedKiosk(Request $request, string $deviceCode): AttendanceKiosk
     {
-        DB::statement('SET search_path TO shared_tenants,public');
+        if (DB::getDriverName() === 'pgsql') { DB::statement('SET search_path TO shared_tenants,public'); }
 
         $kiosk = AttendanceKiosk::query()
             ->where('device_code', strtoupper($deviceCode))
@@ -165,7 +165,7 @@ class KioskController extends Controller
     private function setTenantSearchPath(?Company $company): void
     {
         if (! $company) {
-            DB::statement('SET search_path TO shared_tenants,public');
+            if (DB::getDriverName() === 'pgsql') { DB::statement('SET search_path TO shared_tenants,public'); }
 
             return;
         }
@@ -176,7 +176,7 @@ class KioskController extends Controller
             return;
         }
 
-        DB::statement('SET search_path TO shared_tenants,public');
+        if (DB::getDriverName() === 'pgsql') { DB::statement('SET search_path TO shared_tenants,public'); }
     }
 
     private function serializeKiosk(AttendanceKiosk $kiosk): array
