@@ -18,7 +18,7 @@ Le role des agents automatises n est plus de construire des features, mais de pr
 ## Documents a relire au debut d une session
 
 1. `JULES_ORIGE_BUG.md`
-2. `docs/GESTION_PROJET/REGISTRE_AGENTS_AUTOMATISES.md`
+2. `docs/GESTION_PROJET/CODEX/REGISTRE_AGENTS_AUTOMATISES.md`
 3. `docs/GESTION_PROJET/GO_NO_GO_MVP.md`
 4. `CHANGELOG.md`
 5. PR ouvertes sur GitHub
@@ -79,9 +79,9 @@ S il supprime des branches, docs, tests, migrations ou assets sans autorisation,
 
 Si les agents deviennent nombreux, creer un fichier par agent sous:
 
-`docs/GESTION_PROJET/agents/`
+`docs/GESTION_PROJET/CODEX/agents/`
 
-Pour l instant, deux fichiers suffisent:
+Pour l instant, deux fichiers suffisent dans `docs/GESTION_PROJET/CODEX/`:
 
 - `REGISTRE_AGENTS_AUTOMATISES.md`
 - `MEMO_ORCHESTRATION_AGENTS.md`

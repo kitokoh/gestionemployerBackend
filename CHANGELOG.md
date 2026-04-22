@@ -5,8 +5,8 @@
 ## [4.1.63] - 2026-04-22
 ### Orchestration des agents automatises
 
-- Ajout d un registre des agents automatises Jules pour cadrer Guardian, Bolt, Palette, Sentinel, DocKeeper, Contractor, Scout et Janitor
-- Ajout d un memo d orchestration pour permettre a Codex futur de retrouver les cadences, limites et signaux de modification des prompts agents
+- Ajout d un registre des agents automatises Jules sous `docs/GESTION_PROJET/CODEX/` pour cadrer Guardian, Bolt, Palette, Sentinel, DocKeeper, Contractor, Scout et Janitor
+- Ajout d un memo d orchestration sous `docs/GESTION_PROJET/CODEX/` pour permettre a Codex futur de retrouver les cadences, limites et signaux de modification des prompts agents
 - Formalisation des regles post-GO MVP: les agents protegent le pilote et ne doivent pas creer de PR opportuniste
 
 ## [4.1.61] - 2026-04-21
@@ -968,7 +968,6 @@ docs(erd): unify manager_id and remove supervisor_id from employees
    
  
  
-
 
 
 
