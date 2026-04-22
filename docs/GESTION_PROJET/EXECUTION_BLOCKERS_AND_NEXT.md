@@ -5,7 +5,7 @@ This file tracks what still cannot be solved by documentation alone.
 
 ## Current hard blockers
 
-1. La commande Docker locale officielle de test backend n'est pas encore versionnée dans le repo.
+1. (Résolu) La commande Docker locale officielle de test backend est versionnée (`api/start-local.ps1` et `api/docker-compose.yml`).
 2. Sur cette machine, `docker context ls` répond mais `docker version` / `docker ps` expirent : Docker doit être stabilisé avant d'en faire le validateur principal.
 3. GitHub branch protection must be configured in repo settings (external to local files).
 

@@ -2,6 +2,13 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.64] - 2026-04-22
+### DocKeeper : alignement post-GO MVP
+
+- Alignement de `PILOTAGE.md` avec le statut post-GO MVP (version 4.1.63)
+- Mise à jour du statut de déploiement Render dans `PILOTAGE.md`
+- Résolution des bloqueurs obsolètes dans `EXECUTION_BLOCKERS_AND_NEXT.md` concernant Docker local
+
 ## [4.1.63] - 2026-04-22
 ### API self-service et parite CRUD mobile
 

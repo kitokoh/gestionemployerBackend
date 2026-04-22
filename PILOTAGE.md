@@ -1,5 +1,5 @@
 # 📑 PILOTAGE — LEOPARDO RH
-# PROGRAM_VERSION = 4.1.58 | 14 Mai 2025
+# PROGRAM_VERSION = 4.1.63 | 22 Avril 2026
 # CE FICHIER EST LA SEULE SOURCE DE VÉRITÉ OPÉRATIONNELLE
 # Statut des anciens fichiers : voir section "Gouvernance documentaire"
 
@@ -32,11 +32,11 @@ MVP : "Combien je dois à mes employés aujourd'hui ?" — en 1 clic.
 ## ÉTAT ACTUEL
 
 ```
-Date MAJ       : 05 Avril 2026
+Date MAJ       : 22 Avril 2026
 Conception     : ✅ Terminée (40+ documents dans docs/dossierdeConception/)
 Code           : ✅ MVP-01 à MVP-06 mergés sur `main`
-Phase active   : MVP — scope verrouillé ci-dessous
-Prochaine action : SPRINT 4 — Beta réelle + déploiement VPS
+Phase active   : Beta / Pilote (GO MVP prononcé)
+Prochaine action : SPRINT 4 — Beta réelle + déploiement Render
 Objectif       : Premier utilisateur payant en 8 semaines
 Validation locale backend : Docker d'abord (voir `docs/GESTION_PROJET/RUNBOOK_LOCAL_TESTS.md`)
 ```
@@ -151,7 +151,7 @@ Pays MVP :
 
 | # | Ticket | Responsable | Critère de validation | Statut |
 |---|--------|-------------|----------------------|--------|
-| S4-1 | Déployer backend + web sur VPS | Humain | Domaine/VPS répondent, login web OK | ⬜ |
+| S4-1 | Déployer backend + web sur Render | Humain | Domaine/Render répondent, login web OK | ✅ |
 | S4-2 | Brancher mobile sur environnement beta réel | IA/Humain | Login, check-in/out, history OK sur backend déployé | ⬜ |
 | S4-3 | Inviter 3-5 prospects beta | Humain | Retours collectés | ⬜ |
 | S4-4 | Corrections prioritaires | IA | Feedback implémenté | ⬜ |
