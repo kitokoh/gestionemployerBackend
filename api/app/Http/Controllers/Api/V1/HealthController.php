@@ -76,9 +76,19 @@ class HealthController extends Controller
      */
     private function checkRedis(): array
     {
-        // Redis est optionnel (cache/sessions/queues). Si la connexion n'est
-        // meme pas configuree, on renvoie `skipped` plutot que de planter.
-        if (empty(config('database.redis.default.host'))) {
+        // Redis est optionnel (cache/sessions/queues). On considere Redis
+        // "non configure" si aucune des variables d'env explicites n'est
+        // posee ET qu'aucun driver applicatif (cache/queue/session) ne
+        // l'utilise. Le default `127.0.0.1` de `config/database.php` ne
+        // suffit pas a considerer Redis voulu : ce check est justement la
+        // pour eviter de bloquer quelques secondes sur un `tcp connect`
+        // vers un Redis inexistant sur chaque requete `/health`.
+        $envConfigured = ! empty(env('REDIS_HOST')) || ! empty(env('REDIS_URL'));
+        $driverUsesRedis = in_array(config('cache.default'), ['redis'], true)
+            || in_array(config('queue.default'), ['redis'], true)
+            || in_array(config('session.driver'), ['redis'], true);
+
+        if (! $envConfigured && ! $driverUsesRedis) {
             return ['ok' => true, 'status' => 'skipped'];
         }
 
