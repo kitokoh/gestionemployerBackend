@@ -12,8 +12,8 @@ class AppTheme {
   static const Color accentGreen = AppColors.rh;
   static const Color accentRed = AppColors.danger;
   static const Color accentYellow = AppColors.warning;
-  static const Color textPrimary = AppColors.textOnDark;
-  static const Color textSecondary = AppColors.textMuted;
+  static const Color textPrimary = AppColors.textDark;
+  static const Color textSecondary = AppColors.textMutedDark;
 
   static ThemeData get darkTheme {
     return ThemeData(
@@ -28,7 +28,7 @@ class AppTheme {
         error: AppColors.danger,
       ),
       fontFamily: AppTypography.fontFamily,
-      textTheme: AppTypography.buildTextTheme(AppColors.textOnDark),
+      textTheme: AppTypography.buildTextTheme(AppColors.textDark),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.bgDark,
         elevation: 0,
