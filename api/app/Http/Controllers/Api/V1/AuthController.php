@@ -119,6 +119,7 @@ class AuthController extends Controller
             'emergency_contact_phone' => $employee->emergency_contact_phone,
             'extra_data' => $employee->extra_data ?? [],
             'capabilities' => $this->capabilitiesFor($employee),
+            'suggested_home_route' => $employee->homeRoute(),
         ];
     }
 
