@@ -2,6 +2,17 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.66] - 2026-04-22
+### Sprint A - Cablage des tokens design (APV L.05/L.07)
+
+- Mobile : nouvel ecran `HomeScreen` conversationnel (`mobile/lib/features/home/screens/home_screen.dart`) pose comme route `/` : salutation contextuelle, banniere Leo (placeholder tant que `leo_ai` n est pas active), grille d actions rapides (Pointer, Mon mois, Historique, Equipe si manager, Parametres) et barre de chat desactivee en pied ; l ancien ecran `AttendanceScreen` est desormais accessible via `/attendance`
+- Mobile : refactor de `TeamScreen` pour utiliser `LeopardoBadge.forStatus` + `EmptyState` (finies les `Chip` locales avec couleurs codees en dur) et `LeopardoBadge` sur les invitations (avec libelles FR homogenes)
+- Web : `dashboard.blade.php` bascule en layout 2 colonnes (1fr / 300px) avec nouveau composant `x-leo-sidebar` (placeholder sticky sur >=lg, rappel que Leo arrive bientot)
+- Web : `hr/invitations/index.blade.php` et `me/dashboard.blade.php` utilisent `x-attendance-badge` pour statut pointage/invitation et `x-empty-state` pour les listes vides
+- Web : `layouts/app.blade.php` ecrit les messages de session via `x-alert-banner level="success"` au lieu d une bande emerald ad hoc ; les boutons "Creer RH / employe" et "Renvoyer invitation" passent sur les tokens `bg-rh` / `bg-rh-dark` (APV L.05, RH = emerald)
+- Design : plus aucun `#10B981` / `bg-emerald-500` hardcode dans ces ecrans, toute la chaine passe par `AppColors`, `tailwind.config.js` et les composants Blade
+- Tests : `php artisan test` toujours vert a 89 tests / 408 assertions (aucun changement contrat API, aucun changement schema)
+
 ## [4.1.65] - 2026-04-22
 ### APV - Fondations design moderne + frontieres modules
 
