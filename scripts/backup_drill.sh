@@ -43,6 +43,7 @@ timestamp="$(date -u +%Y%m%d-%H%M%S)"
 dump_file="${BACKUP_DIR}/leopardo-${timestamp}.dump"
 log_file="${BACKUP_DIR}/last-drill.log"
 decrypted_tmp=""
+declare -a snapshot_tmp_files=()
 
 log() {
   local msg="$1"
@@ -59,6 +60,9 @@ cleanup() {
   local rc=$?
   if [[ -n "${decrypted_tmp}" && -f "${decrypted_tmp}" ]]; then
     rm -f "${decrypted_tmp}" || true
+  fi
+  if [[ ${#snapshot_tmp_files[@]} -gt 0 ]]; then
+    rm -f "${snapshot_tmp_files[@]}" || true
   fi
   psql "${RESTORE_DB_URL}" -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" >/dev/null 2>&1 || true
   psql "${RESTORE_DB_URL}" -c "DROP SCHEMA IF EXISTS shared_tenants CASCADE;" >/dev/null 2>&1 || true
@@ -80,35 +84,59 @@ tables=(
 )
 
 # ---------------------------------------------------------------------------
-# 0. Capture des counts source AVANT le dump.
+# 0 + 1. Snapshot REPEATABLE READ partage : counts source + pg_dump.
 # ---------------------------------------------------------------------------
 # Probleme TOCTOU : si on compte les lignes source APRES pg_restore (mode naif),
 # toute insertion survenue pendant le dump+restore (jusqu'a ~90s) fait echouer
 # le drill alors que le backup est valide. attendance_logs est append-only et
 # recoit des pointages continus pendant les heures ouvrees.
-# Correctif : on capture les counts source juste avant pg_dump, dans la meme
-# transaction REPEATABLE READ qu'utilise pg_dump en interne par defaut. Le
-# restore etant le snapshot du dump, les counts cibles doivent matcher les
-# counts source d'avant le dump (pas les counts live actuels).
-log "[0/4] capture source counts (pre-dump snapshot)"
-declare -A source_counts
-for fq in "${tables[@]}"; do
-  schema="${fq%%.*}"
-  table="${fq##*.}"
-  source_counts["${fq}"]=$(psql "${DATABASE_URL}" -Atc "SELECT COUNT(*) FROM ${schema}.${table};" 2>/dev/null || echo "NA")
-  log "    ${fq} = ${source_counts[$fq]}"
-done
+#
+# Solution propre : on utilise un SEUL psql qui ouvre une transaction
+# REPEATABLE READ, exporte son snapshot via pg_export_snapshot() et :
+#   - compte toutes les tables critiques dans cette transaction (counts
+#     mutuellement coherents)
+#   - lance pg_dump --snapshot=<snap> via \! pour que le dump voie EXACTEMENT
+#     le meme etat de la base
+# Les counts stockes correspondent donc au contenu exact du dump (et donc
+# du restore), independamment des ecritures concurrentes pendant que le
+# dump tourne.
+#
+# Pre-requis: Postgres 9.2+ (pg_export_snapshot) — Neon 16 OK.
+log "[0-1/4] capture source counts + pg_dump in shared REPEATABLE READ snapshot"
 
-# ---------------------------------------------------------------------------
-# 1. Dump (format custom, compression incluse).
-# ---------------------------------------------------------------------------
-log "[1/4] pg_dump -> ${dump_file}"
-pg_dump \
-  --format=custom \
-  --no-owner \
-  --no-privileges \
-  --file="${dump_file}" \
-  "${DATABASE_URL}"
+counts_file="$(mktemp)"
+# On delegue la suppression de ce fichier au trap cleanup (via une variable
+# dedicated) pour couvrir les chemins d'echec.
+snapshot_tmp_files+=("${counts_file}")
+
+# Exporte pour que \! pg_dump puisse les reutiliser (les :var psql sont
+# interpoles dans \!, mais passer par env evite tout probleme de quoting
+# pour URL / path avec caracteres speciaux).
+export SNAPSHOT_DUMP_FILE="${dump_file}"
+export SNAPSHOT_DB_URL="${DATABASE_URL}"
+
+PGOPTIONS="--client-min-messages=warning" psql "${DATABASE_URL}" -qAtX -v ON_ERROR_STOP=1 \
+  -v counts_file="${counts_file}" <<'PSQL_SCRIPT'
+BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+SELECT pg_export_snapshot() AS snap \gset
+\o :counts_file
+SELECT 'public.companies|' || COUNT(*) FROM public.companies;
+SELECT 'public.plans|' || COUNT(*) FROM public.plans;
+SELECT 'public.super_admins|' || COUNT(*) FROM public.super_admins;
+SELECT 'shared_tenants.employees|' || COUNT(*) FROM shared_tenants.employees;
+SELECT 'shared_tenants.attendance_logs|' || COUNT(*) FROM shared_tenants.attendance_logs;
+SELECT 'shared_tenants.user_invitations|' || COUNT(*) FROM shared_tenants.user_invitations;
+\o
+\! pg_dump --format=custom --no-owner --no-privileges --snapshot=:'snap' --file="$SNAPSHOT_DUMP_FILE" "$SNAPSHOT_DB_URL"
+COMMIT;
+PSQL_SCRIPT
+
+declare -A source_counts
+while IFS='|' read -r fq cnt; do
+  [[ -z "${fq}" ]] && continue
+  source_counts["${fq}"]="${cnt}"
+  log "    ${fq} = ${cnt}"
+done < "${counts_file}"
 
 dump_size=$(stat -c%s "${dump_file}" 2>/dev/null || stat -f%z "${dump_file}")
 log "    dump size: ${dump_size} bytes"
