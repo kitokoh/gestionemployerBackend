@@ -35,12 +35,6 @@ class WebAuthController extends Controller
                 ->withErrors(['email' => 'Identifiants invalides.']);
         }
 
-        if (! $employee->isManager()) {
-            return back()
-                ->withInput(['email' => $validated['email']])
-                ->withErrors(['email' => 'Acces reserve aux managers.']);
-        }
-
         if ($employee->status !== 'active') {
             return back()
                 ->withInput(['email' => $validated['email']])
@@ -56,7 +50,7 @@ class WebAuthController extends Controller
         Auth::guard('web')->login($employee);
         $request->session()->regenerate();
 
-        return redirect()->intended('/dashboard');
+        return redirect()->intended(route($employee->homeRoute()));
     }
 
     public function logout(Request $request): RedirectResponse

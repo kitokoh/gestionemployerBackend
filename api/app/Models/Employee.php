@@ -99,6 +99,49 @@ class Employee extends Authenticatable
         return $this->role === 'manager';
     }
 
+    public function isEmployee(): bool
+    {
+        return $this->role === 'employee';
+    }
+
+    public function hasManagerRole(string ...$roles): bool
+    {
+        if (! $this->isManager()) {
+            return false;
+        }
+
+        if ($roles === []) {
+            return true;
+        }
+
+        return in_array($this->manager_role, $roles, true);
+    }
+
+    public function isPrincipal(): bool
+    {
+        return $this->hasManagerRole('principal');
+    }
+
+    public function isHr(): bool
+    {
+        return $this->hasManagerRole('rh');
+    }
+
+    /**
+     * Route d'accueil suggeree selon le role/sous-role de l'employe.
+     */
+    public function homeRoute(): string
+    {
+        if (! $this->isManager()) {
+            return 'me.dashboard';
+        }
+
+        return match ($this->manager_role) {
+            'comptable' => 'accounting.dashboard',
+            default => 'dashboard',
+        };
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');

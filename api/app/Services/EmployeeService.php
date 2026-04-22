@@ -11,8 +11,7 @@ class EmployeeService
 {
     public function __construct(
         private readonly UserInvitationService $userInvitationService,
-    ) {
-    }
+    ) {}
 
     public function create(array $payload, ?Employee $actor = null): Employee
     {

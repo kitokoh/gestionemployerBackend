@@ -4,8 +4,9 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class TenantMiddleware
@@ -53,6 +54,11 @@ class TenantMiddleware
 
         $request->attributes->set('company', $company);
         app()->instance('current_company', $company);
+
+        if (DB::getDriverName() === 'pgsql') {
+            $schema = $company->schema_name ?: 'shared_tenants';
+            DB::statement('SET search_path TO '.$schema.',public');
+        }
 
         return $next($request);
     }
