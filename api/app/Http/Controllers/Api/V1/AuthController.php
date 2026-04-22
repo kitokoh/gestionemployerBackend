@@ -27,15 +27,7 @@ class AuthController extends Controller
         $employee = $result['employee'];
 
         return new JsonResponse([
-            'data' => [
-                'id' => $employee->id,
-                'company_id' => $employee->company_id,
-                'first_name' => $employee->first_name,
-                'last_name' => $employee->last_name,
-                'email' => $employee->email,
-                'role' => $employee->role,
-                'status' => $employee->status,
-            ],
+            'data' => $this->serializeEmployee($employee),
             'token' => $result['token'],
             'token_type' => $result['token_type'],
             'token_expires_at' => $result['token_expires_at'],
