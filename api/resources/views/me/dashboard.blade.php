@@ -24,8 +24,8 @@
             <h2 class="text-lg font-semibold">Pointage du jour</h2>
             @if ($todayLog)
                 <dl class="mt-3 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
-                    <div><dt class="text-slate-400">Check-in</dt><dd>{{ optional($todayLog->check_in)->format('H:i') ?? '-' }}</dd></div>
-                    <div><dt class="text-slate-400">Check-out</dt><dd>{{ optional($todayLog->check_out)->format('H:i') ?? '-' }}</dd></div>
+                    <div><dt class="text-slate-400">Check-in</dt><dd>{{ $todayLog->check_in?->setTimezone($company?->timezone ?? 'Africa/Algiers')->format('H:i') ?? '-' }}</dd></div>
+                    <div><dt class="text-slate-400">Check-out</dt><dd>{{ $todayLog->check_out?->setTimezone($company?->timezone ?? 'Africa/Algiers')->format('H:i') ?? '-' }}</dd></div>
                     <div><dt class="text-slate-400">Heures</dt><dd>{{ number_format((float) ($todayLog->hours_worked ?? 0), 2) }}</dd></div>
                     <div><dt class="text-slate-400">Methode</dt><dd>{{ $todayLog->method }}</dd></div>
                 </dl>
@@ -51,8 +51,8 @@
                         <tr>
                             <td class="py-2 pr-4">{{ $log->date }}</td>
                             <td class="py-2 pr-4">{{ $log->status }}</td>
-                            <td class="py-2 pr-4">{{ optional($log->check_in)->format('H:i') ?? '-' }}</td>
-                            <td class="py-2 pr-4">{{ optional($log->check_out)->format('H:i') ?? '-' }}</td>
+                            <td class="py-2 pr-4">{{ $log->check_in?->setTimezone($company?->timezone ?? 'Africa/Algiers')->format('H:i') ?? '-' }}</td>
+                            <td class="py-2 pr-4">{{ $log->check_out?->setTimezone($company?->timezone ?? 'Africa/Algiers')->format('H:i') ?? '-' }}</td>
                             <td class="py-2 pr-4">{{ number_format((float) ($log->hours_worked ?? 0), 2) }}</td>
                         </tr>
                     @empty
