@@ -2,6 +2,11 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.63] - 2026-04-22
+### Hygiene de depot
+
+- Normalisation de la casse du dossier `.Jules/` en `.jules/` pour respecter les conventions d agent et les regles de Janitor
+
 ## [4.1.62] - 2026-04-22
 ### Accessibilite mobile et retour haptique
 
