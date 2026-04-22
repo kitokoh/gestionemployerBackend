@@ -77,18 +77,22 @@ class HealthController extends Controller
     private function checkRedis(): array
     {
         // Redis est optionnel (cache/sessions/queues). On considere Redis
-        // "non configure" si aucune des variables d'env explicites n'est
-        // posee ET qu'aucun driver applicatif (cache/queue/session) ne
-        // l'utilise. Le default `127.0.0.1` de `config/database.php` ne
-        // suffit pas a considerer Redis voulu : ce check est justement la
-        // pour eviter de bloquer quelques secondes sur un `tcp connect`
-        // vers un Redis inexistant sur chaque requete `/health`.
-        $envConfigured = ! empty(env('REDIS_HOST')) || ! empty(env('REDIS_URL'));
-        $driverUsesRedis = in_array(config('cache.default'), ['redis'], true)
-            || in_array(config('queue.default'), ['redis'], true)
-            || in_array(config('session.driver'), ['redis'], true);
+        // "vraiment voulu" si :
+        //   (a) REDIS_URL est explicitement defini -> `config('database.redis.default.url')`
+        //       n'a PAS de default, il vaut `null` tant que REDIS_URL n'est pas pose ;
+        //   (b) ou un driver applicatif (cache/queue/session) utilise redis.
+        //
+        // On NE regarde PAS `database.redis.default.host` : son default `127.0.0.1`
+        // est indistinguable d'une config explicite, et on veut justement eviter de
+        // bloquer quelques secondes sur un `tcp connect` vers un Redis inexistant
+        // sur chaque requete `/health`. `env()` est volontairement evite : apres
+        // `php artisan config:cache` (prod), `env()` renvoie null.
+        $urlConfigured = ! empty(config('database.redis.default.url'));
+        $driverUsesRedis = config('cache.default') === 'redis'
+            || config('queue.default') === 'redis'
+            || config('session.driver') === 'redis';
 
-        if (! $envConfigured && ! $driverUsesRedis) {
+        if (! $urlConfigured && ! $driverUsesRedis) {
             return ['ok' => true, 'status' => 'skipped'];
         }
 
