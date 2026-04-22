@@ -17,6 +17,13 @@
 - Tests : nouveau `FeatureFlagTest` (5 tests, 18 assertions) couvre defaut `rh=true`, defaut `false` pour modules Phase 2, persistance `setFeature`, `for($company)` complet et company nulle. Suite verte a 89 tests / 408 assertions
 - Compat : `app_theme.dart` reference desormais `AppColors` (aucune casse cote ecran existant)
 
+## [4.1.65] - 2026-04-22
+### Retours pilotes clients et audit post-MVP
+
+- Ajout des retours pilotes Karim B., Amina T. et Sofiane M. avec priorisation produit post-GO MVP
+- Ajout d un audit T01-T18 indiquant les points deja couverts, partiels ou encore a traiter
+- Priorisation des prochains correctifs: `search_path`, pagination dashboard, lisibilite mobile, 401 mobile et recu/export paie
+
 ## [4.1.64] - 2026-04-22
 ### Accessibilite et navigation mobile
 
@@ -1014,7 +1021,6 @@ docs(erd): unify manager_id and remove supervisor_id from employees
    
  
  
-
 
 
 
