@@ -68,6 +68,37 @@ trap cleanup EXIT INT TERM
 
 log "=== Leopardo RH backup drill ${timestamp} ==="
 
+# Tables verifiees a l'etape 4. Declare ici pour etre utilise AUSSI a l'etape
+# 0 (capture des counts source avant le dump).
+tables=(
+  "public.companies"
+  "public.plans"
+  "public.super_admins"
+  "shared_tenants.employees"
+  "shared_tenants.attendance_logs"
+  "shared_tenants.user_invitations"
+)
+
+# ---------------------------------------------------------------------------
+# 0. Capture des counts source AVANT le dump.
+# ---------------------------------------------------------------------------
+# Probleme TOCTOU : si on compte les lignes source APRES pg_restore (mode naif),
+# toute insertion survenue pendant le dump+restore (jusqu'a ~90s) fait echouer
+# le drill alors que le backup est valide. attendance_logs est append-only et
+# recoit des pointages continus pendant les heures ouvrees.
+# Correctif : on capture les counts source juste avant pg_dump, dans la meme
+# transaction REPEATABLE READ qu'utilise pg_dump en interne par defaut. Le
+# restore etant le snapshot du dump, les counts cibles doivent matcher les
+# counts source d'avant le dump (pas les counts live actuels).
+log "[0/4] capture source counts (pre-dump snapshot)"
+declare -A source_counts
+for fq in "${tables[@]}"; do
+  schema="${fq%%.*}"
+  table="${fq##*.}"
+  source_counts["${fq}"]=$(psql "${DATABASE_URL}" -Atc "SELECT COUNT(*) FROM ${schema}.${table};" 2>/dev/null || echo "NA")
+  log "    ${fq} = ${source_counts[$fq]}"
+done
+
 # ---------------------------------------------------------------------------
 # 1. Dump (format custom, compression incluse).
 # ---------------------------------------------------------------------------
@@ -139,27 +170,16 @@ if [[ ${pg_restore_rc} -ne 0 ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Verification : on compare quelques tables critiques source vs cible.
+# 4. Verification : on compare les counts source (captures pre-dump) vs cible.
 # ---------------------------------------------------------------------------
-log "[4/4] row count verification"
-
-# Le schema tenant partage s'appelle `shared_tenants`, les tables metier
-# vivent dedans ; les tables de plateforme restent dans `public`.
-tables=(
-  "public.companies"
-  "public.plans"
-  "public.super_admins"
-  "shared_tenants.employees"
-  "shared_tenants.attendance_logs"
-  "shared_tenants.user_invitations"
-)
+log "[4/4] row count verification (pre-dump source snapshot vs restored target)"
 
 mismatch=0
 for fq in "${tables[@]}"; do
   schema="${fq%%.*}"
   table="${fq##*.}"
 
-  source_count=$(psql "${DATABASE_URL}" -Atc "SELECT COUNT(*) FROM ${schema}.${table};" 2>/dev/null || echo "NA")
+  source_count="${source_counts[${fq}]}"
   target_count=$(psql "${RESTORE_DB_URL}" -Atc "SELECT COUNT(*) FROM ${schema}.${table};" 2>/dev/null || echo "NA")
 
   # Les tables listees sont critiques : une absence (NA) doit echouer le drill
