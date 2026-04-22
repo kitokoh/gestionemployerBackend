@@ -128,12 +128,17 @@ class Employee extends Authenticatable
     }
 
     /**
-     * Route d'accueil suggeree selon le role/sous-role de l'employe.
+     * Route d'accueil suggeree selon le role de l'employe.
+     *
+     * APV v2 / L.02 : l'employe simple ("role=employee") n'utilise que
+     * l'app mobile. Sur le web on l'atterrit sur la page CTA mobile qui
+     * lui rappelle de telecharger l'app. Les managers continuent d'aller
+     * sur /dashboard.
      */
     public function homeRoute(): string
     {
         if (! $this->isManager()) {
-            return 'me.dashboard';
+            return 'mobile.cta';
         }
 
         return 'dashboard';

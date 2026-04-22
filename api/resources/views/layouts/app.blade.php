@@ -50,8 +50,8 @@
                                 </a>
                             @endif
                         @else
-                            <a href="{{ route('me.dashboard') }}" class="rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-slate-700">
-                                Mon espace
+                            <a href="{{ route('mobile.cta') }}" class="rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-slate-700">
+                                App mobile
                             </a>
                         @endif
                         <form method="POST" action="{{ route('logout') }}">

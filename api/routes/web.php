@@ -5,7 +5,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InvitationController;
 use App\Http\Controllers\Web\InvitationManagementController;
 use App\Http\Controllers\Web\KioskController;
-use App\Http\Controllers\Web\MyDashboardController;
+use App\Http\Controllers\Web\MobileAppCtaController;
 use App\Http\Controllers\Web\PlatformAuthController;
 use App\Http\Controllers\Web\PlatformCompanyController;
 use App\Http\Controllers\Web\WebAuthController;
@@ -46,9 +46,13 @@ Route::post('/logout', [WebAuthController::class, 'logout'])
     ->middleware('auth:web')
     ->name('logout');
 
-// Espace personnel accessible a tout employe authentifie (manager ou simple employe).
-Route::middleware(['auth:web', 'tenant', 'employee'])->prefix('me')->name('me.')->group(function (): void {
-    Route::get('/', [MyDashboardController::class, 'index'])->name('dashboard');
+// APV v2 / L.02 : un employe simple n'a pas d'interface web. On l'atterrit
+// sur /mobile avec un CTA de telechargement de l'app. Les anciens liens
+// /me sont rediriges (soft-break) pour garder les signets existants.
+Route::middleware(['auth:web', 'tenant', 'employee'])->group(function (): void {
+    Route::get('/mobile', [MobileAppCtaController::class, 'index'])->name('mobile.cta');
+    Route::get('/me', fn () => redirect()->route('mobile.cta'));
+    Route::get('/me/{any}', fn () => redirect()->route('mobile.cta'))->where('any', '.*');
 });
 
 // Dashboard manager (principal + sous-roles RH / dept / comptable / superviseur).

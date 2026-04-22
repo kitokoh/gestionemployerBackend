@@ -192,7 +192,9 @@ class OnboardingE2ETest extends TestCase
 
         DB::statement('SET search_path TO shared_tenants,public');
 
-        // 7. Employe login Web → redirige sur /me.
+        // 7. APV v2 / L.02 : un employe qui se connecte sur le web est
+        // redirige vers la page CTA mobile (pas de dashboard web employe).
+        // Les anciens liens /me sont softs-rediriges vers /mobile.
         $this->get('/login');
         $csrfToken = session()->token();
         $loginWeb = $this->withSession(['_token' => $csrfToken])->post('/login', [
@@ -200,10 +202,11 @@ class OnboardingE2ETest extends TestCase
             'email' => 'sami@acme.test',
             'password' => 'EmpStrong!123',
         ]);
-        $loginWeb->assertRedirect('/me');
+        $loginWeb->assertRedirect('/mobile');
         $this->assertAuthenticated('web');
 
-        $this->get('/me')->assertOk()->assertSee('Sami');
+        $this->get('/mobile')->assertOk()->assertSee('Sami');
+        $this->get('/me')->assertRedirect('/mobile');
 
         // 8. Toutes les societes sont bien sur le meme schema partage.
         DB::statement('SET search_path TO public');

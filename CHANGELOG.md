@@ -2,6 +2,16 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.67] - 2026-04-22
+### Sprint B - Assumer APV v2 cote web + tests Dart unit
+
+- Web / APV L.02 : un employe simple (`role=employee`) qui se connecte sur le web n'atterrit plus sur un dashboard `/me` (retire) mais sur une page CTA `/mobile` (`mobile.cta`) qui lui rappelle que Leopardo RH est mobile-first et propose les liens Play Store / App Store (placeholders tant que les builds ne sont pas publies) + un bouton de deconnexion
+- Web : nouveau controller `MobileAppCtaController` + vue `resources/views/mobile/cta.blade.php` (tokens APV : `bg-rh`, pas d hex hardcode) ; `Employee::homeRoute()` renvoie `mobile.cta` pour les employes simples, `dashboard` pour les managers ; `layouts/app.blade.php` remplace le lien "Mon espace" par "App mobile"
+- Web : les anciens liens `/me` et `/me/...` sont softs-rediriges vers `/mobile` (cote route group `auth:web + tenant + employee`) pour ne pas casser les signets existants ; controller `MyDashboardController` et vue `me/dashboard.blade.php` supprimes
+- Mobile : nouveaux tests unitaires Dart (`test/features/`) : `Invitation.fromJson` (regression PR #76 sur les UUID + fallback `last_sent_at`/`sent_at`), `MonthlySummary.fromJson` (totaux nums/strings, breakdown, defauts), `AuthRepository.extractToken`/`extractEmployeeJson` (payload root vs data vs data.user)
+- Tests : `WebAuthPagesTest` mis a jour (`test_employee_is_redirected_to_mobile_cta_on_web_login`, `test_legacy_me_urls_redirect_to_mobile_cta_for_employee`) ; `OnboardingE2ETest` adapte au virage APV v2 ; suite backend verte 90 tests / 414 assertions ; suite Flutter verte 23 tests / 0 issue nouveau `dart analyze`
+- CI : le workflow mobile existant execute deja `flutter test --coverage` donc les nouveaux tests Dart sont pris en compte sans changement de pipeline
+
 ## [4.1.66] - 2026-04-22
 ### Sprint A - Cablage des tokens design (APV L.05/L.07)
 
