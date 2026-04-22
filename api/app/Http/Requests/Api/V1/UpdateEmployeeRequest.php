@@ -73,6 +73,39 @@ class UpdateEmployeeRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            /** @var \App\Models\Employee $actor */
+            $actor = $this->user();
+
+            if ($actor && ! $actor->isManager()) {
+                if ($this->has('role')) {
+                    $validator->errors()->add('role', 'Seul un manager peut modifier le role.');
+                }
+                if ($this->has('manager_role')) {
+                    $validator->errors()->add('manager_role', 'Seul un manager peut modifier le type de manager.');
+                }
+                if ($this->has('status')) {
+                    $validator->errors()->add('status', 'Seul un manager peut modifier le statut.');
+                }
+                if ($this->has('matricule')) {
+                    $validator->errors()->add('matricule', 'Seul un manager peut modifier le matricule.');
+                }
+            }
+
+            if ($this->input('manager_role') === 'principal') {
+                $employee = $this->route('employee') instanceof \App\Models\Employee
+                    ? $this->route('employee')
+                    : \App\Models\Employee::query()->find($this->route('employee'));
+
+                if (! $employee || $employee->manager_role !== 'principal') {
+                    $validator->errors()->add('manager_role', 'Seul le super admin peut assigner le role de manager principal.');
+                }
+            }
+        });
+    }
+
     protected function prepareForValidation(): void
     {
         if (DB::getDriverName() !== 'pgsql') {

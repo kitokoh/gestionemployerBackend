@@ -2,6 +2,14 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.64] - 2026-04-22
+### Sécurité : durcissement des mises à jour de profil employé
+
+- Renforcement de `UpdateEmployeeRequest` pour interdire aux non-managers la modification de champs sensibles (`role`, `manager_role`, `status`, `matricule`)
+- Interdiction stricte d'assigner le rôle `principal` via l'API manager (réservé au super-admin plateforme lors du provisionnement)
+- Ajout d'une suite de tests de sécurité `EmployeeSelfPromotionTest` couvrant les tentatives d'élévation de privilèges
+- Correction d'une régression mineure de test dans `EmployeesRbacTest` liée au format de date `contract_start`
+
 ## [4.1.63] - 2026-04-22
 ### API self-service et parite CRUD mobile
 

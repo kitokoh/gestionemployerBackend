@@ -243,7 +243,7 @@ class EmployeesRbacTest extends TestCase
         ]);
         $this->assertDatabaseHas('employees', [
             'email' => 'john.doe@a.test',
-            'contract_start' => now()->toDateString(),
+            'contract_start' => now()->startOfDay(),
         ]);
     }
 
@@ -466,7 +466,7 @@ class EmployeesRbacTest extends TestCase
         $response->assertJsonValidationErrors(['matricule']);
     }
 
-    public function test_employee_can_update_self_profile_but_role_is_ignored(): void
+    public function test_employee_cannot_update_self_role(): void
     {
         $companyA = Company::query()->create([
             'name' => 'Company A',
@@ -496,10 +496,11 @@ class EmployeesRbacTest extends TestCase
                 'role' => 'manager',
             ]);
 
-        $response->assertOk();
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['role']);
+
         $this->assertDatabaseHas('employees', [
             'id' => $employeeA->id,
-            'first_name' => 'NewName',
             'role' => 'employee',
         ]);
     }
