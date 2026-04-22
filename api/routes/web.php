@@ -55,9 +55,15 @@ Route::middleware(['auth:web', 'tenant', 'employee'])->prefix('me')->name('me.')
 Route::middleware(['auth:web', 'tenant', 'manager'])->group(function (): void {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/employees/{employee}', [WebEmployeeController::class, 'show'])->name('employees.show');
-    Route::get('/employees/{employee}/quick-estimate', [WebEmployeeController::class, 'quickEstimate'])->name('employees.quickEstimate');
-    Route::get('/employees/{employee}/receipt', [WebEmployeeController::class, 'receipt'])->name('employees.receipt');
+    Route::get('/employees/{employee}', [WebEmployeeController::class, 'show'])
+        ->where('employee', '[0-9]+')
+        ->name('employees.show');
+    Route::get('/employees/{employee}/quick-estimate', [WebEmployeeController::class, 'quickEstimate'])
+        ->where('employee', '[0-9]+')
+        ->name('employees.quickEstimate');
+    Route::get('/employees/{employee}/receipt', [WebEmployeeController::class, 'receipt'])
+        ->where('employee', '[0-9]+')
+        ->name('employees.receipt');
 });
 
 // Creation / gestion des employes : reservee aux managers Principal et RH.

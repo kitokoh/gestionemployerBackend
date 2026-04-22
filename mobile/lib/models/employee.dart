@@ -42,6 +42,10 @@ class Employee {
       for (final entry in rawCapabilities) {
         if (entry is String) capabilities.add(entry);
       }
+    } else if (rawCapabilities is Map) {
+      rawCapabilities.forEach((key, value) {
+        if (value == true && key is String) capabilities.add(key);
+      });
     }
 
     return Employee(
