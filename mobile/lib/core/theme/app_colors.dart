@@ -99,6 +99,7 @@ class AppColors {
       case 'enabled':
         return success;
       case 'late':
+      case 'early_leave':
       case 'pending':
       case 'trial':
       case 'suspended':
@@ -106,6 +107,9 @@ class AppColors {
       case 'absent':
       case 'expired':
         return danger;
+      case 'half_day':
+      case 'holiday':
+      case 'weekend':
       case 'sent':
       case 'on_leave':
         return info;
