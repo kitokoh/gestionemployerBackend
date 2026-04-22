@@ -120,11 +120,7 @@ class AuthController extends Controller
 
     private function resolveCompany(Employee $employee): ?Company
     {
-        if (! $employee->company_id) {
-            return null;
-        }
-
-        return Company::find($employee->company_id);
+        return $employee->company;
     }
 
     /**
