@@ -2,6 +2,13 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.64] - 2026-04-22
+### Securite et isolation Kiosk
+
+- Ajout d'un test de regression `KioskSecurityTest` pour verrouiller l'interface Kiosk/Biometrie
+- Verification que les employes archives ne peuvent plus pointer via borne
+- Verification que les bornes rattachees a une societe suspendue ou expiree sont bloquees
+
 ## [4.1.63] - 2026-04-22
 ### API self-service et parite CRUD mobile
 
