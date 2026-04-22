@@ -2,6 +2,37 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.62] - 2026-04-22
+### Accessibilite mobile et retour haptique
+
+- Ajout de tooltips sur les boutons icones des ecrans historique et parametres pour ameliorer la navigation lecteur d ecran
+- Ajout de labels `Semantics` sur le bouton de pointage afin d expliciter l action arrivee / sortie
+- Ajout d un retour haptique au tap du bouton de pointage pour renforcer la confirmation utilisateur
+
+## [4.1.61] - 2026-04-21
+### GO MVP officiel
+
+- Decision GO MVP prononcee apres validation de `main`, Render, Neon/PostgreSQL, Firebase mobile et tests de connexion reels positifs
+- `docs/GESTION_PROJET/GO_NO_GO_MVP.md` archive la decision, le perimetre valide et la checklist de passage
+- Le projet passe de construction MVP a pilote client encadre, avec gel des nouvelles features hors corrections P0/P1
+- La release MVP est preparee pour tag Git `v0.1.0-mvp`
+
+## [4.1.60] - 2026-04-21
+### Couverture onboarding invitations
+
+- Ajout d assertions feature pour verrouiller la creation d une societe avec manager principal et invitation email depuis le super-admin
+- Verification explicite des invitations RH et employe creees par un manager, avec `role`, `manager_role`, origine d invitation et lien `/activate`
+- Ces tests securisent le parcours pilote: entreprise -> manager principal -> RH/employes -> activation de compte par email
+
+## [4.1.59] - 2026-04-21
+### Optimisations backend ciblees
+
+- Optimisation du chemin de connexion API en chargeant la societe avec l employe pour eviter une requete relationnelle tardive
+- Reduction des colonnes lues sur les endpoints de presence utilises par les tableaux de bord et historiques
+- Reutilisation du fuseau horaire courant pendant la serialisation des statuts de presence manager
+- Simplification de la resolution des horaires via les relations Eloquent existantes
+- Correction du helper de schema de test pour eviter la syntaxe `CASCADE` hors PostgreSQL
+
 ## [4.1.58] - 2025-05-14
 ### Amelioration UX et accessibilite mobile
 
@@ -937,10 +968,6 @@ docs(erd): unify manager_id and remove supervisor_id from employees
    
  
  
-
-
-
-
 
 
 
