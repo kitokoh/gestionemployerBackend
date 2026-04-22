@@ -52,6 +52,8 @@ return new class extends Migration
 
     public function down(): void
     {
+        DB::statement('SET search_path TO public');
+
         DB::statement('DROP INDEX IF EXISTS companies_features_gin');
         DB::statement('DROP INDEX IF EXISTS companies_metadata_gin');
 
