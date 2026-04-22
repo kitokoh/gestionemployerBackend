@@ -20,11 +20,13 @@ class DashboardController extends Controller
         $today = now('UTC')->setTimezone($company->timezone)->toDateString();
 
         $employees = Employee::query()
+            ->select(['id', 'first_name', 'last_name', 'email', 'salary_type', 'salary_base', 'hourly_rate'])
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
 
         $logsByEmployee = AttendanceLog::query()
+            ->select(['id', 'employee_id', 'check_in', 'check_out', 'status', 'hours_worked', 'overtime_hours'])
             ->where('date', $today)
             ->where('session_number', 1)
             ->get()
@@ -34,6 +36,9 @@ class DashboardController extends Controller
         $present = 0;
         $late = 0;
         $totalEstimated = 0.0;
+
+        $timezone = $company->timezone;
+        $currency = $company->currency;
 
         foreach ($employees as $employee) {
             $log = $logsByEmployee->get($employee->id);
@@ -52,11 +57,11 @@ class DashboardController extends Controller
             $rows[] = [
                 'employee' => $employee,
                 'attendance_status' => $attendanceStatus,
-                'check_in' => $log?->check_in?->setTimezone($company->timezone)->format('H:i'),
-                'check_out' => $log?->check_out?->setTimezone($company->timezone)->format('H:i'),
+                'check_in' => $log?->check_in?->setTimezone($timezone)->format('H:i'),
+                'check_out' => $log?->check_out?->setTimezone($timezone)->format('H:i'),
                 'hours' => $summary['hours_worked'] ?? 0.0,
                 'due' => $summary['total_estimated'] ?? 0.0,
-                'currency' => $summary['currency'] ?? $company->currency,
+                'currency' => $summary['currency'] ?? $currency,
             ];
         }
 

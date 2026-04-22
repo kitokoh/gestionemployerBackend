@@ -26,6 +26,7 @@ class WebEmployeeController extends Controller
         $company = app('current_company');
 
         $historyLogs = AttendanceLog::query()
+            ->select(['id', 'employee_id', 'date', 'check_in', 'check_out', 'status', 'hours_worked', 'overtime_hours'])
             ->where('employee_id', $employee->id)
             ->where('session_number', 1)
             ->orderByDesc('date')
@@ -33,7 +34,10 @@ class WebEmployeeController extends Controller
             ->limit(30)
             ->get();
 
-        $history = $historyLogs->map(function (AttendanceLog $log) use ($employee) {
+        $timezone = $company->timezone;
+        $currency = $company->currency;
+
+        $history = $historyLogs->map(function (AttendanceLog $log) use ($employee, $timezone, $currency) {
             $summary = $this->estimationService->dailySummaryFromLog(
                 employee: $employee,
                 log: $log,
@@ -42,11 +46,11 @@ class WebEmployeeController extends Controller
 
             return [
                 'date' => $log->date?->format('Y-m-d'),
-                'check_in' => $log->check_in?->setTimezone(app('current_company')->timezone)->format('H:i'),
-                'check_out' => $log->check_out?->setTimezone(app('current_company')->timezone)->format('H:i'),
+                'check_in' => $log->check_in?->setTimezone($timezone)->format('H:i'),
+                'check_out' => $log->check_out?->setTimezone($timezone)->format('H:i'),
                 'hours_worked' => $summary['hours_worked'] ?? 0.0,
                 'total_estimated' => $summary['total_estimated'] ?? 0.0,
-                'currency' => $summary['currency'] ?? app('current_company')->currency,
+                'currency' => $summary['currency'] ?? $currency,
                 'status' => $log->status ?? 'absent',
             ];
         })->values();

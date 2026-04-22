@@ -2,6 +2,12 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.64] - 2026-04-22
+### Optimisations web manager
+
+- Reduction des colonnes lues sur le tableau de bord manager et l historique employe pour alleger la charge base de donnees
+- Mise en cache locale du fuseau horaire et de la devise dans les boucles de rendu du dashboard pour eviter les resolutions de conteneur redundantes
+
 ## [4.1.63] - 2026-04-22
 ### API self-service et parite CRUD mobile
 
