@@ -127,7 +127,10 @@ SELECT 'shared_tenants.employees|' || COUNT(*) FROM shared_tenants.employees;
 SELECT 'shared_tenants.attendance_logs|' || COUNT(*) FROM shared_tenants.attendance_logs;
 SELECT 'shared_tenants.user_invitations|' || COUNT(*) FROM shared_tenants.user_invitations;
 \o
-\! pg_dump --format=custom --no-owner --no-privileges --snapshot=:'snap' --file="$SNAPSHOT_DUMP_FILE" "$SNAPSHOT_DB_URL"
+-- \! ne fait PAS d'interpolation psql (:var reste litteral), mais \setenv si.
+-- On passe donc le snapshot id via un env var pour que pg_dump le recoive.
+\setenv PG_SNAPSHOT :snap
+\! pg_dump --format=custom --no-owner --no-privileges --snapshot="$PG_SNAPSHOT" --file="$SNAPSHOT_DUMP_FILE" "$SNAPSHOT_DB_URL"
 COMMIT;
 PSQL_SCRIPT
 
