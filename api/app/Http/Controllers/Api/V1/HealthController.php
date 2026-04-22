@@ -108,10 +108,14 @@ class HealthController extends Controller
     {
         try {
             $disk = Storage::disk(config('filesystems.default', 'local'));
-            $disk->put('.healthcheck', (string) now()->timestamp);
+            // Laravel 11 : les disques sont en `throw => false` par defaut,
+            // donc `put()` retourne `false` au lieu de lever. On verifie
+            // explicitement la valeur de retour pour vraiment detecter un
+            // disque non inscriptible.
+            $written = $disk->put('.healthcheck', (string) now()->timestamp);
             $disk->delete('.healthcheck');
 
-            return ['ok' => true];
+            return ['ok' => (bool) $written];
         } catch (Throwable $e) {
             return [
                 'ok' => false,
