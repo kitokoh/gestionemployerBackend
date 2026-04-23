@@ -25,6 +25,13 @@ class BiometricWorkflowTest extends TestCase
         parent::tearDown();
     }
 
+    private function setPath(string $path): void
+    {
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("SET search_path TO $path");
+        }
+    }
+
     public function test_employee_biometric_request_requires_manager_approval_before_activation(): void
     {
         $company = Company::query()->create([
@@ -40,7 +47,7 @@ class BiometricWorkflowTest extends TestCase
             'status' => 'active',
         ]);
 
-        DB::statement('SET search_path TO shared_tenants,public');
+        $this->setPath('shared_tenants,public');
 
         $manager = Employee::query()->create([
             'company_id' => $company->id,
@@ -107,7 +114,7 @@ class BiometricWorkflowTest extends TestCase
             'status' => 'active',
         ]);
 
-        DB::statement('SET search_path TO shared_tenants,public');
+        $this->setPath('shared_tenants,public');
 
         $employee = Employee::query()->create([
             'company_id' => $company->id,
@@ -134,7 +141,7 @@ class BiometricWorkflowTest extends TestCase
             'status' => 'active',
         ]);
 
-        DB::statement('SET search_path TO public');
+        $this->setPath('public');
 
         $kioskResponse = $this->actingAs($manager, 'sanctum')
             ->postJson('/api/v1/kiosks', [
@@ -170,7 +177,7 @@ class BiometricWorkflowTest extends TestCase
             'status' => 'active',
         ]);
 
-        DB::statement('SET search_path TO shared_tenants,public');
+        $this->setPath('shared_tenants,public');
 
         $manager = Employee::query()->create([
             'company_id' => $company->id,
@@ -196,7 +203,7 @@ class BiometricWorkflowTest extends TestCase
             'biometric_fingerprint_enabled' => true,
         ]);
 
-        DB::statement('SET search_path TO public');
+        $this->setPath('public');
 
         $kioskResponse = $this->actingAs($manager, 'sanctum')
             ->postJson('/api/v1/kiosks', [
@@ -235,7 +242,7 @@ class BiometricWorkflowTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.processed_count', 2);
 
-        DB::statement('SET search_path TO shared_tenants,public');
+        $this->setPath('shared_tenants,public');
 
         $this->assertDatabaseHas('attendance_logs', [
             'employee_id' => $employee->id,

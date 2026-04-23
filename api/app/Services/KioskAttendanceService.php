@@ -16,10 +16,12 @@ class KioskAttendanceService
 
     public function punch(AttendanceKiosk $kiosk, string $identifier, string $action = 'check_in'): AttendanceLog
     {
-        $searchPath = $kiosk->company?->tenancy_type === 'schema'
-            ? $kiosk->company->schema_name.',public'
-            : 'shared_tenants,public';
-        DB::statement('SET search_path TO '.$searchPath);
+        if (DB::getDriverName() === 'pgsql') {
+            $searchPath = $kiosk->company?->tenancy_type === 'schema'
+                ? $kiosk->company->schema_name.',public'
+                : 'shared_tenants,public';
+            DB::statement('SET search_path TO '.$searchPath);
+        }
 
         $employee = Employee::query()
             ->where('company_id', $kiosk->company_id)
@@ -33,6 +35,10 @@ class KioskAttendanceService
 
         if (! $employee) {
             throw (new ModelNotFoundException)->setModel(Employee::class);
+        }
+
+        if ($employee->status === 'archived') {
+            abort(403, 'EMPLOYEE_ARCHIVED');
         }
 
         if (! $employee->biometric_fingerprint_enabled && ! $employee->biometric_face_enabled) {
@@ -50,10 +56,12 @@ class KioskAttendanceService
 
     public function syncPunches(AttendanceKiosk $kiosk, array $events): array
     {
-        $searchPath = $kiosk->company?->tenancy_type === 'schema'
-            ? $kiosk->company->schema_name.',public'
-            : 'shared_tenants,public';
-        DB::statement('SET search_path TO '.$searchPath);
+        if (DB::getDriverName() === 'pgsql') {
+            $searchPath = $kiosk->company?->tenancy_type === 'schema'
+                ? $kiosk->company->schema_name.',public'
+                : 'shared_tenants,public';
+            DB::statement('SET search_path TO '.$searchPath);
+        }
 
         $processed = [];
 
@@ -73,7 +81,7 @@ class KioskAttendanceService
                 })
                 ->first();
 
-            if (! $employee) {
+            if (! $employee || $employee->status === 'archived') {
                 continue;
             }
 

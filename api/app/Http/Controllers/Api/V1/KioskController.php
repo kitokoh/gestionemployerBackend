@@ -61,6 +61,10 @@ class KioskController extends Controller
 
         $kiosk = $this->resolveAuthorizedKiosk($request, $deviceCode);
 
+        if (in_array($kiosk->company->status, ['suspended', 'expired'], true)) {
+            return new JsonResponse(['error' => 'ACCOUNT_SUSPENDED'], 403);
+        }
+
         $company = $kiosk->company;
         app()->instance('current_company', $company);
 
@@ -85,6 +89,11 @@ class KioskController extends Controller
     public function roster(Request $request, string $deviceCode): JsonResponse
     {
         $kiosk = $this->resolveAuthorizedKiosk($request, $deviceCode);
+
+        if (in_array($kiosk->company->status, ['suspended', 'expired'], true)) {
+            return new JsonResponse(['error' => 'ACCOUNT_SUSPENDED'], 403);
+        }
+
         $company = $kiosk->company;
         app()->instance('current_company', $company);
         $this->setTenantSearchPath($company);
@@ -122,6 +131,12 @@ class KioskController extends Controller
 
     public function sync(Request $request, string $deviceCode): JsonResponse
     {
+        $kiosk = $this->resolveAuthorizedKiosk($request, $deviceCode);
+
+        if (in_array($kiosk->company->status, ['suspended', 'expired'], true)) {
+            return new JsonResponse(['error' => 'ACCOUNT_SUSPENDED'], 403);
+        }
+
         $validated = $request->validate([
             'events' => ['required', 'array'],
             'events.*.identifier' => ['required', 'string', 'max:150'],
@@ -131,7 +146,6 @@ class KioskController extends Controller
             'events.*.biometric_type' => ['nullable', 'in:fingerprint,face,mixed'],
         ]);
 
-        $kiosk = $this->resolveAuthorizedKiosk($request, $deviceCode);
         app()->instance('current_company', $kiosk->company);
         $this->setTenantSearchPath($kiosk->company);
 
@@ -148,7 +162,9 @@ class KioskController extends Controller
 
     private function resolveAuthorizedKiosk(Request $request, string $deviceCode): AttendanceKiosk
     {
-        DB::statement('SET search_path TO shared_tenants,public');
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('SET search_path TO shared_tenants,public');
+        }
 
         $kiosk = AttendanceKiosk::query()
             ->where('device_code', strtoupper($deviceCode))
@@ -163,6 +179,10 @@ class KioskController extends Controller
 
     private function setTenantSearchPath(?Company $company): void
     {
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+
         if (! $company) {
             DB::statement('SET search_path TO shared_tenants,public');
 

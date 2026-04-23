@@ -2,6 +2,14 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.70] - 2026-04-22
+### Sentinel 🛡️ - Hardening isolation Kiosque et statut employe
+
+- Kiosque : les endpoints `punch`, `roster` et `sync` verifient desormais le statut de la societe et retournent `403 ACCOUNT_SUSPENDED` si elle est suspendue ou expiree (auparavant, seule l auth utilisateur standard etait protegee)
+- Kiosque : l action `punch` refuse desormais les employes archives avec `403 EMPLOYEE_ARCHIVED` et la `sync` les ignore silencieusement
+- Tests : nouveau `KioskSecurityTest` (3 tests) couvrant ces garde-fous ; correctif de `CreatesMvpSchema` pour le support SQLite (JSONB fallback)
+- Fix : ajout de verifications du driver DB dans `KioskAttendanceService` et `KioskController` pour eviter les crashs `SET search_path` sous SQLite (tests)
+
 ## [4.1.69] - 2026-04-22
 ### Sprint D - UI super-admin pour toggler les modules + guides utilisateurs
 
