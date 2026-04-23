@@ -2,6 +2,11 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.70] - 2026-04-23
+### 🧹 Janitor: root documentation and governance hygiene
+
+- Docs: Archive explicitly marked historical files `ORCHESTRATION_MAITRE.md` and `docs/PROMPTS_EXECUTION/ORCHESTRATION/CONTINUE.md` to `docs/notes/archive/` (replaced by `PILOTAGE.md`).
+
 ## [4.1.69] - 2026-04-22
 ### Sprint D - UI super-admin pour toggler les modules + guides utilisateurs
 
