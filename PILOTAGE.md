@@ -1,5 +1,5 @@
 # 📑 PILOTAGE — LEOPARDO RH
-# PROGRAM_VERSION = 4.1.66 | 2026-04-22
+# PROGRAM_VERSION = 4.1.69 | 2026-04-22
 # CE FICHIER EST LA SEULE SOURCE DE VÉRITÉ OPÉRATIONNELLE
 # Statut des anciens fichiers : voir section "Gouvernance documentaire"
 
@@ -18,7 +18,7 @@
 ## CONVENTION DE VERSIONING
 
 ```
-PROGRAM_VERSION  = 4.1.66   → Version globale du projet/pilotage (ce fichier fait foi)
+PROGRAM_VERSION  = 4.1.69   → Version globale du projet/pilotage (ce fichier fait foi)
                               Doit rester synchrone avec :
                                 - CHANGELOG.md (dernière entrée)
                                 - api/config/app.php → 'version'
@@ -48,7 +48,7 @@ MVP : "Combien je dois à mes employés aujourd'hui ?" — en 1 clic.
 ```
 Date MAJ       : 2026-04-22
 Conception     : ✅ Terminée (40+ documents dans docs/dossierdeConception/)
-Code           : ✅ MVP-01 à MVP-06 mergés sur `main` (voir CHANGELOG.md jusqu'à 4.1.66)
+Code           : ✅ MVP-01 à MVP-06 mergés sur `main` (voir CHANGELOG.md jusqu'à 4.1.69)
 Phase active   : Phase 1 APV Fondations (voir docs/ROADMAP.md)
                  Note: la section "SCOPE MVP VERROUILLÉ" plus bas reflète
                  le scope initial figé, pas l'état actuel du code.
