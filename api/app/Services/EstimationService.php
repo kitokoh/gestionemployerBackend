@@ -16,6 +16,9 @@ class EstimationService
 
     private const DEFAULT_OVERTIME_RATE_1 = 1.25;
 
+    /** @var array<string, float> */
+    private array $deductionRates = [];
+
     public function dailySummary(Employee $employee, ?string $date = null): array
     {
         $company = app('current_company');
@@ -33,7 +36,7 @@ class EstimationService
             ->orderByDesc('id')
             ->first();
 
-        return $this->dailySummaryFromLog($employee, $log, $dateKey);
+        return $this->dailySummaryFromLog($employee, $log, $dateKey, $company);
     }
 
     public function quickEstimate(Employee $employee, string $from, string $to): array
@@ -64,7 +67,7 @@ class EstimationService
                 continue;
             }
 
-            $daySummary = $this->dailySummaryFromLog($employee, $log, $log->date->format('Y-m-d'));
+            $daySummary = $this->dailySummaryFromLog($employee, $log, $log->date->format('Y-m-d'), $company);
             $daysPresent++;
             $totalHours += (float) $daySummary['hours_worked'];
             $totalOvertime += (float) $daySummary['overtime_hours'];
@@ -107,9 +110,9 @@ class EstimationService
         ];
     }
 
-    public function dailySummaryFromLog(Employee $employee, ?AttendanceLog $log, ?string $date = null): array
+    public function dailySummaryFromLog(Employee $employee, ?AttendanceLog $log, ?string $date = null, ?\App\Models\Company $company = null): array
     {
-        $company = app('current_company');
+        $company ??= app('current_company');
         $dateKey = $date ?: now('UTC')->setTimezone($company->timezone)->toDateString();
 
         if (! $log || ! $log->check_in) {
@@ -230,10 +233,14 @@ class EstimationService
 
     private function resolveEmployeeDeductionRate(string $countryCode): float
     {
+        if (isset($this->deductionRates[$countryCode])) {
+            return $this->deductionRates[$countryCode];
+        }
+
         $defaultRate = $countryCode === 'DZ' ? 0.09 : 0.0;
 
         if (! $this->hrModelTemplatesTableExists()) {
-            return $defaultRate;
+            return $this->deductionRates[$countryCode] = $defaultRate;
         }
 
         $row = DB::table(DB::getDriverName() === 'pgsql' ? 'public.hr_model_templates' : 'hr_model_templates')
@@ -241,12 +248,12 @@ class EstimationService
             ->first();
 
         if (! $row || empty($row->cotisations)) {
-            return $defaultRate;
+            return $this->deductionRates[$countryCode] = $defaultRate;
         }
 
         $cotisations = json_decode((string) $row->cotisations, true);
 
-        return (float) ($cotisations['total_salarial'] ?? $defaultRate);
+        return $this->deductionRates[$countryCode] = (float) ($cotisations['total_salarial'] ?? $defaultRate);
     }
 
     private function hrModelTemplatesTableExists(): bool

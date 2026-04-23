@@ -2,6 +2,13 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.70] - 2026-04-22
+### Performance
+
+- `DashboardController@index` : optimisation des requetes `Employee` et `AttendanceLog` (selecteur de colonnes) + mise en cache locale des tokens `timezone`/`currency` pour eviter les resolutions de container redundantes dans la boucle de rendu.
+- `WebEmployeeController@show` : optimisation de la requete d historique (30 derniers logs) avec selection de colonnes.
+- `EstimationService` : le helper `dailySummaryFromLog` accepte desormais un objet `Company` optionnel pour eviter `app('current_company')` a chaque appel ; mise en cache locale des `deductionRates` par pays pour eviter les acces DB repetes dans `quickEstimate`.
+
 ## [4.1.69] - 2026-04-22
 ### Sprint D - UI super-admin pour toggler les modules + guides utilisateurs
 

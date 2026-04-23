@@ -15,14 +15,18 @@ class DashboardController extends Controller
     public function index(): View
     {
         $company = app('current_company');
-        $today = now('UTC')->setTimezone($company->timezone)->toDateString();
+        $timezone = $company->timezone;
+        $currency = $company->currency;
+        $today = now('UTC')->setTimezone($timezone)->toDateString();
 
         $employees = Employee::query()
+            ->select(['id', 'company_id', 'first_name', 'last_name', 'email', 'salary_type', 'salary_base', 'hourly_rate', 'status'])
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
 
         $logsByEmployee = AttendanceLog::query()
+            ->select(['id', 'company_id', 'employee_id', 'status', 'check_in', 'check_out', 'hours_worked', 'overtime_hours'])
             ->where('date', $today)
             ->where('session_number', 1)
             ->get()
@@ -44,17 +48,17 @@ class DashboardController extends Controller
                 $late++;
             }
 
-            $summary = $this->estimationService->dailySummaryFromLog($employee, $log, $today);
+            $summary = $this->estimationService->dailySummaryFromLog($employee, $log, $today, $company);
             $totalEstimated += (float) $summary['total_estimated'];
 
             $rows[] = [
                 'employee' => $employee,
                 'attendance_status' => $attendanceStatus,
-                'check_in' => $log?->check_in?->setTimezone($company->timezone)->format('H:i'),
-                'check_out' => $log?->check_out?->setTimezone($company->timezone)->format('H:i'),
+                'check_in' => $log?->check_in?->setTimezone($timezone)->format('H:i'),
+                'check_out' => $log?->check_out?->setTimezone($timezone)->format('H:i'),
                 'hours' => $summary['hours_worked'] ?? 0.0,
                 'due' => $summary['total_estimated'] ?? 0.0,
-                'currency' => $summary['currency'] ?? $company->currency,
+                'currency' => $summary['currency'] ?? $currency,
             ];
         }
 
