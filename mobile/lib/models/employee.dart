@@ -1,6 +1,7 @@
 class Employee {
   final int id;
   final String? companyId;
+  final String? matricule;
   final String firstName;
   final String lastName;
   final String email;
@@ -19,6 +20,7 @@ class Employee {
   Employee({
     required this.id,
     this.companyId,
+    this.matricule,
     required this.firstName,
     required this.lastName,
     required this.email,
@@ -51,6 +53,7 @@ class Employee {
     return Employee(
       id: json['id'],
       companyId: json['company_id'] as String?,
+      matricule: json['matricule'] as String?,
       firstName: (json['first_name'] ?? '') as String,
       lastName: (json['last_name'] ?? '') as String,
       email: (json['email'] ?? '') as String,

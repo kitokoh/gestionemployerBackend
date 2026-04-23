@@ -30,22 +30,26 @@ class MobilePayloadContractTest extends TestCase
     public function test_auth_me_payload_matches_mobile_contract(): void
     {
         $company = Company::query()->create([
-            'name' => 'Company A',
-            'slug' => 'company-a',
-            'sector' => 'restaurant',
+            'name' => 'TechCorp SPA',
+            'slug' => 'techcorp-spa',
+            'sector' => 'technology',
             'country' => 'DZ',
             'city' => 'Alger',
-            'email' => 'a@company.test',
+            'email' => 'contact@techcorp.test',
             'schema_name' => 'shared_tenants',
             'tenancy_type' => 'shared',
             'status' => 'active',
+            'language' => 'fr',
+            'timezone' => 'Africa/Algiers',
+            'currency' => 'DZD',
         ]);
 
         $employee = Employee::query()->create([
             'company_id' => $company->id,
-            'first_name' => 'Nora',
-            'last_name' => 'Ait',
-            'email' => 'nora@company.test',
+            'matricule' => 'EMP-0042',
+            'first_name' => 'Ahmed',
+            'last_name' => 'Benali',
+            'email' => 'ahmed.benali@techcorp.test',
             'password_hash' => Hash::make('password123'),
             'role' => 'employee',
             'status' => 'active',
@@ -60,15 +64,108 @@ class MobilePayloadContractTest extends TestCase
             'data' => [
                 'id',
                 'company_id',
+                'matricule',
                 'first_name',
+                'middle_name',
                 'last_name',
+                'preferred_name',
                 'email',
+                'personal_email',
+                'phone',
                 'role',
+                'manager_role',
                 'status',
+                'photo_path',
+                'biometric_face_enabled',
+                'biometric_fingerprint_enabled',
+                'address_line',
+                'postal_code',
+                'emergency_contact_name',
+                'emergency_contact_phone',
+                'extra_data',
+                'capabilities' => [
+                    'can_view_dashboard',
+                    'can_create_employees',
+                    'can_manage_invitations',
+                    'can_manage_biometrics',
+                    'can_view_payroll',
+                    'is_principal',
+                ],
+                'features',
+                'suggested_home_route',
+                'company' => [
+                    'id',
+                    'name',
+                    'language',
+                    'timezone',
+                    'currency',
+                ],
             ],
         ]);
-        $response->assertJsonPath('data.email', 'nora@company.test');
-        $response->assertJsonPath('data.role', 'employee');
+
+        $response->assertJsonPath('data.matricule', 'EMP-0042');
+        $response->assertJsonPath('data.email', 'ahmed.benali@techcorp.test');
+        $response->assertJsonPath('data.company.name', 'TechCorp SPA');
+        $response->assertJsonPath('data.company.timezone', 'Africa/Algiers');
+    }
+
+    public function test_attendance_today_single_payload_matches_mobile_contract(): void
+    {
+        $company = Company::query()->create([
+            'name' => 'Company A',
+            'slug' => 'company-a',
+            'sector' => 'restaurant',
+            'country' => 'DZ',
+            'city' => 'Alger',
+            'email' => 'a@company.test',
+            'schema_name' => 'shared_tenants',
+            'tenancy_type' => 'shared',
+            'status' => 'active',
+            'timezone' => 'UTC',
+        ]);
+
+        $employee = Employee::query()->create([
+            'company_id' => $company->id,
+            'first_name' => 'Sami',
+            'last_name' => 'Employee',
+            'email' => 'employee@company.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'employee',
+            'status' => 'active',
+        ]);
+
+        AttendanceLog::query()->create([
+            'company_id' => $company->id,
+            'employee_id' => $employee->id,
+            'date' => Carbon::now('UTC')->toDateString(),
+            'session_number' => 1,
+            'check_in' => Carbon::parse(Carbon::now('UTC')->toDateString() . ' 08:00:00', 'UTC'),
+            'check_out' => null,
+            'hours_worked' => 0,
+            'overtime_hours' => 0,
+            'status' => 'incomplete',
+        ]);
+
+        Sanctum::actingAs($employee);
+
+        $response = $this->getJson('/api/v1/attendance/today');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.mode', 'single');
+        $response->assertJsonStructure([
+            'data' => [
+                'mode',
+                'item' => [
+                    'employee_id',
+                    'name',
+                    'checked_in',
+                    'check_in_time',
+                    'check_out_time',
+                    'hours_worked',
+                    'status',
+                ],
+            ],
+        ]);
     }
 
     public function test_attendance_today_collection_payload_matches_mobile_contract(): void
@@ -109,9 +206,9 @@ class MobilePayloadContractTest extends TestCase
         AttendanceLog::query()->create([
             'company_id' => $company->id,
             'employee_id' => $employee->id,
-            'date' => '2026-04-18',
+            'date' => Carbon::now('UTC')->toDateString(),
             'session_number' => 1,
-            'check_in' => Carbon::parse('2026-04-18 08:00:00', 'UTC'),
+            'check_in' => Carbon::parse(Carbon::now('UTC')->toDateString() . ' 08:00:00', 'UTC'),
             'check_out' => null,
             'hours_worked' => 0,
             'overtime_hours' => 0,
@@ -119,7 +216,6 @@ class MobilePayloadContractTest extends TestCase
         ]);
 
         Sanctum::actingAs($manager);
-        $this->travelTo(Carbon::parse('2026-04-18 09:00:00', 'UTC'));
 
         $response = $this->getJson('/api/v1/attendance/today');
 

@@ -2,6 +2,14 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.70] - 2026-04-22
+### Contract Guard - Alignement et durcissement du contrat API/Mobile
+
+- API : `AuthController@me` inclut desormais `matricule` et l'objet `company` (`id`, `name`, `language`, `timezone`, `currency`) pour une parite totale avec la documentation canonique
+- Mobile : Le modele `Employee` gagne le champ `matricule` et sa gestion dans la factory `fromJson`
+- Tests : `MobilePayloadContractTest` durci avec assertions exhaustives sur `/auth/me` (verrouillage de la structure du payload) et `/attendance/today` (validation des modes `single` et `collection`)
+- Fix : `CreatesMvpSchema` ameliore pour supporter les types `jsonb` de maniere conditionnelle (fallback `json` sur SQLite), fiabilisant l'execution des tests contractuels en local
+
 ## [4.1.69] - 2026-04-22
 ### Sprint D - UI super-admin pour toggler les modules + guides utilisateurs
 

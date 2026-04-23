@@ -91,9 +91,12 @@ class AuthController extends Controller
 
     private function serializeEmployee(Employee $employee): array
     {
+        $company = $this->resolveCompany($employee);
+
         return [
             'id' => $employee->id,
             'company_id' => $employee->company_id,
+            'matricule' => $employee->matricule,
             'first_name' => $employee->first_name,
             'middle_name' => $employee->middle_name,
             'last_name' => $employee->last_name,
@@ -113,8 +116,15 @@ class AuthController extends Controller
             'emergency_contact_phone' => $employee->emergency_contact_phone,
             'extra_data' => $employee->extra_data ?? [],
             'capabilities' => $this->capabilitiesFor($employee),
-            'features' => FeatureFlag::for($this->resolveCompany($employee)),
+            'features' => FeatureFlag::for($company),
             'suggested_home_route' => $employee->homeRoute(),
+            'company' => $company ? [
+                'id' => $company->id,
+                'name' => $company->name,
+                'language' => $company->language,
+                'timezone' => $company->timezone,
+                'currency' => $company->currency,
+            ] : null,
         ];
     }
 
