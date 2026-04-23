@@ -1,4 +1,5 @@
 import 'package:leopardo_rh/core/widgets/shimmer_loading.dart';
+import 'package:leopardo_rh/core/widgets/empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -85,7 +86,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               ref.read(authProvider.notifier).logout();
             });
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(
+                semanticsLabel: 'Chargement...',
+              ),
+            );
           }
 
           if (errorText.contains('403') || errorText.contains('FORBIDDEN')) {
@@ -118,7 +123,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         },
         data: (logs) {
           if (logs.isEmpty) {
-            return const Center(child: Text('Aucun historique pour ce mois.'));
+            return const EmptyState(
+              title: 'Aucun historique',
+              description: 'Il n\'y a pas de pointages enregistrés pour ce mois.',
+              icon: Icons.history_toggle_off,
+            );
           }
           final totalJours = logs.length;
           final totalHeures = logs.fold<double>(0, (sum, log) => sum + (log.workedHours ?? 0));
@@ -142,7 +151,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     if (index == logs.length) {
                       return const Padding(
                         padding: EdgeInsets.all(16.0),
-                        child: Center(child: CircularProgressIndicator()),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            semanticsLabel: 'Chargement de la suite...',
+                          ),
+                        ),
                       );
                     }
                     final log = logs[index];
