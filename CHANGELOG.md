@@ -2,6 +2,12 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.72] - 2026-04-24
+### Seeder - Multi-company demo seeder (GO MVP)
+
+- Backend : mise a jour de `DemoCompanySeeder.php` pour supporter plusieurs pays (DZ, MA, TN) avec des donnees realistes (devises, fuseaux horaires, matricules, plans distincts)
+- Backend : amelioration de la gestion du `search_path` dans le seeder pour garantir l'isolation tenant et la creation correcte des `user_lookups`
+
 ## [4.1.70] - 2026-04-23
 ### Audit de coherence PILOTAGE / CORRECTIONS (aucun changement fonctionnel)
 
