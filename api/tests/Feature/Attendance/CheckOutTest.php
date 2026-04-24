@@ -79,6 +79,7 @@ class CheckOutTest extends TestCase
             'name' => 'Day',
             'start_time' => '08:00:00',
             'end_time' => '17:00:00',
+            'break_minutes' => 60,
             'late_tolerance_minutes' => 15,
             'overtime_threshold_daily' => 8.0,
             'is_default' => true,
@@ -102,13 +103,15 @@ class CheckOutTest extends TestCase
         $this->travelTo(Carbon::parse('2026-04-04 17:00:00', 'UTC'));
         $checkOut = $this->postJson('/api/v1/attendance/check-out');
 
+        // 08:00 -> 17:00 = 9h brut. Avec 60 min de pause, on facture 8h
+        // effectives, donc 0h d'heures sup (seuil quotidien = 8h).
         $checkOut->assertOk();
-        $checkOut->assertJsonPath('data.hours_worked', '9.00');
-        $checkOut->assertJsonPath('data.overtime_hours', '1.00');
+        $checkOut->assertJsonPath('data.hours_worked', '8.00');
+        $checkOut->assertJsonPath('data.overtime_hours', '0.00');
 
         $log = AttendanceLog::query()->firstOrFail();
-        $this->assertSame('9.00', $log->hours_worked);
-        $this->assertSame('1.00', $log->overtime_hours);
+        $this->assertSame('8.00', $log->hours_worked);
+        $this->assertSame('0.00', $log->overtime_hours);
         $this->assertSame('2026-04-04 17:00:00', $log->check_out->setTimezone('UTC')->format('Y-m-d H:i:s'));
     }
 }

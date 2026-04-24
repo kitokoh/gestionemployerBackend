@@ -64,8 +64,14 @@ class EmployeeService
         $isManager = $actor->isManager();
         $isSelfUpdate = $actor->id === $employee->id;
 
+        // Un employe non-manager ne peut PAS changer son email librement :
+        // - le `user_lookups.email` est PRIMARY KEY et est utilise pour router
+        //   la session au login. Un updateOrInsert sur un email deja utilise
+        //   par un autre employe ecraserait son mapping (prise de controle).
+        // - le changement d'email exige sinon un workflow de confirmation
+        //   (lien envoye a l'ancien et nouveau mail) qui n'est pas implemente.
         if (! $isManager) {
-            $payload = Arr::only($payload, ['first_name', 'last_name', 'email', 'password']);
+            $payload = Arr::only($payload, ['first_name', 'last_name', 'password']);
         }
 
         if (array_key_exists('password', $payload) && $payload['password']) {
