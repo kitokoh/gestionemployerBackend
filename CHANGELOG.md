@@ -2,6 +2,13 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.71] - 2026-04-24
+### Sentinel - Hardening Tenant Isolation
+
+- API : Renforcement de l'isolation tenant par l'ajout du trait `BelongsToCompany` aux modeles `UserInvitation`, `BiometricEnrollmentRequest` et `AttendanceKiosk`. Ces modeles beneficient desormais d'un scopying global automatique par `company_id`, prevenant toute fuite de donnees inter-tenant meme en cas d'omission de filtre manuel dans les requetes.
+- Tests : Correction du trait `CreatesMvpSchema` pour assurer la compatibilite SQLite (support des colonnes JSON/JSONB selon le driver), permettant l'execution fiable des tests de securite en memoire.
+- Tests : Ajout de `SentinelTenantIsolationHardeningTest` pour verrouiller le comportement d'isolation sur ces nouveaux modeles.
+
 ## [4.1.70] - 2026-04-23
 ### Audit de coherence PILOTAGE / CORRECTIONS (aucun changement fonctionnel)
 
