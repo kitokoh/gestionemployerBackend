@@ -1,15 +1,16 @@
 # CHANGELOG — LEOPARDO RH
-# Format : Keep a Changelog (keepachangelog.com)
-# Versioning : Semantic Versioning (semver.org)
-
-## [4.1.72] - 2026-04-25
-
+# Format : Keep a Changelog (k
 ### DocKeeper - Alignement documentation et synchronisation de version
 
 - `PILOTAGE.md` : mise a jour de `PROGRAM_VERSION` a `4.1.72` et alignement de la date au `2026-04-25` pour correspondre au CHANGELOG.
 - `api/config/app.php` : mise a jour de la version par defaut a `4.1.72` pour maintenir la synchronisation avec le pilotage.
 - `README.md` : retrait de la reference obsolete a `docs/GESTION_PROJET/INDEX_CANONIQUE.md` qui a ete archivee.
-- `CHANGELOG.md` : correction d'une erreur de date future (`2026-05-20` -> `2026-04-24`) pour la version `[4.1.71]`.
+- `CHANGELOG.md` : correction d'une erreur de date future (`2026-05-20` -> `2026-04-24`) pour la version `[4.1.
+### Seeder - Rejeu automatique et jeu de donnees demo enrichi
+
+- API : `api/database/seeders/DemoCompanyOnceSeeder.php` versionne desormais le verrou de seed demo (`demo_company_seed_v2`) afin que le nouveau jeu de donnees de demonstration soit rejoue automatiquement au prochain deploiement avec `DEMO_SEED_ONCE=true`.
+- API : `api/database/seeders/DemoCompanySeeder.php` cree desormais un jeu de donnees multi-company beaucoup plus riche pour les tests manuels et E2E : managers `principal` / `rh` / `dept` / `comptable` / `superviseur`, employes `active` / `suspended` / `archived`, plusieurs types d'absences, historiques de conges, paies et exports, projets, taches, commentaires, evaluations, notifications et audit logs.
+- Deploy : `api/docker-entrypoint.sh` accepte maintenant un reset complet one-shot de la base de test via `RESET_TEST_DB_ONCE=true`, memorise par un verrou `public.seed_locks` (configurable via `RESET_TEST_DB_LOCK_KEY`) pour qu'un redeploiement suivant ne repe
 
 ### Seeder - Stabilisation demo multi-company
 
@@ -1148,7 +1149,6 @@ docs(erd): unify manager_id and remove supervisor_id from employees
    
  
  
-
 
 
 
