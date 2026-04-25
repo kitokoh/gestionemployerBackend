@@ -7,6 +7,12 @@
 
 - `api/app/Http/Controllers/Web/DashboardController.php` : ajout de `select()` sur les requetes `Employee` et `AttendanceLog` pour ne recuperer que les colonnes necessaires, evitant ainsi le chargement des colonnes JSONB lourdes et reduisant la consommation memoire lors de l'hydratation des modeles Eloquent.
 
+## [4.1.71] - 2026-04-25
+### Janitor: Ignorer et cesser de suivre les fichiers d'environnement mobile
+
+- Mobile : Ajout de `mobile/.env.local`, `.env.production` et `.env.staging` au `.gitignore` racine et retrait du suivi git pour eviter de versionner des configurations specifiques a l'environnement.
+- Mobile : Creation de `mobile/.env.example` comme modele pour les developpeurs.
+
 ## [4.1.71] - 2026-04-24
 ### DocKeeper - Alignement documentation Sprint 0
 
