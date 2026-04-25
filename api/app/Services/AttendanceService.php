@@ -40,7 +40,7 @@ class AttendanceService
             $diffMinutes = $startLocal->diffInMinutes($checkInLocal, false);
             $tolerance = (int) $schedule->late_tolerance_minutes;
             $lateMinutes = max(0, (int) floor($diffMinutes - $tolerance));
-            $status = $diffMinutes > $tolerance ? 'late' : 'ontime';
+            $status = $lateMinutes > 0 ? 'late' : 'ontime';
         }
 
         return AttendanceLog::query()->create([
@@ -100,7 +100,7 @@ class AttendanceService
             $diffMinutes = $startLocal->diffInMinutes($checkInLocal, false);
             $tolerance = (int) $schedule->late_tolerance_minutes;
             $log->late_minutes = max(0, (int) floor($diffMinutes - $tolerance));
-            $log->status = $diffMinutes > $tolerance ? 'late' : 'ontime';
+            $log->status = $log->late_minutes > 0 ? 'late' : 'ontime';
         }
 
         $log->save();
@@ -183,7 +183,7 @@ class AttendanceService
             $diffMinutes = $startLocal->diffInMinutes($checkInLocal, false);
             $tolerance = (int) $schedule->late_tolerance_minutes;
             $lateMinutes = max(0, (int) floor($diffMinutes - $tolerance));
-            $status = $diffMinutes > $tolerance ? 'late' : 'ontime';
+            $status = $lateMinutes > 0 ? 'late' : 'ontime';
         }
 
         return AttendanceLog::query()->create([
