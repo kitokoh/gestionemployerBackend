@@ -2,7 +2,64 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.72] - 2026-04-25
+
+
+### Documentation - Plan d'Action d'Amelioration
+
+- `docs/GESTION_PROJET/PLAN_ACTION_AMELIORATION.md` : ajout du plan d'action detaillant les 15 ameliorations identifiees lors de l'audit technique, organise en 4 phases (Securite, Qualite, Robustesse, Scalabilite) avec instructions d'implementation, code d'exemple et criteres d'acceptation pour chaque action.
+### Pointage - Corrections CRITIQUES (rapport Leopardo_RH_Pointage_Validation_Finale)
+
+- API : `app/Exceptions/AlreadyCheckedInException.php` et `app/Exceptions/MissingCheckInException.php` renvoient désormais HTTP **422** (au lieu de 409) — alignement avec les règles R-PT-03 / R-PT-04 / PT-08 / PT-17.
+- API : `app/Services/AttendanceService.php` (`checkOut`, `importExternalPunch`) — `hours_worked` soustrait désormais `schedule.break_minutes` (R-PT-06 / PT-13→PT-16). Pour 08:00→17:00 avec pause 60 min, on passe de 9.00 h à 8.00 h.
+- API : `app/Services/AttendanceService.php` (`checkIn`, `checkOut`, `importExternalPunch`) — `late_minutes = max(0, in − start − tolerance)` (R-PT-08 / PT-02). Un check-in à 08:10 avec tolérance 15 min renvoie désormais `late_minutes=0`.
+- API : `app/Policies/AttendancePolicy.php` — `checkIn`/`checkOut` exigent désormais `role='employee'` ; les managers reçoivent **403 FORBIDDEN** (PT-10).
+- API : `app/Http/Controllers/Api/V1/AttendanceController.php` — `today()` (vue manager) filtre `where('status', 'active')` et n'expose plus les employés archivés/suspendus (PT-29 / PT-43).
+- API : `app/Http/Middleware/TenantMiddleware.php` — bloque désormais les employés `suspended` en plus d'`archived` (`EMPLOYEE_SUSPENDED`, 403) — PT-68.
+- Contrat : `openapi.yaml` mis à jour pour le statut 422 sur `/attendance/check-in` (consolidation `ALREADY_CHECKED_IN` + `GPS_OUTSIDE_ZONE`).
+- Tests : `tests/Feature/Attendance/CheckInTest.php`, `tests/Feature/Attendance/CheckOutTest.php`, `tests/Unit/AttendanceServiceTest.php` mis à jour pour refléter les nouveaux statuts (422) et les nouvelles valeurs `hours_worked`/`overtime_hours`.
+- Suite locale : 11/11 Unit + 87/87 Feature OK.
+
+## [4.1.71] - 2026-05-20
+### Performance - Optimisation du dashboard manager
+
+- `api/app/Http/Controllers/Web/DashboardController.php` : ajout de `select()` sur les requetes `Employee` et `AttendanceLog` pour ne recuperer que les colonnes necessaires, evitant ainsi le chargement des colonnes JSONB lourdes et reduisant la consommation memoire lors de l'hydratation des modeles Eloquent.
+
+## [4.1.71] - 2026-04-24
+### DocKeeper - Alignement documentation Sprint 0
+
+- `PILOTAGE.md` : mise a jour du statut S0-2 en "termine" et correction du compte des contradictions (6 -> 7) pour correspondre a `docs/GESTION_PROJET/CORRECTIONS.md`.
+
+## [4.1.71] - 2026-04-23
+### Janitor: Archivage documentation historique et synchronisation
+
+- Docs : archivage de 8 fichiers marques `📦 HISTORIQUE` dans `PILOTAGE.md` vers `docs/notes/archive/` (`ORCHESTRATION_MAITRE.md`, `INDEX_CANONIQUE.md`, `CONTEXTE_SESSION_IA.md`, `JOURNAL_DE_BORD.md`, `BACKLOG_PHASE1_UNIQUE.md`, `CONTINUE.md`, `SUIVI_PROMPTS.md`, `EXECUTION_BLOCKERS_AND_NEXT.md`)
+- Governance : mise a jour de `tools/check-governance.ps1` pour refleter les nouveaux emplacements des fichiers requis
+- Pilotage : mise a jour de `PILOTAGE.md` (bump version `4.1.71`, mise a jour de la table de statut documentaire, validation C-6)
+- API : bump `APP_VERSION` default de `4.1.70` a `4.1.71` dans `api/config/app.php`
+
+## [4.1.71] - 2026-04-24
+### Palette - Accessibilite EmptyState mobile
+
+- Mobile : Amelioration de l'accessibilite du widget `EmptyState` par l'ajout de labels `Semantics` regroupant le titre et la description, permettant aux lecteurs d'ecran d'annoncer clairement le contexte des listes vides.
+
+## [4.1.71] - 2026-04-24
+### Contractor - Alignement contrat API/mobile (auth/me)
+
+- API : Mise a jour de `AuthController@serializeEmployee` pour inclure le `matricule` a la racine et un objet `company` imbrique (id, name, language, timezone, currency) conformement au contrat MVP.
+- Mobile : Mise a jour du modele `Employee` pour inclure et parser le champ `matricule`.
+- Tests : Renforcement de `MobilePayloadContractTest` pour verrouiller la presence de `matricule` et de la structure `company` dans la reponse `/api/v1/auth/me`.
+
 ## [4.1.70] - 2026-04-23
+### Mobile - Page d'accueil (WelcomeScreen) avant la connexion
+
+- Mobile : nouvel ecran `/welcome` (`mobile/lib/features/auth/screens/welcome_screen.dart`) affiche par defaut aux utilisateurs non authentifies a la place du saut direct sur `/login`. L'ecran met en valeur les benefices employe-centres de l'app : pointage + total d'heures, parcours professionnel cumule (meme d'une entreprise a l'autre), coffre-fort de documents personnels (diplomes, contrats), et notifications des entreprises qui ont recrute l'employe. Deux CTA : "Se connecter" -> `/login` et "Creer un compte" -> `/register`
+- Mobile : nouvel ecran `/register` (`mobile/lib/features/auth/screens/register_screen.dart`) qui explique le flow d'onboarding par invitation employeur (3 etapes : invitation RH -> email -> activation) et propose une capture d'email "me prevenir a l'ouverture de l'inscription libre" (UX placeholder, non branche au backend). L'inscription publique libre reste hors scope Phase 1 (pas de route API `/auth/register`, l'onboarding passe toujours par `user_invitations`)
+- Mobile : `mobile/lib/app.dart` - redirection `GoRouter` mise a jour pour autoriser les routes publiques `/welcome`, `/login`, `/register` (les utilisateurs non authentifies sont maintenant rediriges vers `/welcome` au lieu de `/login`, les utilisateurs authentifies sont rediriges hors de ces routes publiques vers `/`)
+- Mobile : `mobile/lib/features/auth/screens/login_screen.dart` - ajout d'un bouton "retour" (IconButton en top-left) pour revenir sur `/welcome` depuis l'ecran de connexion
+- Tests : nouveau `mobile/test/features/auth/welcome_screen_test.dart` (smoke test : rendu de l'ecran, presence des CTA `Se connecter` / `Creer un compte`, presence de la marque `Leopardo RH`)
+- Aucun changement backend, aucune migration. Rollback = `git revert` de la PR
+
 ### Audit de coherence PILOTAGE / CORRECTIONS (aucun changement fonctionnel)
 
 - `PILOTAGE.md` : en-tete re-aligne sur `PROGRAM_VERSION = 4.1.70 | 2026-04-23` (precedemment `4.1.58 | 14 Mai 2025`, date erronee), date MAJ corrigee, bloc "CONVENTION DE VERSIONING" precise que la version doit rester synchrone entre CHANGELOG.md, `api/config/app.php` et `/api/v1/health`
