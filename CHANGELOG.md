@@ -2,6 +2,11 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.72] - 2026-04-25
+### Documentation - Plan d'Action d'Amelioration
+
+- `docs/GESTION_PROJET/PLAN_ACTION_AMELIORATION.md` : ajout du plan d'action detaillant les 15 ameliorations identifiees lors de l'audit technique, organise en 4 phases (Securite, Qualite, Robustesse, Scalabilite) avec instructions d'implementation, code d'exemple et criteres d'acceptation pour chaque action.
+
 ## [4.1.71] - 2026-05-20
 ### Performance - Optimisation du dashboard manager
 
