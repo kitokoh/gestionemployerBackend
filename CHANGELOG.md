@@ -6,7 +6,7 @@
 
 ### Migration - Robustesse creation user_invitations
 
-- API : `api/database/migrations/public/2026_04_19_000012_create_user_invitations_table.php` tolere maintenant explicitement l'erreur PostgreSQL `42P07` (`relation already exists`) afin qu'un rebuild/reset complet de la base de test sur Render ne casse pas si la creation de `user_invitations` est rejouee lors d'une relance ou d'une course de migration.
+- API : `api/database/migrations/public/2026_04_19_000012_create_user_invitations_table.php` utilise maintenant `CREATE TABLE IF NOT EXISTS` et des indexes `IF NOT EXISTS` PostgreSQL, afin qu'un rebuild/reset complet de la base de test sur Render ne casse pas si la creation de `user_invitations` est rejouee lors d'une relance ou d'une course de migration.
 
 ### Migration - Robustesse ajout colonnes JSONB company
 
@@ -1156,7 +1156,6 @@ docs(erd): unify manager_id and remove supervisor_id from employees
    
  
  
-
 
 
 
