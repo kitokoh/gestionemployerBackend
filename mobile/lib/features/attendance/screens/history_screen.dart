@@ -1,3 +1,4 @@
+import 'package:leopardo_rh/core/widgets/empty_state.dart';
 import 'package:leopardo_rh/core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -118,7 +119,17 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         },
         data: (logs) {
           if (logs.isEmpty) {
-            return const Center(child: Text('Aucun historique pour ce mois.'));
+            return ListView(
+              children: const [
+                SizedBox(height: 80),
+                EmptyState(
+                  icon: Icons.history,
+                  title: 'Aucun historique',
+                  description:
+                      'Rien à signaler pour ce mois-ci. Vos futurs pointages apparaitront ici.',
+                ),
+              ],
+            );
           }
           final totalJours = logs.length;
           final totalHeures = logs.fold<double>(0, (sum, log) => sum + (log.workedHours ?? 0));
