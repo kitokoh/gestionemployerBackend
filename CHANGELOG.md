@@ -8,6 +8,7 @@
 
 - API : `api/database/seeders/DemoCompanyOnceSeeder.php` versionne desormais le verrou de seed demo (`demo_company_seed_v2`) afin que le nouveau jeu de donnees de demonstration soit rejoue automatiquement au prochain deploiement avec `DEMO_SEED_ONCE=true`.
 - API : `api/database/seeders/DemoCompanySeeder.php` cree desormais un jeu de donnees multi-company beaucoup plus riche pour les tests manuels et E2E : managers `principal` / `rh` / `dept` / `comptable` / `superviseur`, employes `active` / `suspended` / `archived`, plusieurs types d'absences, historiques de conges, paies et exports, projets, taches, commentaires, evaluations, notifications et audit logs.
+- Deploy : `api/docker-entrypoint.sh` accepte maintenant un reset complet one-shot de la base de test via `RESET_TEST_DB_ONCE=true`, memorise par un verrou `public.seed_locks` (configurable via `RESET_TEST_DB_LOCK_KEY`) pour qu'un redeploiement suivant ne repete pas le wipe.
 
 ### Seeder - Stabilisation demo multi-company
 
@@ -1146,7 +1147,6 @@ docs(erd): unify manager_id and remove supervisor_id from employees
    
  
  
-
 
 
 
