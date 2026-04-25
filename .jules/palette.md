@@ -13,3 +13,7 @@ This journal contains critical UX and accessibility learnings for the Leopardo R
 ## 2026-04-22 - Loading State Accessibility
 **Learning:** `CircularProgressIndicator` doesn't provide feedback to screen readers by default.
 **Action:** Wrap loading indicators in `Semantics` widgets with a descriptive `label` (e.g., 'Connexion en cours...') to inform users that an action is being processed. Avoid `const` on `Semantics` if the child or label might be dynamic, and watch for "const_with_non_const" analyzer errors.
+
+## 2026-05-21 - Aesthetic vs Semantic Balance
+**Learning:** Purely decorative elements (like name initials in a circle) can clutter screen reader navigation if they don't add unique information already present in text (like the full name).
+**Action:** Use `ExcludeSemantics` to hide redundant decorative elements from screen readers while keeping them for sighted users.
