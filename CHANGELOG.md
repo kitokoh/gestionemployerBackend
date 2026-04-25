@@ -2,6 +2,12 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.73] - 2026-04-25
+
+### Performance - Optimisation des requetes d'estimation
+
+- API : `app/Services/EstimationService.php` — ajout de `select()` sur les requetes `AttendanceLog` dans `dailySummary` et `quickEstimate` pour ne recuperer que les colonnes necessaires, reduisant l'hydratation des modeles Eloquent.
+
 ## [4.1.72] - 2026-04-25
 
 ### Cameras - Correctifs RBAC permissions expirees
