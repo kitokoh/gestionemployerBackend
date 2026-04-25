@@ -3,6 +3,8 @@
 namespace Tests\Feature\Cameras;
 
 use App\Models\Cameras\Camera;
+use App\Models\Cameras\CameraPermission;
+use Illuminate\Support\Carbon;
 use Tests\Support\CreatesCameraFixtures;
 use Tests\Support\CreatesMvpSchema;
 use Tests\TestCase;
@@ -186,5 +188,33 @@ class CamerasCrudTest extends TestCase
                 'rtsp_url' => 'rtsp://admin:pass@10.0.0.1:554/live',
             ]);
         $rhCreate->assertStatus(403);
+    }
+
+    public function test_expired_manage_permission_cannot_update_camera(): void
+    {
+        $company = $this->createCompanyWithCameras();
+        $principal = $this->createManager($company, 'principal', 'principal@co.test');
+        $supervisor = $this->createManager($company, 'superviseur', 'supervisor@co.test');
+
+        $cam = Camera::query()->create([
+            'company_id' => $company->id,
+            'name' => 'Cam',
+            'rtsp_url' => 'rtsp://admin:pass@10.0.0.1:554/live',
+            'created_by' => $principal->id,
+        ]);
+
+        CameraPermission::query()->create([
+            'company_id' => $company->id,
+            'camera_id' => $cam->id,
+            'employee_id' => $supervisor->id,
+            'can_view' => true,
+            'can_manage' => true,
+            'granted_by' => $principal->id,
+            'expires_at' => Carbon::now('UTC')->subMinute(),
+        ]);
+
+        $this->withHeaders($this->authHeaders($supervisor))
+            ->patchJson('/api/v1/cameras/'.$cam->id, ['name' => 'Renamed'])
+            ->assertStatus(403);
     }
 }

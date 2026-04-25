@@ -66,6 +66,9 @@ class CameraPolicy
         return $camera->permissions()
             ->where('employee_id', $actor->id)
             ->where('can_manage', true)
+            ->where(function ($query): void {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
             ->exists();
     }
 
@@ -97,6 +100,9 @@ class CameraPolicy
         return $camera->permissions()
             ->where('employee_id', $actor->id)
             ->where('can_share', true)
+            ->where(function ($query): void {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
             ->exists();
     }
 
