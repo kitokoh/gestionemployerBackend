@@ -24,6 +24,7 @@ class HealthEndpointTest extends TestCase
 
         $response->assertJson([
             'status' => 'ok',
+            'version' => config('app.version'),
             'checks' => [
                 'database' => ['ok' => true],
                 'storage' => ['ok' => true],
