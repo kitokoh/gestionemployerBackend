@@ -6,7 +6,7 @@ Ce modele CRM est pense pour suivre les beta testeurs, les prospects et les prem
 
 Le fichier pret a utiliser se trouve ici:
 
-- [LEOPARDO_RH_CRM_TEMPLATE.csv](/C:/Users/cheic/Downloads/gestionemployer/docs/LEOPARDO_RH_CRM_TEMPLATE.csv)
+- [LEOPARDO_RH_CRM_TEMPLATE.csv](LEOPARDO_RH_CRM_TEMPLATE.csv)
 
 Il peut etre:
 
