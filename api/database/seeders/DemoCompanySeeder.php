@@ -583,10 +583,18 @@ class DemoCompanySeeder extends Seeder
         foreach (array_slice($employeeIds, 0, 4) as $index => $employeeId) {
             $grossSalary = round($gross * (1 - ($index * 0.08)), 2);
             $overtimeAmount = $index === 0 ? round($grossSalary * 0.04, 2) : 0;
+            $bonusAmount = $index === 0 ? round($grossSalary * 0.06, 2) : 0;
             $advanceDeduction = $index === 1 ? round($grossSalary * 0.05, 2) : 0;
             $absenceDeduction = $index === 2 ? round($grossSalary * 0.03, 2) : 0;
+            $cotisationAmount = round($grossSalary * 0.09, 2);
             $irAmount = round($grossSalary * 0.07, 2);
-            $netSalary = $grossSalary + $overtimeAmount - $advanceDeduction - $absenceDeduction - $irAmount;
+            $netSalary = $grossSalary
+                + $overtimeAmount
+                + $bonusAmount
+                - $advanceDeduction
+                - $absenceDeduction
+                - $cotisationAmount
+                - $irAmount;
 
             $payrollIds[] = DB::table('payrolls')->insertGetId([
                 'company_id' => $companyId,
@@ -595,9 +603,9 @@ class DemoCompanySeeder extends Seeder
                 'period_year' => (int) now()->subMonth()->format('Y'),
                 'gross_salary' => $grossSalary,
                 'overtime_amount' => $overtimeAmount,
-                'bonuses' => json_encode($index === 0 ? [['label' => 'Prime performance', 'amount' => round($grossSalary * 0.06, 2)]] : []),
+                'bonuses' => json_encode($bonusAmount > 0 ? [['label' => 'Prime performance', 'amount' => $bonusAmount]] : []),
                 'deductions' => json_encode($absenceDeduction > 0 ? [['label' => 'Absence non justifiee', 'amount' => $absenceDeduction]] : []),
-                'cotisations' => json_encode([['label' => 'CNAS/CNSS', 'amount' => round($grossSalary * 0.09, 2)]]),
+                'cotisations' => json_encode([['label' => 'CNAS/CNSS', 'amount' => $cotisationAmount]]),
                 'ir_amount' => $irAmount,
                 'advance_deduction' => $advanceDeduction,
                 'absence_deduction' => $absenceDeduction,
