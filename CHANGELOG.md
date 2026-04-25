@@ -2,6 +2,20 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.73] - 2026-04-25
+
+### Contractor - Alignement contrat API/mobile (Employees)
+
+- API : Mise a jour de `EmployeeController` (`index`, `store`, `show`, `update`) pour inclure `matricule` et `company_id` dans les reponses, garantissant la compatibilite avec les modeles mobile et le contrat documente.
+- API : Unification de la serialisation detaillee des employes via `serializeDetailedEmployee` dans `EmployeeController`.
+- Tests : Renforcement de `MobilePayloadContractTest` pour verrouiller la presence de `matricule` et `company_id` sur les endpoints employes.
+- Securite : Exclusion explicite des donnees de salaire sensibles des reponses publiques `EmployeeController` pour proteger la confidentialite des employes post-MVP.
+
+### Scout 🧪 - MVP Regression Testing
+
+- Tests : Ajout d'un test de régression `test_suspended_employee_token_is_blocked_by_tenant_middleware` dans `api/tests/Feature/AuthMeLogoutTest.php` pour verrouiller le blocage des employés suspendus par le `TenantMiddleware`.
+- Fix : Sécurisation du modèle `Company` contre les erreurs de driver SQL lors de la révocation des tokens à la suspension d'une entreprise (compatibilité SQLite pour les tests).
+
 ## [4.1.72] - 2026-04-25
 
 
