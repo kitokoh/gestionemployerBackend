@@ -217,4 +217,125 @@ class MobilePayloadContractTest extends TestCase
         ]);
         $response->assertJsonPath('meta.per_page', 10);
     }
+
+    public function test_employee_show_payload_matches_mobile_contract(): void
+    {
+        $company = Company::query()->create([
+            'name' => 'Company A',
+            'slug' => 'company-a',
+            'sector' => 'restaurant',
+            'country' => 'DZ',
+            'city' => 'Alger',
+            'email' => 'a@company.test',
+            'schema_name' => 'shared_tenants',
+            'tenancy_type' => 'shared',
+            'status' => 'active',
+            'currency' => 'DZD',
+        ]);
+
+        $manager = Employee::query()->create([
+            'company_id' => $company->id,
+            'first_name' => 'Leila',
+            'last_name' => 'Manager',
+            'email' => 'manager@company.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'manager',
+            'manager_role' => 'principal',
+            'status' => 'active',
+        ]);
+
+        $employee = Employee::query()->create([
+            'company_id' => $company->id,
+            'matricule' => 'EMP-001',
+            'first_name' => 'Sami',
+            'last_name' => 'Employee',
+            'email' => 'employee@company.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'employee',
+            'status' => 'active',
+            'salary_type' => 'fixed',
+            'salary_base' => 50000,
+            'hourly_rate' => 0,
+        ]);
+
+        Sanctum::actingAs($manager);
+
+        $response = $this->getJson("/api/v1/employees/{$employee->id}");
+
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'matricule',
+                'company_id',
+                'first_name',
+                'last_name',
+                'email',
+                'role',
+                'manager_role',
+                'status',
+            ],
+        ]);
+        $response->assertJsonPath('data.matricule', 'EMP-001');
+        $response->assertJsonPath('data.company_id', $company->id);
+    }
+
+    public function test_employees_index_payload_includes_matricule_and_company_id(): void
+    {
+        $company = Company::query()->create([
+            'name' => 'Company A',
+            'slug' => 'company-a',
+            'sector' => 'restaurant',
+            'country' => 'DZ',
+            'city' => 'Alger',
+            'email' => 'a@company.test',
+            'schema_name' => 'shared_tenants',
+            'tenancy_type' => 'shared',
+            'status' => 'active',
+        ]);
+
+        $manager = Employee::query()->create([
+            'company_id' => $company->id,
+            'first_name' => 'Leila',
+            'last_name' => 'Manager',
+            'email' => 'manager@company.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'manager',
+            'manager_role' => 'principal',
+            'status' => 'active',
+        ]);
+
+        Employee::query()->create([
+            'company_id' => $company->id,
+            'matricule' => 'EMP-SAMI',
+            'first_name' => 'Sami',
+            'last_name' => 'Employee',
+            'email' => 'employee@company.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'employee',
+            'status' => 'active',
+        ]);
+
+        Sanctum::actingAs($manager);
+
+        $response = $this->getJson('/api/v1/employees');
+
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'data' => [
+                '*' => [
+                    'id',
+                    'matricule',
+                    'company_id',
+                    'first_name',
+                    'last_name',
+                    'email',
+                    'role',
+                    'status',
+                ],
+            ],
+        ]);
+        $response->assertJsonPath('data.1.matricule', 'EMP-SAMI');
+        $response->assertJsonPath('data.1.company_id', $company->id);
+    }
 }
