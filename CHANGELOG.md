@@ -4,6 +4,10 @@
 
 ## [4.1.72] - 2026-04-25
 
+### Scout 🧪 - MVP Regression Testing
+
+- Tests : Ajout d'un test de régression `test_suspended_employee_token_is_blocked_by_tenant_middleware` dans `api/tests/Feature/AuthMeLogoutTest.php` pour verrouiller le blocage des employés suspendus par le `TenantMiddleware`.
+- Fix : Sécurisation du modèle `Company` contre les erreurs de driver SQL lors de la révocation des tokens à la suspension d'une entreprise (compatibilité SQLite pour les tests).
 
 ### Documentation - Plan d'Action d'Amelioration
 
