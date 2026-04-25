@@ -166,6 +166,57 @@ class CameraStreamTokenVerifyTest extends TestCase
         $response->assertJsonPath('reason', 'company_suspended');
     }
 
+    public function test_verify_denies_soft_deleted_or_inactive_camera(): void
+    {
+        $company = $this->createCompanyWithCameras();
+        $principal = $this->createManager($company);
+
+        $inactive = Camera::query()->create([
+            'company_id' => $company->id,
+            'name' => 'Inactive Cam',
+            'rtsp_url' => 'rtsp://admin:pass@10.0.0.1:554/live',
+            'created_by' => $principal->id,
+            'is_active' => false,
+        ]);
+
+        $inactiveToken = CameraAccessToken::query()->create([
+            'company_id' => $company->id,
+            'camera_id' => $inactive->id,
+            'token' => bin2hex(random_bytes(32)),
+            'granted_by' => $principal->id,
+            'permissions' => ['view' => true],
+            'expires_at' => Carbon::now('UTC')->addHour(),
+        ]);
+
+        $this->getJson('/api/v1/internal/camera-token/verify?token='.$inactiveToken->token.'&camera_id='.$inactive->id)
+            ->assertOk()
+            ->assertJsonPath('allowed', false)
+            ->assertJsonPath('reason', 'camera_not_found');
+
+        $deleted = Camera::query()->create([
+            'company_id' => $company->id,
+            'name' => 'Deleted Cam',
+            'rtsp_url' => 'rtsp://admin:pass@10.0.0.1:554/live',
+            'created_by' => $principal->id,
+        ]);
+
+        $deletedToken = CameraAccessToken::query()->create([
+            'company_id' => $company->id,
+            'camera_id' => $deleted->id,
+            'token' => bin2hex(random_bytes(32)),
+            'granted_by' => $principal->id,
+            'permissions' => ['view' => true],
+            'expires_at' => Carbon::now('UTC')->addHour(),
+        ]);
+
+        $deleted->delete();
+
+        $this->getJson('/api/v1/internal/camera-token/verify?token='.$deletedToken->token.'&camera_id='.$deleted->id)
+            ->assertOk()
+            ->assertJsonPath('allowed', false)
+            ->assertJsonPath('reason', 'camera_not_found');
+    }
+
     public function test_verify_requires_bearer_secret_when_configured(): void
     {
         config()->set('cameras.mediamtx_secret', 'topsecret');

@@ -197,9 +197,12 @@ class CameraService
     public function verifyTokenForMediamtx(string $token, int $cameraId, ?string $clientIp): array
     {
         /** @var Camera|null $camera */
-        $camera = Camera::withoutGlobalScopes()->find($cameraId);
+        $camera = Camera::withoutGlobalScopes()
+            ->whereKey($cameraId)
+            ->whereNull('deleted_at')
+            ->first();
 
-        if ($camera === null) {
+        if ($camera === null || ! $camera->is_active) {
             return ['allowed' => false, 'reason' => 'camera_not_found'];
         }
 
