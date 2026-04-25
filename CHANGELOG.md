@@ -4,6 +4,13 @@
 
 ## [4.1.72] - 2026-04-25
 
+### DocKeeper - Alignement documentation et synchronisation de version
+
+- `PILOTAGE.md` : mise a jour de `PROGRAM_VERSION` a `4.1.72` et alignement de la date au `2026-04-25` pour correspondre au CHANGELOG.
+- `api/config/app.php` : mise a jour de la version par defaut a `4.1.72` pour maintenir la synchronisation avec le pilotage.
+- `README.md` : retrait de la reference obsolete a `docs/GESTION_PROJET/INDEX_CANONIQUE.md` qui a ete archivee.
+- `CHANGELOG.md` : correction d'une erreur de date future (`2026-05-20` -> `2026-04-24`) pour la version `[4.1.71]`.
+
 ### Seeder - Stabilisation demo multi-company
 
 - API : `api/database/seeders/DemoCompanySeeder.php` stocke les identifiants legaux de demo dans `companies.metadata`, limite `company_settings` aux cles globales partagees du tenant commun, rend `absence_types.code` unique par company et complete `approved_by` sur les absences pending afin de fiabiliser le seed local multi-company en mode `shared_tenants`.
@@ -39,7 +46,7 @@
 - Tests : `tests/Feature/Attendance/CheckInTest.php`, `tests/Feature/Attendance/CheckOutTest.php`, `tests/Unit/AttendanceServiceTest.php` mis à jour pour refléter les nouveaux statuts (422) et les nouvelles valeurs `hours_worked`/`overtime_hours`.
 - Suite locale : 11/11 Unit + 87/87 Feature OK.
 
-## [4.1.71] - 2026-05-20
+## [4.1.71] - 2026-04-24
 ### Performance - Optimisation du dashboard manager
 
 - `api/app/Http/Controllers/Web/DashboardController.php` : ajout de `select()` sur les requetes `Employee` et `AttendanceLog` pour ne recuperer que les colonnes necessaires, evitant ainsi le chargement des colonnes JSONB lourdes et reduisant la consommation memoire lors de l'hydratation des modeles Eloquent.
