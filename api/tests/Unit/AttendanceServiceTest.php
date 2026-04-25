@@ -87,14 +87,57 @@ class AttendanceServiceTest extends TestCase
 
         $result = app(AttendanceService::class)->checkOut($employee, 36.77, 3.05);
 
+        // 09:00 -> 18:30 = 9h30 brut. Le planning par defaut a 60 min de
+        // pause, donc on facture 8h30 effectives, dont 0h30 d'heures sup
+        // (seuil quotidien = 8h).
         $this->assertSame($log->id, $result->id);
-        $this->assertSame('9.50', $result->fresh()->hours_worked);
-        $this->assertSame('1.50', $result->fresh()->overtime_hours);
+        $this->assertSame('8.50', $result->fresh()->hours_worked);
+        $this->assertSame('0.50', $result->fresh()->overtime_hours);
         $this->assertSame('36.77000000', $result->fresh()->gps_lat);
         $this->assertSame('3.05000000', $result->fresh()->gps_lng);
     }
 
-    private function seedEmployeeWithSchedule(): array
+    public function test_check_out_without_break_keeps_full_hours(): void
+    {
+        [$company, $employee] = $this->seedEmployeeWithSchedule(breakMinutes: 0);
+        app()->instance('current_company', $company);
+        Carbon::setTestNow(CarbonImmutable::parse('2026-04-07 18:30:00', 'UTC'));
+
+        AttendanceLog::query()->create([
+            'company_id' => $company->id,
+            'employee_id' => $employee->id,
+            'schedule_id' => $employee->schedule_id,
+            'date' => '2026-04-07',
+            'session_number' => 1,
+            'check_in' => Carbon::parse('2026-04-07 09:00:00', 'UTC'),
+            'method' => 'mobile',
+            'status' => 'incomplete',
+            'late_minutes' => 0,
+        ]);
+
+        $result = app(AttendanceService::class)->checkOut($employee);
+
+        $this->assertSame('9.50', $result->fresh()->hours_worked);
+        $this->assertSame('1.50', $result->fresh()->overtime_hours);
+    }
+
+    public function test_check_in_concurrent_collision_returns_already_checked_in(): void
+    {
+        [$company, $employee] = $this->seedEmployeeWithSchedule();
+        app()->instance('current_company', $company);
+        Carbon::setTestNow(CarbonImmutable::parse('2026-04-07 08:00:00', 'UTC'));
+
+        $service = app(AttendanceService::class);
+        $service->checkIn($employee);
+
+        // Simule une seconde requete concurrente : la contrainte unique
+        // (employee_id, date, session_number) doit etre traduite en
+        // AlreadyCheckedInException et non en QueryException 500.
+        $this->expectException(AlreadyCheckedInException::class);
+        $service->checkIn($employee);
+    }
+
+    private function seedEmployeeWithSchedule(int $breakMinutes = 60): array
     {
         $company = Company::query()->create([
             'name' => 'Company A',
@@ -115,6 +158,7 @@ class AttendanceServiceTest extends TestCase
             'name' => 'Jour',
             'start_time' => '09:00:00',
             'end_time' => '17:00:00',
+            'break_minutes' => $breakMinutes,
             'late_tolerance_minutes' => 15,
             'overtime_threshold_daily' => 8,
             'is_default' => true,
