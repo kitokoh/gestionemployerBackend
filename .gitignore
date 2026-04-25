@@ -11,6 +11,9 @@ bon-fixed/
 api/.env
 api/.env.backup
 mobile/.env
+mobile/.env.local
+mobile/.env.production
+mobile/.env.staging
 
 # Dépendances (générées à l'init)
 api/vendor/
