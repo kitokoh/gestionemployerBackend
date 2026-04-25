@@ -2,6 +2,16 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.73] - 2026-05-22
+
+### Securite - Correction injection SQL search_path
+
+- API : Mise en oeuvre de `Company::getSafeSearchPath()` pour echapper les identifiants de schema PostgreSQL dans les instructions `SET search_path`, prevenant ainsi les risques d'injection SQL lors de la bascule de contexte tenant.
+- Tests : Ajout de tests unitaires dans `api/tests/Unit/CompanySearchPathTest.php` pour valider l'echappement des caracteres speciaux et des tentatives d'injection.
+### Palette - UX Historique Mobile
+
+- Mobile : Ajout d'un etat vide (`EmptyState`) sur l'ecran d'historique de pointage pour ameliorer l'UX lorsqu'aucun log n'est disponible pour la periode selectionnee.
+
 ## [4.1.72] - 2026-04-25
 
 ### Migration - Robustesse creation user_invitations
