@@ -2,6 +2,14 @@
 # Format : Keep a Changelog (keepachangelog.com)
 # Versioning : Semantic Versioning (semver.org)
 
+## [4.1.73] - 2026-05-21
+
+### Palette - Accessibilite et Feedback Mobile
+
+- Mobile : Amelioration de l'accessibilite et du feedback visuel dans `SettingsScreen` par l'ajout d'indicateurs de chargement et de labels `Semantics` sur les boutons d'action (profil, mot de passe, biometrie).
+- Mobile : Renforcement de l'accessibilite globale par l'ajout de labels `Semantics` sur les indicateurs de chargement dans `TeamScreen` et `HistoryScreen`.
+- Mobile : Optimisation des lecteurs d'ecran dans `TeamScreen` par l'exclusion des elements decoratifs (initiales) de la navigation semantique.
+
 ## [4.1.72] - 2026-04-25
 
 ### Seeder - Stabilisation demo multi-company

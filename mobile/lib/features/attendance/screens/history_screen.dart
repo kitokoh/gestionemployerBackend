@@ -85,7 +85,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               ref.read(authProvider.notifier).logout();
             });
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: Semantics(
+                label: 'Redirection vers la connexion...',
+                child: const CircularProgressIndicator(),
+              ),
+            );
           }
 
           if (errorText.contains('403') || errorText.contains('FORBIDDEN')) {
@@ -140,9 +145,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   itemCount: logs.length + (_isLoadingMore ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == logs.length) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Center(child: CircularProgressIndicator()),
+                      return Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Center(
+                          child: Semantics(
+                            label: 'Chargement de plus de pointages...',
+                            child: const CircularProgressIndicator(),
+                          ),
+                        ),
                       );
                     }
                     final log = logs[index];
