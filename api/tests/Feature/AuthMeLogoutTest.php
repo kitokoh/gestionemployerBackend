@@ -117,6 +117,37 @@ class AuthMeLogoutTest extends TestCase
         $response->assertJsonPath('error', 'EMPLOYEE_ARCHIVED');
     }
 
+    public function test_suspended_employee_token_is_blocked_by_tenant_middleware(): void
+    {
+        $company = Company::query()->create([
+            'name' => 'Company A',
+            'slug' => 'company-a',
+            'sector' => 'restaurant',
+            'country' => 'DZ',
+            'city' => 'Alger',
+            'email' => 'a@company.test',
+            'schema_name' => 'shared_tenants',
+            'tenancy_type' => 'shared',
+            'status' => 'active',
+        ]);
+
+        $employee = Employee::query()->create([
+            'company_id' => $company->id,
+            'email' => 'suspended@company.test',
+            'password_hash' => Hash::make('password123'),
+            'role' => 'employee',
+            'status' => 'suspended',
+        ]);
+
+        $plain = $employee->createToken('tests')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$plain}")
+            ->getJson('/api/v1/auth/me');
+
+        $response->assertStatus(403);
+        $response->assertJsonPath('error', 'EMPLOYEE_SUSPENDED');
+    }
+
     public function test_company_suspension_revokes_employee_tokens(): void
     {
         $company = Company::query()->create([
