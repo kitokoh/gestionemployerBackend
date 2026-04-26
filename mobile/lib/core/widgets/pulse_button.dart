@@ -69,7 +69,10 @@ class _PulseButtonState extends State<PulseButton> with SingleTickerProviderStat
                 ),
                 child: Center(
                   child: widget.isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                          semanticsLabel: 'Traitement en cours...',
+                        )
                       : Text(
                           widget.isCheckedIn ? 'CHECK OUT' : 'CHECK IN',
                           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
