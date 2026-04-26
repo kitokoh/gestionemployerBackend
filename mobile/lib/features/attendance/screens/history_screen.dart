@@ -1,3 +1,4 @@
+import 'package:leopardo_rh/core/widgets/empty_state.dart';
 import 'package:leopardo_rh/core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -56,70 +57,104 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           ),
         ],
       ),
-      body: historyAsync.when(
-        loading: () => ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: 6,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
-          itemBuilder: (_, __) => Row(
-            children: [
-              const ShimmerLoading(width: 40, height: 40, borderRadius: 20),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const ShimmerLoading(width: 100, height: 16),
-                    const SizedBox(height: 8),
-                    const ShimmerLoading(width: double.infinity, height: 16),
-                  ],
+      body: RefreshIndicator(
+        onRefresh: () async => ref.refresh(historyProvider(DateTime(now.year, now.month))),
+        child: historyAsync.when(
+          loading: () => ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: 6,
+            separatorBuilder: (_, __) => const SizedBox(height: 16),
+            itemBuilder: (_, __) => Row(
+              children: [
+                const ShimmerLoading(width: 40, height: 40, borderRadius: 20),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ShimmerLoading(width: 100, height: 16),
+                      const SizedBox(height: 8),
+                      const ShimmerLoading(width: double.infinity, height: 16),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        error: (err, stack) {
-          final errorText = err.toString();
+          error: (err, stack) {
+            final errorText = err.toString();
 
-          if (errorText.contains('401') || errorText.contains('UNAUTHENTICATED')) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ref.read(authProvider.notifier).logout();
-            });
-            return const Center(child: CircularProgressIndicator());
-          }
+            if (errorText.contains('401') || errorText.contains('UNAUTHENTICATED')) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref.read(authProvider.notifier).logout();
+              });
+              return const Center(
+                child: CircularProgressIndicator(
+                  semanticsLabel: 'Déconnexion en cours...',
+                ),
+              );
+            }
 
-          if (errorText.contains('403') || errorText.contains('FORBIDDEN')) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('Compte suspendu ou acces refuse.'),
-              ),
-            );
-          }
-
-          if (err.toString().contains('NOT_IMPLEMENTED')) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.build_circle_outlined, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text('Fonction bientôt disponible', style: TextStyle(fontSize: 20)),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => ref.refresh(historyProvider(DateTime(now.year, now.month))),
-                    child: const Text('Réessayer'),
+            if (errorText.contains('403') || errorText.contains('FORBIDDEN')) {
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 80),
+                  Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Text('Compte suspendu ou accès refusé.'),
+                    ),
                   ),
                 ],
-              ),
+              );
+            }
+
+            if (err.toString().contains('NOT_IMPLEMENTED')) {
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  const SizedBox(height: 80),
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.build_circle_outlined, size: 64, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        const Text('Fonction bientôt disponible', style: TextStyle(fontSize: 20)),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => ref.refresh(historyProvider(DateTime(now.year, now.month))),
+                          child: const Text('Réessayer'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                const SizedBox(height: 80),
+                Center(child: Text('Erreur : $err')),
+              ],
             );
-          }
-          return Center(child: Text('Erreur : $err'));
-        },
-        data: (logs) {
-          if (logs.isEmpty) {
-            return const Center(child: Text('Aucun historique pour ce mois.'));
-          }
+          },
+          data: (logs) {
+            if (logs.isEmpty) {
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 80),
+                  EmptyState(
+                    title: 'Aucun historique',
+                    description:
+                        'Rien ici pour le moment. Vos pointages s\'afficheront ici au fur et à mesure.',
+                  ),
+                ],
+              );
+            }
           final totalJours = logs.length;
           final totalHeures = logs.fold<double>(0, (sum, log) => sum + (log.workedHours ?? 0));
           return Column(
@@ -142,7 +177,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     if (index == logs.length) {
                       return const Padding(
                         padding: EdgeInsets.all(16.0),
-                        child: Center(child: CircularProgressIndicator()),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            semanticsLabel: 'Chargement de la suite...',
+                          ),
+                        ),
                       );
                     }
                     final log = logs[index];
@@ -216,6 +255,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           );
         },
       ),
+    ),
     );
   }
 }
