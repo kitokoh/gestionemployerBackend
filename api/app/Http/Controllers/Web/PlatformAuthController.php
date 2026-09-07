@@ -43,7 +43,7 @@ class PlatformAuthController extends Controller
             ]);
 
             return back()->withErrors([
-                'email' => 'Une erreur est survenue. Veuillez réessayer.',
+                'email' => __('errors.INTERNAL_ERROR'),
             ]);
         }
     }
