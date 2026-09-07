@@ -11,7 +11,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
+use Throwable;
 
 class PlatformAuthController extends Controller
 {
@@ -20,6 +22,30 @@ class PlatformAuthController extends Controller
     ) {}
 
     public function login(Request $request): JsonResponse
+    {
+        try {
+            return $this->attemptLogin($request);
+        } catch (Throwable $exception) {
+            // #6974 : le login super-admin a produit un 500 inexpliqué sur DEV
+            // (persiste après la garde #6956 — la cause n'est donc pas un hash
+            // NULL). On loggue la classe + message d'exception pour un
+            // diagnostic immédiat dans les logs (Render), sans jamais exposer
+            // de détail au client.
+            Log::channel('structured')->error('platform.login.unexpected_error', [
+                'email' => (string) $request->input('email'),
+                'exception' => $exception::class,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return new JsonResponse([
+                'error' => 'INTERNAL_ERROR',
+                'message' => 'INTERNAL_ERROR',
+                'localized_message' => __('errors.INTERNAL_ERROR'),
+            ], 500);
+        }
+    }
+
+    private function attemptLogin(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'email' => ['required', 'email'],

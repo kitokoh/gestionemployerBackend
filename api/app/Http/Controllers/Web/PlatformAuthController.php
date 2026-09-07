@@ -31,6 +31,25 @@ class PlatformAuthController extends Controller
 
     public function login(Request $request): RedirectResponse
     {
+        try {
+            return $this->attemptLogin($request);
+        } catch (\Throwable $exception) {
+            // #6974 : diagnostic — ne jamais exposer de stack au client, mais
+            // logguer classe + message pour identifier le 500 DEV persistant.
+            Log::channel('structured')->error('platform.login.unexpected_error.web', [
+                'email' => (string) $request->input('email'),
+                'exception' => $exception::class,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'email' => __('errors.INTERNAL_ERROR'),
+            ]);
+        }
+    }
+
+    private function attemptLogin(Request $request): RedirectResponse
+    {
         $validated = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
