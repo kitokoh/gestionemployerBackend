@@ -53,7 +53,10 @@ class AttendanceTodayResource extends JsonResource
             'company_id' => $employee->company_id,
             'matricule' => $employee->matricule,
             'name' => trim(($employee->first_name ?? '').' '.($employee->last_name ?? '')),
-            'checked_in' => (bool) $this->log?->check_in,
+            // Session réellement OUVERTE (check_in posé, check_out absent) — après
+            // le check-out du jour, la session la plus récente a check_in ET
+            // check_out renseignés : l'employé n'est plus « en service » (#6962).
+            'checked_in' => $this->log?->check_in !== null && $this->log?->check_out === null,
             'session_number' => (int) ($this->log?->session_number ?? 0),
             'check_in' => $this->log?->check_in?->toIso8601String(),
             'check_out' => $this->log?->check_out?->toIso8601String(),
