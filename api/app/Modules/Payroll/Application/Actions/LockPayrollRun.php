@@ -30,8 +30,7 @@ class LockPayrollRun
 {
     public function __construct(
         private readonly PayrollClosingService $closing,
-    ) {
-    }
+    ) {}
 
     public function execute(PayrollRun $run, Employee $validator): PayrollRun
     {

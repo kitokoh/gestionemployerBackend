@@ -30,8 +30,7 @@ class CreatePayrollRegularization
 {
     public function __construct(
         private readonly PayrollRegularizationService $regularization,
-    ) {
-    }
+    ) {}
 
     public function execute(PayrollRun $run, Employee $actor, string $reason): PayrollRun
     {

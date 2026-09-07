@@ -42,8 +42,7 @@ class PayrollRunController extends Controller
         private readonly LockPayrollRun $lockRun,
         private readonly UnlockPayrollRun $unlockRun,
         private readonly CreatePayrollRegularization $createRegularization,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): JsonResponse
     {

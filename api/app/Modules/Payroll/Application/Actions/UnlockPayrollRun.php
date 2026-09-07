@@ -27,8 +27,7 @@ class UnlockPayrollRun
 {
     public function __construct(
         private readonly PayrollClosingService $closing,
-    ) {
-    }
+    ) {}
 
     public function execute(PayrollRun $run, Employee $actor, string $reason): PayrollRun
     {
