@@ -7,9 +7,9 @@ namespace App\Modules\FuelStation\Interfaces\Api\V1\Controllers;
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Feature\Infrastructure\Services\FeatureFlag;
 use App\Http\Controllers\Controller;
+use App\Modules\FuelStation\Application\Actions\RecordFuelSaleAction;
 use App\Modules\FuelStation\Domain\Exceptions\FuelSolutionInactiveException;
 use App\Modules\FuelStation\Domain\Models\FuelSale;
-use App\Modules\FuelStation\Infrastructure\Services\FuelSaleService;
 use App\Modules\FuelStation\Interfaces\Api\V1\Requests\StoreFuelSaleRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,8 +23,6 @@ use Illuminate\Http\Request;
  */
 class FuelSaleController extends Controller
 {
-    public function __construct(private readonly FuelSaleService $sales) {}
-
     public function store(StoreFuelSaleRequest $request): JsonResponse
     {
         $this->assertSolutionActive();
@@ -33,7 +31,7 @@ class FuelSaleController extends Controller
         $actor = $request->user();
         $this->authorize('create', FuelSale::class);
 
-        $sale = $this->sales->record($actor, $request->validated());
+        $sale = app(RecordFuelSaleAction::class)->execute($actor, $request->validated());
 
         return response()->json(['data' => $this->payload($sale)]);
     }

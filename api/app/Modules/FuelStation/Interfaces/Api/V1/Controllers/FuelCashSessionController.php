@@ -8,10 +8,13 @@ use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Auth\Infrastructure\Services\DataAccessAuditLogger;
 use App\Core\Feature\Infrastructure\Services\FeatureFlag;
 use App\Http\Controllers\Controller;
+use App\Modules\FuelStation\Application\Actions\AddFuelCashSessionMovementAction;
+use App\Modules\FuelStation\Application\Actions\ApproveFuelCashSessionAction;
+use App\Modules\FuelStation\Application\Actions\CloseFuelCashSessionAction;
+use App\Modules\FuelStation\Application\Actions\OpenFuelCashSessionAction;
 use App\Modules\FuelStation\Domain\Exceptions\FuelSolutionInactiveException;
 use App\Modules\FuelStation\Domain\Models\FuelCashSession;
 use App\Modules\FuelStation\Domain\Models\FuelCashSessionMovement;
-use App\Modules\FuelStation\Infrastructure\Services\FuelCashSessionService;
 use App\Modules\FuelStation\Interfaces\Api\V1\Requests\CloseFuelCashSessionRequest;
 use App\Modules\FuelStation\Interfaces\Api\V1\Requests\OpenFuelCashSessionRequest;
 use App\Modules\FuelStation\Interfaces\Api\V1\Requests\StoreFuelCashSessionMovementRequest;
@@ -29,7 +32,6 @@ use Illuminate\Http\Request;
 class FuelCashSessionController extends Controller
 {
     public function __construct(
-        private readonly FuelCashSessionService $sessions,
         private readonly DataAccessAuditLogger $audit,
     ) {}
 
@@ -78,7 +80,7 @@ class FuelCashSessionController extends Controller
         $actor = $request->user();
         $this->authorize('create', FuelCashSession::class);
 
-        $session = $this->sessions->open($actor, $request->validated());
+        $session = app(OpenFuelCashSessionAction::class)->execute($actor, $request->validated());
 
         return response()->json(['data' => $this->payload($session)], 201);
     }
@@ -112,7 +114,7 @@ class FuelCashSessionController extends Controller
 
         $this->authorize('addMovement', $session);
 
-        $movement = $this->sessions->addMovement($session, $actor, $request->validated());
+        $movement = app(AddFuelCashSessionMovementAction::class)->execute($session, $actor, $request->validated());
 
         return response()->json(['data' => $this->movementPayload($movement)], 201);
     }
@@ -130,7 +132,7 @@ class FuelCashSessionController extends Controller
 
         $this->authorize('close', $session);
 
-        $session = $this->sessions->close($session, $actor, $request->validated());
+        $session = app(CloseFuelCashSessionAction::class)->execute($session, $actor, $request->validated());
 
         $this->audit->record($request, $actor, 'fuel.cash_session.closed', $session, [
             'category' => 'fuel_cash_session',
@@ -154,7 +156,7 @@ class FuelCashSessionController extends Controller
 
         $this->authorize('approve', $session);
 
-        $session = $this->sessions->approve($session, $actor);
+        $session = app(ApproveFuelCashSessionAction::class)->execute($session, $actor);
 
         $this->audit->record($request, $actor, 'fuel.cash_session.approved', $session, [
             'category' => 'fuel_cash_session',
