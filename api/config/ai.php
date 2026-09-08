@@ -100,7 +100,10 @@ return [
     // handler + entrée registre.
     'write_tools' => [
         'create_absence',
-        'approve_absence',
+        // B3a (#6856) — décision approve/reject d'une demande d'absence
+        // (exécution via les Actions canoniques Planning après confirmation).
+        // Remplace l'ancien 'approve_absence' (approbation seule, inline).
+        'absence_decision',
     ],
 
     // BC-23-D05 (issue #6237) — matrice de permissions par outil AI
@@ -132,7 +135,9 @@ return [
         'team_absences_recent' => ['role' => 'manager', 'permissions' => ['absences.view']],
         'employee_leave_balance' => ['role' => 'employee', 'permissions' => ['leave.view']],
         'create_absence' => ['role' => 'employee', 'permissions' => ['absences.create']],
-        'approve_absence' => ['role' => 'manager', 'permissions' => ['absences.approve']],
+        // B3a (#6856) — décision sur demande d'absence : manager uniquement
+        // (parité AbsencePolicy::approve / AbsenceController::approve|reject).
+        'absence_decision' => ['role' => 'manager', 'permissions' => ['absences.approve']],
     ],
 
     // BC-23-D05 (issue #6237) — permissions accordées par rôle (résolution du

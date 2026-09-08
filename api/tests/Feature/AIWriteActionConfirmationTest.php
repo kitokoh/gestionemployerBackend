@@ -8,13 +8,16 @@ use App\AI\DTOs\AIResponse;
 use App\AI\DTOs\ToolCall;
 use App\AI\IntentEngine;
 use App\AI\LLMClient;
+use App\AI\Models\AIToolRegistryEntry;
 use App\AI\PendingActionStore;
 use App\AI\ToolRegistry;
+use App\Core\Auth\Domain\Models\Employee;
+use App\Core\Tenant\Domain\Models\Company;
+use App\Events\AbsenceApproved;
 use App\Modules\Planning\Domain\Models\Absence;
 use App\Modules\Planning\Domain\Models\AbsenceType;
-use App\AI\Models\AIToolRegistryEntry;
-use App\Core\Tenant\Domain\Models\Company;
-use App\Core\Auth\Domain\Models\Employee;
+use App\Modules\Planning\Domain\Models\LeaveBalance;
+use Illuminate\Support\Facades\Event;
 use Laravel\Sanctum\Sanctum;
 use stdClass;
 use Tests\Support\CreatesMvpSchema;
@@ -136,8 +139,11 @@ class AIWriteActionConfirmationTest extends TestCase
         $this->assertDatabaseCount('absences', 0);
     }
 
-    public function test_confirm_approve_absence_updates_status(): void
+    public function test_confirm_absence_decision_approve_updates_status(): void
     {
+        // B3a (#6856) : la confirmation exécute la décision via le service
+        // canonique Planning (AbsenceService::approve) — statut, approved_by,
+        // événement métier et revalidation du solde (#2666) préservés.
         [$company, $manager] = $this->aiFixture();
         $type = $this->seedAbsenceType($company->id);
         $employee = Employee::factory()->create(['company_id' => $company->id, 'status' => 'active']);
@@ -153,17 +159,31 @@ class AIWriteActionConfirmationTest extends TestCase
             'status' => 'pending',
         ]);
 
+        // Snapshot de solde suffisant (approbation d'un type déductible).
+        LeaveBalance::create([
+            'company_id' => $company->id,
+            'employee_id' => $employee->id,
+            'absence_type_id' => $type->id,
+            'year' => 2026,
+            'balance' => 20,
+            'used' => 0,
+            'pending' => 0,
+        ]);
+
         Sanctum::actingAs($manager);
+        Event::fake([AbsenceApproved::class]);
 
         $pendingId = app(PendingActionStore::class)->store(
             $company->id,
             $manager->id,
-            'approve_absence',
-            ['absence_id' => $absence->id],
+            'absence_decision',
+            ['absence_id' => $absence->id, 'decision' => 'approve'],
         );
 
         $this->postJson("/api/v1/ai/actions/{$pendingId}/confirm")
             ->assertOk()
+            ->assertJsonPath('data.status', 'executed')
+            ->assertJsonPath('data.tool', 'absence_decision')
             ->assertJsonPath('data.result.status', 'approved');
 
         $this->assertDatabaseHas('absences', [
@@ -171,6 +191,7 @@ class AIWriteActionConfirmationTest extends TestCase
             'status' => 'approved',
             'approved_by' => $manager->id,
         ]);
+        Event::assertDispatched(AbsenceApproved::class);
     }
 
     public function test_orchestrator_returns_pending_confirmations_for_write_tools(): void
@@ -255,11 +276,12 @@ class AIWriteActionConfirmationTest extends TestCase
         ]);
     }
 
-    public function test_employee_cannot_approve_absence_via_ai(): void
+    public function test_employee_cannot_decide_absence_via_ai(): void
     {
-        // audit(securite) #6533 : approbation d'absence via IA réservée aux
-        // managers (AbsencePolicy::approve) — un employé qui tente d'approuver
-        // reçoit un refus explicite, l'absence reste pending.
+        // audit(securite) #6533 : décision d'absence via IA réservée aux
+        // managers (AbsencePolicy::approve) — un employé qui tente de décider
+        // reçoit un refus explicite, l'absence reste pending (matrice de
+        // permissions re-vérifiée à la confirmation, flux A4).
         [$company] = $this->aiFixture();
         $type = $this->seedAbsenceType($company->id);
         $employeeActor = Employee::factory()->create(['company_id' => $company->id, 'status' => 'active']);
@@ -280,8 +302,8 @@ class AIWriteActionConfirmationTest extends TestCase
         $pendingId = app(PendingActionStore::class)->store(
             $company->id,
             $employeeActor->id,
-            'approve_absence',
-            ['absence_id' => $absence->id],
+            'absence_decision',
+            ['absence_id' => $absence->id, 'decision' => 'approve'],
         );
 
         $this->postJson("/api/v1/ai/actions/{$pendingId}/confirm")

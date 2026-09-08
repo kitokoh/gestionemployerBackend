@@ -5,12 +5,21 @@ declare(strict_types=1);
 namespace App\AI;
 
 use App\Core\Auth\Domain\Models\Employee;
+use App\Modules\Planning\Application\Actions\ApproveAbsence;
+use App\Modules\Planning\Application\Actions\RejectAbsence;
+use App\Modules\Planning\Domain\Exceptions\AbsenceNotPendingException;
+use App\Modules\Planning\Domain\Exceptions\InsufficientLeaveBalanceException;
 use App\Modules\Planning\Domain\Models\Absence;
 use App\Modules\Planning\Domain\Models\AbsenceType;
 use Illuminate\Support\Carbon;
 
 class WriteActionRunner
 {
+    public function __construct(
+        private readonly ApproveAbsence $approveAbsence,
+        private readonly RejectAbsence $rejectAbsence,
+    ) {}
+
     /**
      * Issue #5625 : liste statique des write tools qui ont un handler PHP.
      *
@@ -20,7 +29,7 @@ class WriteActionRunner
     {
         return [
             'create_absence',
-            'approve_absence',
+            'absence_decision',
         ];
     }
 
@@ -43,13 +52,19 @@ class WriteActionRunner
      * couverture ToolRegistryCoverageTest (config ai.write_tools ⊆ ici, et
      * chaque outil ici doit être exposé dans ai_tool_registry).
      *
+     * B3a (#6856) : `absence_decision` remplace l'ancien `approve_absence`
+     * (approbation seule, mise à jour inline) — décision approve OU reject
+     * avec motif, exécutée via les cas d'usage canoniques Planning
+     * (ApproveAbsence/RejectAbsence, PA2-ARCH-002) : statuts, événements
+     * métier, verrou ligne et revalidation du solde (#2666) préservés.
+     *
      * @return array<string, callable(array<string, mixed>): array<string, mixed>>
      */
     private function writeToolHandlers(string $companyId, int $userId): array
     {
         return [
             'create_absence' => fn (array $arguments): array => $this->createAbsence($companyId, $userId, $arguments),
-            'approve_absence' => fn (array $arguments): array => $this->approveAbsence($companyId, $userId, $arguments),
+            'absence_decision' => fn (array $arguments): array => $this->decideAbsence($companyId, $userId, $arguments),
         ];
     }
 
@@ -125,15 +140,22 @@ class WriteActionRunner
     }
 
     /**
+     * B3a (#6856) — décision sur une demande d'absence (approbation ou rejet
+     * avec motif) après confirmation humaine (flux A4). L'exécution passe par
+     * les cas d'usage canoniques Planning — jamais de mise à jour inline :
+     * transitions d'état, événements métier (AbsenceApproved/AbsenceRejected)
+     * et revalidation du solde (#2666) sont garantis par AbsenceService.
+     *
+     * Défense en profondeur (#6533, parité AbsenceController::approve) : le
+     * rôle manager est re-vérifié ici (en plus de la matrice de permissions
+     * ToolPermissionPolicy à l'exécution et à la confirmation), et l'absence
+     * doit appartenir au tenant de l'acteur (isolation, 404 côté REST).
+     *
      * @param  array<string, mixed>  $arguments
      * @return array<string, mixed>
      */
-    private function approveAbsence(string $companyId, int $userId, array $arguments): array
+    private function decideAbsence(string $companyId, int $userId, array $arguments): array
     {
-        // audit(securite) #6533 : ré-utilisation des policies REST
-        // (AbsencePolicy::approve = company_id match && isManager) — un
-        // manager dept/superviseur ne peut plus approuver via l'IA hors de son
-        // périmètre, et un employé ne peut pas approuver du tout.
         /** @var Employee|null $actor */
         $actor = Employee::query()
             ->where('company_id', $companyId)
@@ -141,32 +163,66 @@ class WriteActionRunner
             ->first();
 
         if ($actor === null || ! $actor->isManager()) {
-            return ['error' => 'AI_TOOL_PERMISSION_DENIED', 'message' => 'Manager role required to approve absences'];
+            return ['error' => 'AI_TOOL_PERMISSION_DENIED', 'message' => 'Manager role required to decide absences'];
         }
 
         $absenceId = $this->intArgument($arguments, 'absence_id', 0);
+        if ($absenceId <= 0) {
+            return ['error' => 'ABSENCE_ID_REQUIRED'];
+        }
+
         $absence = Absence::query()
             ->where('company_id', $companyId)
             ->where('id', $absenceId)
             ->first();
 
         if ($absence === null) {
-            return ['error' => 'Absence not found'];
+            return ['error' => 'ABSENCE_NOT_FOUND'];
         }
 
+        // Contrat B3a : l'outil décide d'une demande EN ATTENTE uniquement —
+        // approbation comme refus. Un statut terminal (approved/rejected/
+        // cancelled) est refusé AVANT toute exécution (parité avec la
+        // description exposée au LLM ; un refus d'absence déjà approuvée
+        // renverserait silencieusement une approbation tierce).
         if ($absence->status !== 'pending') {
-            return ['error' => 'Absence is not pending approval'];
+            return ['error' => 'ABSENCE_NOT_PENDING'];
         }
 
-        $absence->update([
-            'status' => 'approved',
-            'approved_by' => $userId,
-        ]);
+        $decision = $this->stringArgument($arguments, 'decision', 'approve');
 
-        return [
-            'absence_id' => $absence->id,
-            'status' => $absence->status,
+        try {
+            if ($decision === 'approve') {
+                $decided = $this->approveAbsence->execute($absence, $actor);
+            } elseif ($decision === 'reject') {
+                $reason = trim($this->stringArgument($arguments, 'reason', ''));
+                if ($reason === '') {
+                    return ['error' => 'REJECT_REASON_REQUIRED'];
+                }
+                if (mb_strlen($reason) > 1000) {
+                    return ['error' => 'REJECT_REASON_TOO_LONG'];
+                }
+                $decided = $this->rejectAbsence->execute($absence, $reason);
+            } else {
+                return ['error' => 'INVALID_DECISION', 'message' => "decision must be 'approve' or 'reject'"];
+            }
+        } catch (AbsenceNotPendingException) {
+            return ['error' => 'ABSENCE_NOT_PENDING'];
+        } catch (InsufficientLeaveBalanceException) {
+            return ['error' => 'INSUFFICIENT_LEAVE_BALANCE'];
+        }
+
+        $payload = [
+            'absence_id' => $decided->id,
+            'status' => $decided->status,
+            'decision' => $decision,
         ];
+
+        if ($decision === 'reject' && $decided->rejected_reason !== null) {
+            $payload['rejected_reason'] = $decided->rejected_reason;
+        }
+
+        return $payload;
     }
 
     /**

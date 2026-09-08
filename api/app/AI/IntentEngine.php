@@ -196,9 +196,15 @@ class IntentEngine
                 $startDate,
                 $endDate,
             ),
-            'approve_absence' => sprintf(
-                'Approuver l\'absence #%s',
+            // B3a (#6856) — résumé honnête de la décision demandée (approbation
+            // ou refus avec motif) avant confirmation humaine.
+            'absence_decision' => sprintf(
+                '%s la demande d\'absence #%s%s',
+                $this->stringArgument($arguments, 'decision', 'approve') === 'reject' ? 'Refuser' : 'Approuver',
                 $absenceId,
+                $this->stringArgument($arguments, 'decision', 'approve') === 'reject'
+                    ? sprintf(' (%s)', $this->stringArgument($arguments, 'reason', 'motif non précisé'))
+                    : '',
             ),
             default => "Confirmer l'action {$toolName}",
         };

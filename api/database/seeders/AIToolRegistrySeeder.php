@@ -135,18 +135,24 @@ class AIToolRegistrySeeder extends Seeder
                 'module' => 'rh',
             ],
             [
-                'name' => 'approve_absence',
-                'description' => 'Approve a pending absence request.',
+                // B3a (#6856) — remplace l'ancien outil 'approve_absence'
+                // (approbation seule) : décision approve/reject avec motif.
+                // `parameters` aligné sur l'inputSchema de l'AIToolDefinition
+                // (AbsenceDecisionToolCatalog, module Planning).
+                'name' => 'absence_decision',
+                'description' => "Prendre une décision sur une demande d'absence en attente : l'approuver ou la refuser (un motif est obligatoire pour refuser). Réservé aux managers ; l'action n'est exécutée qu'après confirmation explicite.",
                 'parameters' => json_encode([
                     'type' => 'object',
                     'properties' => [
-                        'absence_id' => ['type' => 'integer'],
+                        'absence_id' => ['type' => 'integer', 'description' => "Identifiant de la demande d'absence concernée."],
+                        'decision' => ['type' => 'string', 'enum' => ['approve', 'reject'], 'description' => "Décision à appliquer : 'approve' (approuver) ou 'reject' (refuser)."],
+                        'reason' => ['type' => 'string', 'maxLength' => 1000, 'description' => 'Motif de la décision — obligatoire pour un refus.'],
                     ],
-                    'required' => ['absence_id'],
+                    'required' => ['absence_id', 'decision'],
                 ]),
                 'required_permissions' => '["absences.approve"]',
                 'required_role' => 'manager',
-                'module' => 'rh',
+                'module' => 'planning',
             ],
             [
                 'name' => 'get_daily_summary',
@@ -254,5 +260,13 @@ class AIToolRegistrySeeder extends Seeder
                 ]),
             );
         }
+
+        // B3a (#6856) — l'outil 'approve_absence' (approbation seule, inline)
+        // est remplacé par 'absence_decision' (approve/reject via les Actions
+        // canoniques Planning) : purge de l'entrée historique pour les bases
+        // déjà seedées (garde anti-promesse fantôme ToolRegistryCoverageTest).
+        DB::table('ai_tool_registry')
+            ->where('name', 'approve_absence')
+            ->delete();
     }
 }

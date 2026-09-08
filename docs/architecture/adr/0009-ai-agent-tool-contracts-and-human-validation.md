@@ -54,9 +54,11 @@ that changes state — a human confirmation step before execution.
 ### 2. Read vs. write tools: the confirmation gate
 
 - `config('ai.write_tools')` (`api/config/ai.php`) is the single allowlist
-  of tool names that **mutate** data: `create_absence`, `approve_absence`,
-  `create_employee`, `update_employee`, `check_in_employee`,
-  `check_out_employee`, `create_salary_advance`.
+  of tool names that **mutate** data (issue #5625 : seuls les outils avec un
+  handler effectif y figurent — état 2026-09-08 : `create_absence`,
+  `absence_decision`). L'ancien `approve_absence` (approbation seule, inline)
+  a été remplacé par `absence_decision` (approbation OU refus motivé, exécution
+  via les Actions canoniques Planning, B3a #6856).
 - `WriteToolPolicy::requiresConfirmation($toolName)` checks that allowlist.
   `IntentEngine::executeSingleTool()` consults it **before** touching any
   domain model:
