@@ -226,9 +226,9 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -n "${BASE_SHA}" && "${BASE_SHA}" != "0000000000000000000000000000000000000000" ]]; then
-            git diff -z --name-only "${BASE_SHA}" HEAD -- '*.dart' > /tmp/changed-dart-files
+            git diff -z --diff-filter=ACMR --name-only "${BASE_SHA}" HEAD -- '*.dart' > /tmp/changed-dart-files
           else
-            git diff -z --name-only HEAD^ HEAD -- '*.dart' > /tmp/changed-dart-files
+            git diff -z --diff-filter=ACMR --name-only HEAD^ HEAD -- '*.dart' > /tmp/changed-dart-files
           fi
           project_prefix="${{ matrix.project.path }}/"
           : > /tmp/changed-dart-files-relative
