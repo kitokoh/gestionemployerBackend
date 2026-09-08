@@ -2,8 +2,8 @@
 
 namespace App\Http\Resources\Api\V1;
 
-use App\Modules\Attendance\Domain\Models\AttendanceLog;
 use App\Core\Auth\Domain\Models\Employee;
+use App\Modules\Attendance\Domain\Models\AttendanceLog;
 use App\Modules\Planning\Infrastructure\Services\EstimationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -78,4 +78,3 @@ class AttendanceTodayResource extends JsonResource
         ];
     }
 }
-

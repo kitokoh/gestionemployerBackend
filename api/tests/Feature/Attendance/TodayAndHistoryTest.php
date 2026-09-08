@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Attendance;
 
-use App\Modules\Attendance\Domain\Models\AttendanceLog;
-use App\Core\Tenant\Domain\Models\Company;
 use App\Core\Auth\Domain\Models\Employee;
+use App\Core\Tenant\Domain\Models\Company;
+use App\Modules\Attendance\Domain\Models\AttendanceLog;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
@@ -332,4 +332,3 @@ class TodayAndHistoryTest extends TestCase
         $response->assertJsonValidationErrors(['employee_id']);
     }
 }
-
