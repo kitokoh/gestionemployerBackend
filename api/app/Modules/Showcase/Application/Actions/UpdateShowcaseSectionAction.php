@@ -27,8 +27,7 @@ final class UpdateShowcaseSectionAction
     public function __construct(
         private readonly ShowcaseSectionSchemaValidator $validator,
         private readonly ShowcasePublicCache $publicCache,
-    ) {
-    }
+    ) {}
 
     public function execute(CompanyShowcase $showcase, CompanyShowcaseSection $section, ?string $type, ?array $content = null): CompanyShowcaseSection
     {

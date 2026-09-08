@@ -18,9 +18,7 @@ use App\Modules\Showcase\Infrastructure\Services\ShowcasePublicCache;
  */
 final class DeleteShowcaseSectionAction
 {
-    public function __construct(private readonly ShowcasePublicCache $publicCache)
-    {
-    }
+    public function __construct(private readonly ShowcasePublicCache $publicCache) {}
 
     public function execute(CompanyShowcase $showcase, CompanyShowcaseSection $section): void
     {

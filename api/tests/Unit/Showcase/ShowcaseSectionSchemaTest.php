@@ -23,7 +23,7 @@ final class ShowcaseSectionSchemaTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->validator = new ShowcaseSectionSchemaValidator();
+        $this->validator = new ShowcaseSectionSchemaValidator;
     }
 
     public function test_registry_exposes_v1_types_with_documents(): void

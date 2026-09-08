@@ -34,7 +34,7 @@ final class ShowcaseResource extends JsonResource
             'slug' => $showcase->slug,
             'status' => $showcase->status->value,
             'theme' => $showcase->theme,
-            'settings' => is_array($settings) ? $settings : new \stdClass(),
+            'settings' => is_array($settings) ? $settings : new \stdClass,
             'published_at' => $showcase->published_at?->toIso8601String(),
             'created_at' => $showcase->created_at?->toIso8601String(),
             'updated_at' => $showcase->updated_at?->toIso8601String(),

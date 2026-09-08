@@ -36,8 +36,7 @@ final class ShowcasePublicController extends Controller
     public function __construct(
         private readonly TenantManager $tenantManager,
         private readonly ShowcasePublicCache $cache,
-    ) {
-    }
+    ) {}
 
     public function show(Request $request, string $slug): JsonResponse
     {

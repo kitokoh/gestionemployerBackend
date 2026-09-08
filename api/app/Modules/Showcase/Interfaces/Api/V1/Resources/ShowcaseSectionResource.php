@@ -30,7 +30,7 @@ final class ShowcaseSectionResource extends JsonResource
             'id' => $section->id,
             'showcase_id' => $section->showcase_id,
             'type' => $section->type->value,
-            'content' => $section->content ?? new \stdClass(),
+            'content' => $section->content ?? new \stdClass,
             'sort_order' => $section->sort_order,
             'schema_version' => $section->schema_version,
         ];

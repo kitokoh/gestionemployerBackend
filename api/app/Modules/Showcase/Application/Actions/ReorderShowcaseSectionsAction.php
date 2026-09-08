@@ -22,9 +22,7 @@ use Illuminate\Validation\ValidationException;
  */
 final class ReorderShowcaseSectionsAction
 {
-    public function __construct(private readonly ShowcasePublicCache $publicCache)
-    {
-    }
+    public function __construct(private readonly ShowcasePublicCache $publicCache) {}
 
     /**
      * @param  list<int>  $orderedIds

@@ -28,9 +28,7 @@ use Illuminate\Http\Request;
  */
 final class ShowcaseController extends Controller
 {
-    public function __construct(private readonly CreateShowcaseAction $createShowcase)
-    {
-    }
+    public function __construct(private readonly CreateShowcaseAction $createShowcase) {}
 
     public function show(Request $request): JsonResponse
     {

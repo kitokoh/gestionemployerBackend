@@ -42,8 +42,7 @@ final class ShowcaseSectionController extends Controller
         private readonly UpdateShowcaseSectionAction $updateSection,
         private readonly DeleteShowcaseSectionAction $deleteSection,
         private readonly ReorderShowcaseSectionsAction $reorderSections,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): JsonResponse
     {

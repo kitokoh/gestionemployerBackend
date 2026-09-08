@@ -57,7 +57,7 @@ final class VitrinePublicResource extends JsonResource
                 static fn (CompanyShowcaseSection $section): array => [
                     'type' => $section->type->value,
                     'schema_version' => $section->schema_version,
-                    'content' => $section->content ?? new \stdClass(),
+                    'content' => $section->content ?? new \stdClass,
                 ],
                 $this->sections
             ),
