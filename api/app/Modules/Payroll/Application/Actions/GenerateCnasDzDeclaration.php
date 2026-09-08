@@ -30,12 +30,16 @@ class GenerateCnasDzDeclaration
         private readonly SocialDeclarationService $declarations,
     ) {}
 
+    /**
+     * @return array{content: string, employee_count: int, filename: string}
+     */
     public function execute(Employee $actor, string $quarter, int $year): array
     {
         $employees = $this->declarations->activeEmployees((string) $actor->company_id);
 
         $quarterMonths = $this->declarations->quarterMonths($quarter);
 
+        /** @var \Illuminate\Support\Collection<int, object{total_gross?: int|float|string|null, months_worked?: int|string|null}> $payrollData */
         $payrollData = $this->declarations->quarterPayrollData(
             (string) $actor->company_id,
             $year,
@@ -45,13 +49,14 @@ class GenerateCnasDzDeclaration
 
         $company = Company::query()->whereKey($actor->company_id)->first();
 
-        $companyName = $company?->name ?? 'N/A';
+        $companyName = $company->name ?? 'N/A';
         $companyNis = $this->companyRegistrationNumber($company);
 
         $declarationRows = $employees->map(function ($emp) use ($payrollData): array {
             $payroll = $payrollData->get($emp->id);
 
-            return [
+            /** @var array{employee_id: int, num_ss: string, last_name: string, first_name: string, date_naissance: string, gross_salary: float, months_worked: int} $row */
+            $row = [
                 'employee_id' => (int) $emp->id,
                 'num_ss' => (string) ($emp->national_id ?? ''),
                 'last_name' => (string) ($emp->last_name ?? ''),
@@ -60,6 +65,8 @@ class GenerateCnasDzDeclaration
                 'gross_salary' => (float) ($payroll->total_gross ?? 0),
                 'months_worked' => (int) ($payroll->months_worked ?? 0),
             ];
+
+            return $row;
         })->filter(fn (array $row): bool => $row['gross_salary'] > 0);
 
         $generator = new SocialDeclarationGenerator;
@@ -71,11 +78,14 @@ class GenerateCnasDzDeclaration
             $declarationRows->values(),
         );
 
-        return [
+        /** @var array{content: string, employee_count: int, filename: string} $result */
+        $result = [
             'content' => $content,
             'employee_count' => $declarationRows->count(),
             'filename' => sprintf('CNAS_DZ_%s_%d_%s.txt', $quarter, $year, now()->format('Ymd')),
         ];
+
+        return $result;
     }
 
     private function companyRegistrationNumber(?Company $company): string
@@ -84,15 +94,13 @@ class GenerateCnasDzDeclaration
             return '';
         }
 
-        $metadata = $company->metadata ?? [];
+        $candidate = $company->metadata['tax_id']
+            ?? $company->metadata['nis']
+            ?? $company->metadata['affiliate_number']
+            ?? $company->metadata['siret']
+            ?? '';
 
-        return (string) (
-            $metadata['tax_id']
-            ?? $metadata['nis']
-            ?? $metadata['affiliate_number']
-            ?? $metadata['siret']
-            ?? ''
-        );
+        return is_scalar($candidate) ? (string) $candidate : '';
     }
 
     private function dateValue(mixed $value): string
@@ -101,6 +109,6 @@ class GenerateCnasDzDeclaration
             return $value->format('Y-m-d');
         }
 
-        return $value === null ? '' : (string) $value;
+        return is_scalar($value) ? (string) $value : '';
     }
 }

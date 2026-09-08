@@ -25,6 +25,9 @@ use App\Modules\Payroll\Infrastructure\Services\DasDeclarationGenerator;
  */
 class GenerateDasDzDeclaration
 {
+    /**
+     * @return array{content: string, employee_count: int, filename: string}
+     */
     public function execute(Employee $actor, int $year): array
     {
         $slips = PaySlip::query()
@@ -47,11 +50,14 @@ class GenerateDasDzDeclaration
             $slips,
         );
 
-        return [
+        /** @var array{content: string, employee_count: int, filename: string} $result */
+        $result = [
             'content' => $content,
             'employee_count' => $slips->groupBy('employee_id')->count(),
             'filename' => sprintf('DAS_DZ_%d_%s.txt', $year, now()->format('Ymd')),
         ];
+
+        return $result;
     }
 
     private function companyRegistrationNumber(?Company $company): string
@@ -60,14 +66,12 @@ class GenerateDasDzDeclaration
             return '';
         }
 
-        $metadata = $company->metadata ?? [];
+        $candidate = $company->metadata['tax_id']
+            ?? $company->metadata['nis']
+            ?? $company->metadata['affiliate_number']
+            ?? $company->metadata['siret']
+            ?? '';
 
-        return (string) (
-            $metadata['tax_id']
-            ?? $metadata['nis']
-            ?? $metadata['affiliate_number']
-            ?? $metadata['siret']
-            ?? ''
-        );
+        return is_scalar($candidate) ? (string) $candidate : '';
     }
 }
