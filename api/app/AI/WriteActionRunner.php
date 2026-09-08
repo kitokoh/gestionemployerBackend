@@ -173,7 +173,6 @@ class WriteActionRunner
         }
     }
 
-
     /**
      * B3b (#6857) — affectation d'un shift (gabarit horaire `Schedule`) à un
      * employé, exécutée APRÈS confirmation humaine (flux A4). Parité exacte
@@ -241,7 +240,6 @@ class WriteActionRunner
             'status' => 'assigned',
         ];
     }
-
 
     /**
      * @param  array<string, mixed>  $arguments
