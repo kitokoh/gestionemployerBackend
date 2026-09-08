@@ -6,6 +6,7 @@ namespace App\Modules\Platform\Interfaces\Api\V1\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
@@ -38,6 +39,7 @@ class HealthController extends Controller
         $storage = $this->checkStorage();
         $queue = $this->checkQueue();
         $memory = $this->checkMemory();
+        $web = $this->checkWeb();
 
         $globalOk = $database['ok'];
 
@@ -51,6 +53,7 @@ class HealthController extends Controller
                 'storage' => $storage,
                 'queue' => $queue,
                 'memory' => $memory,
+                'web' => $web,
             ],
             'uptime_seconds' => defined('LARAVEL_START')
                 ? (int) round(microtime(true) - LARAVEL_START)
@@ -195,6 +198,64 @@ class HealthController extends Controller
             'checks' => ['database' => $database],
             'timestamp' => now()->toIso8601String(),
         ], $code);
+    }
+
+    /**
+     * #6957 : sonde « couche web » sans I/O — permet à l'observabilité de
+     * détecter un environnement dont toutes les routes web (session/cookies)
+     * répondent 500 alors que l'API (stateless) reste verte. Deux causes
+     * fréquentes, détectées ici sans effet de bord :
+     *  - `APP_KEY` absente → `EncryptCookies`/`StartSession` lèvent sur chaque
+     *    requête web ;
+     *  - clé présente mais invalide pour le cipher → aller-retour
+     *    encrypt/decrypt impossible.
+     * Check non bloquant (dégradé, jamais de 503) : l'API peut rester servable
+     * même si la surface web est cassée.
+     *
+     * @return array{ok: bool, driver: string, app_key_set: bool, reason?: string}
+     */
+    private function checkWeb(): array
+    {
+        $driver = (string) config('session.driver', 'file');
+        $appKey = config('app.key');
+
+        if (! is_string($appKey) || $appKey === '') {
+            return [
+                'ok' => false,
+                'driver' => $driver,
+                'app_key_set' => false,
+                'reason' => 'app_key_missing',
+            ];
+        }
+
+        $roundTrip = null;
+
+        try {
+            $probe = Crypt::encryptString('leopardo-health-web-probe');
+            $roundTrip = Crypt::decryptString($probe);
+        } catch (Throwable $e) {
+            return [
+                'ok' => false,
+                'driver' => $driver,
+                'app_key_set' => true,
+                'reason' => class_basename($e),
+            ];
+        }
+
+        if ($roundTrip !== 'leopardo-health-web-probe') {
+            return [
+                'ok' => false,
+                'driver' => $driver,
+                'app_key_set' => true,
+                'reason' => 'encryption_roundtrip_mismatch',
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'driver' => $driver,
+            'app_key_set' => true,
+        ];
     }
 
     /**

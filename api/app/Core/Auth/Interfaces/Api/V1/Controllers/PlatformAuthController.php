@@ -11,7 +11,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
+use Throwable;
 
 class PlatformAuthController extends Controller
 {
@@ -20,6 +22,30 @@ class PlatformAuthController extends Controller
     ) {}
 
     public function login(Request $request): JsonResponse
+    {
+        try {
+            return $this->attemptLogin($request);
+        } catch (Throwable $exception) {
+            // #6974 : le login super-admin a produit un 500 inexpliqué sur DEV
+            // (persiste après la garde #6956 — la cause n'est donc pas un hash
+            // NULL). On loggue la classe + message d'exception pour un
+            // diagnostic immédiat dans les logs (Render), sans jamais exposer
+            // de détail au client.
+            Log::channel('structured')->error('platform.login.unexpected_error', [
+                'email' => (string) $request->input('email'),
+                'exception' => $exception::class,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return new JsonResponse([
+                'error' => 'INTERNAL_ERROR',
+                'message' => 'INTERNAL_ERROR',
+                'localized_message' => __('errors.INTERNAL_ERROR'),
+            ], 500);
+        }
+    }
+
+    private function attemptLogin(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'email' => ['required', 'email'],
@@ -48,7 +74,16 @@ class PlatformAuthController extends Controller
         /** @var SuperAdmin|null $superAdmin */
         $superAdmin = SuperAdmin::query()->where('email', $validated['email'])->first();
 
-        if (! $superAdmin || ! Hash::check($validated['password'], $superAdmin->password_hash)) {
+        // #6956 : un compte dont le hash stocké est absent/invalide (dérive
+        // de schéma ou seed partiel — constaté en DEV 2026-09-06) ne doit
+        // JAMAIS produire un 500 : `Hash::check()` exige une string et lève
+        // un TypeError sur NULL. On traite ce cas comme des identifiants
+        // invalides (401), jamais comme une erreur serveur.
+        $storedHash = $superAdmin?->password_hash;
+        $hashCheckable = is_string($storedHash) && $storedHash !== ''
+            && Hash::check($validated['password'], $storedHash);
+
+        if (! $superAdmin || ! $hashCheckable) {
             $attempts = (int) Cache::get($attemptKey, 0) + 1;
             Cache::put($attemptKey, $attempts, now()->addMinutes(15));
 

@@ -31,6 +31,25 @@ class PlatformAuthController extends Controller
 
     public function login(Request $request): RedirectResponse
     {
+        try {
+            return $this->attemptLogin($request);
+        } catch (\Throwable $exception) {
+            // #6974 : diagnostic — ne jamais exposer de stack au client, mais
+            // logguer classe + message pour identifier le 500 DEV persistant.
+            Log::channel('structured')->error('platform.login.unexpected_error.web', [
+                'email' => (string) $request->input('email'),
+                'exception' => $exception::class,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return back()->withErrors([
+                'email' => __('errors.INTERNAL_ERROR'),
+            ]);
+        }
+    }
+
+    private function attemptLogin(Request $request): RedirectResponse
+    {
         $validated = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
@@ -39,7 +58,13 @@ class PlatformAuthController extends Controller
         /** @var SuperAdmin|null $superAdmin */
         $superAdmin = SuperAdmin::query()->where('email', $validated['email'])->first();
 
-        if (! $superAdmin || ! Hash::check($validated['password'], $superAdmin->password_hash)) {
+        // #6956 : hash stocké absent/invalide (dérive de schéma DEV) → 401,
+        // jamais de TypeError/500 (Hash::check exige une string).
+        $storedHash = $superAdmin?->password_hash;
+        $hashCheckable = is_string($storedHash) && $storedHash !== ''
+            && Hash::check($validated['password'], $storedHash);
+
+        if (! $superAdmin || ! $hashCheckable) {
             // PA2-API-005: security-relevant event, logged to the dedicated
             // 'audit' channel so brute-force attempts against the super-admin
             // login are visible independently of the per-minute throttle.

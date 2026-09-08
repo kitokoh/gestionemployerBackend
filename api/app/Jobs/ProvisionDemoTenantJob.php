@@ -74,7 +74,11 @@ class ProvisionDemoTenantJob implements ShouldQueue
             Log::info('Sandbox provisioned successfully', ['company_id' => $result['company']->id]);
 
         } catch (\Throwable $e) {
-            Log::error('Failed to provision sandbox', ['error' => $e->getMessage()]);
+            Log::error('Failed to provision sandbox', [
+                'email' => $this->email,
+                'error' => $e->getMessage(),
+                'exception' => $e::class,
+            ]);
 
             // Issue #3600 : rethrow — le job doit être re-tenté par la queue
             // (tries=5, backoff 30/60/120/300) au lieu de « réussir » en
