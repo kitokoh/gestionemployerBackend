@@ -81,6 +81,8 @@ class AbsenceTypesTenantUniqueTest extends TestCase
 
     public function test_duplicate_code_within_same_tenant_is_rejected(): void
     {
+        // Un premier type CA existe (insert direct — le code standard est par
+        // ailleurs seedé par le template, cf. test_two_tenants_can_have_the_same_standard_code).
         $this->tenants()->withinTenant($this->tenantA, function (): void {
             AbsenceType::query()->create([
                 'company_id' => $this->tenantA->id,
@@ -92,17 +94,26 @@ class AbsenceTypesTenantUniqueTest extends TestCase
             ]);
         });
 
-        $this->expectException(QueryException::class);
-
+        // Re-créer le même code dans le même tenant doit violer l'index unique
+        // (company_id, code) (#5967). La création fautive est isolée dans une
+        // transaction IMBRIQUÉE (savepoint) : la violation 23505 y est
+        // rollbackée, ce qui évite de laisser la transaction du test (posée par
+        // RefreshDatabase) en état « aborted » — sinon le SET search_path du
+        // tearDown échoue en 25P02 (constat #6954). Pattern repo identique aux
+        // tests Travel (expectException dans le contexte tenant + DB::transaction).
         $this->tenants()->withinTenant($this->tenantA, function (): void {
-            AbsenceType::query()->create([
-                'company_id' => $this->tenantA->id,
-                'name' => 'Congé Annuel (doublon)',
-                'code' => 'CA',
-                'is_paid' => true,
-                'deducts_leave' => true,
-                'requires_proof' => false,
-            ]);
+            $this->expectException(QueryException::class);
+
+            DB::transaction(function (): void {
+                AbsenceType::query()->create([
+                    'company_id' => $this->tenantA->id,
+                    'name' => 'Congé Annuel (doublon)',
+                    'code' => 'CA',
+                    'is_paid' => true,
+                    'deducts_leave' => true,
+                    'requires_proof' => false,
+                ]);
+            });
         });
     }
 
