@@ -8,16 +8,16 @@ use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Auth\Infrastructure\Services\DataAccessAuditLogger;
 use App\Core\Tenant\Domain\Models\Company;
 use App\Http\Controllers\Controller;
-use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationService;
+use App\Modules\Payroll\Application\Actions\GenerateCnasDzDeclaration;
+use App\Modules\Payroll\Application\Actions\GenerateDasDzDeclaration;
 use App\Modules\Payroll\Domain\Models\PayrollRun;
-use App\Modules\Payroll\Domain\Models\PaySlip;
 use App\Modules\Payroll\Infrastructure\Services\CedeaoCnsDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\CemacCnpsDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\CnpsDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\CnssDeclarationGenerator;
-use App\Modules\Payroll\Infrastructure\Services\DasDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\IpresDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationGenerator;
+use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationService;
 use DateTimeInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,6 +29,8 @@ class SocialDeclarationController extends Controller
     public function __construct(
         private readonly DataAccessAuditLogger $auditLogger,
         private readonly SocialDeclarationService $declarationService,
+        private readonly GenerateCnasDzDeclaration $generateCnasDz,
+        private readonly GenerateDasDzDeclaration $generateDasDz,
     ) {}
 
     public function generateCnasDz(Request $request): JsonResponse
@@ -39,8 +41,6 @@ class SocialDeclarationController extends Controller
             abort(403);
         }
 
-        $this->auditLogger->recordSensitive($request, $actor, 'payroll.cnas_declaration');
-
         $validated = $request->validate([
             'quarter' => 'required|in:Q1,Q2,Q3,Q4',
             'year' => 'required|integer|min:2020|max:2099',
@@ -48,53 +48,18 @@ class SocialDeclarationController extends Controller
 
         $this->auditLogger->recordSensitive($request, $actor, 'payroll.cnas_declaration');
 
-        $employees = $this->declarationService->activeEmployees((string) $actor->company_id);
-
-        $quarterMonths = $this->declarationService->quarterMonths((string) $validated['quarter']);
-
-        $payrollData = $this->declarationService->quarterPayrollData(
-            (string) $actor->company_id,
-            (int) $validated['year'],
-            $quarterMonths,
-            withMonthsCount: true,
-        );
-
-        $company = Company::query()->whereKey($actor->company_id)->first();
-
-        $companyName = $company?->name ?? 'N/A';
-        $companyNis = $this->companyRegistrationNumber($company);
-
-        $declarationRows = $employees->map(function ($emp) use ($payrollData) {
-            $payroll = $payrollData->get($emp->id);
-
-            return [
-                'employee_id' => (int) $emp->id,
-                'num_ss' => (string) ($emp->national_id ?? ''),
-                'last_name' => (string) ($emp->last_name ?? ''),
-                'first_name' => (string) ($emp->first_name ?? ''),
-                'date_naissance' => $this->dateValue($emp->date_of_birth ?? null),
-                'gross_salary' => (float) ($payroll->total_gross ?? 0),
-                'months_worked' => (int) ($payroll->months_worked ?? 0),
-            ];
-        })->filter(fn (array $row) => $row['gross_salary'] > 0);
-
-        $generator = new SocialDeclarationGenerator;
-        $content = $generator->generateCnasDz(
-            $companyName,
-            $companyNis,
-            $validated['quarter'],
-            (int) $validated['year'],
-            $declarationRows->values(),
-        );
+        // Cas d'usage nommable (ADR-0020, lot 3a #6968) — collecte + formatage
+        // dans GenerateCnasDzDeclaration (services Infrastructure existants).
+        $result = $this->generateCnasDz->execute($actor, (string) $validated['quarter'], (int) $validated['year']);
 
         return response()->json([
             'data' => [
                 'format' => 'cnas_dz',
                 'quarter' => $validated['quarter'],
                 'year' => $validated['year'],
-                'employee_count' => $declarationRows->count(),
-                'content' => $content,
-                'filename' => sprintf('CNAS_DZ_%s_%d_%s.txt', $validated['quarter'], $validated['year'], now()->format('Ymd')),
+                'employee_count' => $result['employee_count'],
+                'content' => $result['content'],
+                'filename' => $result['filename'],
             ],
         ]);
     }
@@ -119,35 +84,16 @@ class SocialDeclarationController extends Controller
 
         $this->auditLogger->recordSensitive($request, $actor, 'payroll.das_declaration');
 
-        $year = (int) $validated['year'];
-
-        $slips = PaySlip::query()
-            ->where('company_id', $actor->company_id)
-            ->where('status', 'validated')
-            ->whereBetween('period_start', ["{$year}-01-01", "{$year}-12-31"])
-            ->whereHas('payrollRun', fn ($query) => $query->where('country_code', 'DZ'))
-            ->with(['employee', 'lines'])
-            ->get();
-
-        $company = Company::query()->whereKey($actor->company_id)->first();
-
-        $companyName = $company->name ?? 'N/A';
-        $companyNis = $this->companyRegistrationNumber($company);
-
-        $content = (new DasDeclarationGenerator)->generate(
-            $companyName,
-            $companyNis,
-            $year,
-            $slips,
-        );
+        // Cas d'usage nommable (ADR-0020, lot 3a #6968).
+        $result = $this->generateDasDz->execute($actor, (int) $validated['year']);
 
         return response()->json([
             'data' => [
                 'format' => 'das_dz',
-                'year' => $year,
-                'employee_count' => $slips->groupBy('employee_id')->count(),
-                'content' => $content,
-                'filename' => sprintf('DAS_DZ_%d_%s.txt', $year, now()->format('Ymd')),
+                'year' => $validated['year'],
+                'employee_count' => $result['employee_count'],
+                'content' => $result['content'],
+                'filename' => $result['filename'],
             ],
         ]);
     }
