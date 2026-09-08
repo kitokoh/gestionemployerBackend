@@ -4,21 +4,26 @@ declare(strict_types=1);
 
 namespace App\Modules\Payroll\Interfaces\Api\V1\Controllers;
 
-use App\Core\Auth\Domain\Models\AuditLog;
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Auth\Infrastructure\Services\DataAccessAuditLogger;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\PayrollRunResource;
 use App\Jobs\WarmPaySlipPdfPathsForPayrollRunJob;
+use App\Modules\Payroll\Application\Actions\CalculatePayrollRun;
+use App\Modules\Payroll\Application\Actions\CancelPayrollRun;
 use App\Modules\Payroll\Application\Actions\CreatePayrollRegularization;
 use App\Modules\Payroll\Application\Actions\LockPayrollRun;
 use App\Modules\Payroll\Application\Actions\UnlockPayrollRun;
 use App\Modules\Payroll\Application\Actions\ValidatePayrollRun;
 use App\Modules\Payroll\Application\Services\PayrollRegularizationService;
 use App\Modules\Payroll\Domain\Exceptions\PayrollAlreadyValidatedException;
+use App\Modules\Payroll\Domain\Exceptions\PayrollPlaceholderAcknowledgementRequiredException;
+use App\Modules\Payroll\Domain\Exceptions\PayrollRunCalculationFailedException;
+use App\Modules\Payroll\Domain\Exceptions\PayrollRunCalculationRulesException;
 use App\Modules\Payroll\Domain\Exceptions\PayrollRunLockedException;
 use App\Modules\Payroll\Domain\Exceptions\PayrollRunNoSlipsException;
 use App\Modules\Payroll\Domain\Exceptions\PayrollRunNotLockedException;
+use App\Modules\Payroll\Domain\Exceptions\PayrollRunZeroSlipsException;
 use App\Modules\Payroll\Domain\Models\PayrollRun;
 use App\Modules\Payroll\Infrastructure\Exports\PayrollAccountingExportService;
 use App\Modules\Payroll\Infrastructure\Services\PayrollAnomalyService;
@@ -36,6 +41,8 @@ class PayrollRunController extends Controller
 {
     public function __construct(
         private readonly PayrollCalculator $calculator,
+        private readonly CalculatePayrollRun $calculateAction,
+        private readonly CancelPayrollRun $cancelAction,
         private readonly PayrollRegularizationService $regularization,
         private readonly DataAccessAuditLogger $auditLogger,
         private readonly ValidatePayrollRun $validateRun,
@@ -186,24 +193,26 @@ class PayrollRunController extends Controller
         }
 
         // #6529 : un run laissé en `error` ou orphelin en `processing` (worker
-        // mort entre le claim et le calcul) doit rester recalculable via l'API
-        // (sinon la paie reste bloquée pour toujours et aucun chemin de reprise
-        // n'existe). `calculated` reste permis (recalcul correctif) ; les
-        // statuts de clôture (validated, paid…) restent exclus.
+        // mort entre le claim et le calcul) doit rester recalculable ;
+        // `calculated` reste permis (recalcul correctif) ; les statuts de
+        // clôture (validated, paid…) restent exclus.
         if (in_array($payrollRun->status, ['draft', 'calculated', 'error', 'processing'], true) === false) {
             return response()->json(['message' => __('payroll.run_cannot_recalculate')], 422);
         }
 
-        // Issue #2555 — un pays sans règles enregistrées (ex. 'ZZ') fait
-        // lever `UnsupportedCountryRulesException` ici, AVANT le try/catch :
-        // le run restait bloqué dans son statut précédent (ex. `calculated`)
-        // et n'était plus recalculable. Contrat : tout échec de calculate
-        // ramène le run à `draft` (recalculable), même l'échec de résolution
-        // des règles.
+        // Cas d'usage nommable (ADR-0020, lot 1b #6968) : règles pays,
+        // garde placeholder auditée (#2332/#5623), calcul, invariants #1767 —
+        // la politique reste dans PayrollCalculator ; l'interface mappe les
+        // exceptions vers les réponses localisées et journalise le détail.
         try {
-            $rules = $this->calculator->getRules($payrollRun->country_code);
-        } catch (\Throwable $e) {
-            $payrollRun->update(['status' => PayrollRun::STATUS_DRAFT]);
+            $run = $this->calculateAction->execute(
+                $payrollRun,
+                $actor,
+                $request->boolean('acknowledge_placeholder'),
+                $request->ip(),
+                $request->userAgent(),
+            );
+        } catch (PayrollRunCalculationRulesException $e) {
             Log::error('payroll.run.calculation_failed', [
                 'run_id' => $payrollRun->id,
                 'company_id' => $payrollRun->company_id,
@@ -215,55 +224,14 @@ class PayrollRunController extends Controller
             return response()->json([
                 'message' => __('payroll.calculation_failed'),
             ], 422);
-        }
-
-        // Issue #2332 — un pays en règle « placeholder » (aucune valeur légale
-        // implémentée) expose des montants indicatifs : un run RÉEL ne doit
-        // pas être calculé sans confirmation explicite. Même garde que les
-        // simulations (#1872), placée AVANT tout changement de statut pour
-        // ne jamais laisser le run bloqué en `calculating` sur un 422.
-        // (getRules est déjà résolu ci-dessus — ne pas re-résoudre.)
-        if ($rules->confidenceLevel() === 'placeholder') {
-            $acknowledged = $request->boolean('acknowledge_placeholder');
-            if (! $acknowledged) {
-                return response()->json([
-                    'message' => __('payroll.placeholder_acknowledge_required', ['country' => $payrollRun->country_code]),
-                    'errors' => [
-                        'acknowledge_placeholder' => [__('payroll.placeholder_acknowledge_required', ['country' => $payrollRun->country_code])],
-                    ],
-                ], 422);
-            }
-
-            // Acceptation AUDITÉE — mêmes champs que les simulations #1872,
-            // contexte `payroll_run_calculate` + run_id pour tracer le run.
-            AuditLog::create([
-                'company_id' => $payrollRun->company_id,
-                'user_id' => $actor->id,
-                'action' => 'placeholder_warning_acknowledged',
-                'auditable_type' => 'App\\Modules\\Payroll\\Infrastructure\\Services\\CountryRules\\CountryRulesResolver',
-                'auditable_id' => 0,
-                'old_values' => [],
-                'new_values' => [
-                    'country_code' => $payrollRun->country_code,
-                    'rules_identifier' => (new \ReflectionClass($rules))->getShortName(),
-                    'confidence_level' => 'placeholder',
-                    'context' => 'payroll_run_calculate',
-                    'run_id' => $payrollRun->id,
+        } catch (PayrollPlaceholderAcknowledgementRequiredException $e) {
+            return response()->json([
+                'message' => __('payroll.placeholder_acknowledge_required', ['country' => $e->countryCode]),
+                'errors' => [
+                    'acknowledge_placeholder' => [__('payroll.placeholder_acknowledge_required', ['country' => $e->countryCode])],
                 ],
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
-        }
-
-        $payrollRun->update(['status' => 'calculating']);
-
-        try {
-            $run = $this->calculator->calculateRun($payrollRun);
-        } catch (\Throwable $e) {
-            // Issue #2221 : un échec de calcul ne doit jamais laisser le run
-            // bloqué en `calculating` (recalcul refusé à vie par la garde
-            // ci-dessus). On restaure `draft` et on journalise le détail.
-            $payrollRun->update(['status' => PayrollRun::STATUS_DRAFT]);
+            ], 422);
+        } catch (PayrollRunCalculationFailedException $e) {
             Log::error('payroll.run.calculation_failed', [
                 'run_id' => $payrollRun->id,
                 'company_id' => $payrollRun->company_id,
@@ -275,14 +243,7 @@ class PayrollRunController extends Controller
             return response()->json([
                 'message' => __('payroll.calculation_failed'),
             ], 422);
-        }
-
-        // Issue #1767 : un calcul à 0 bulletin (ex. aucune structure salariale
-        // active pour ce pays) ne doit pas réussir en silence — sinon le run
-        // peut être validé/verrouillé à vide (clôture comptable à zéro).
-        if ((int) $run->employee_count === 0) {
-            $run->update(['status' => PayrollRun::STATUS_DRAFT]);
-
+        } catch (PayrollRunZeroSlipsException) {
             return response()->json([
                 'message' => __('payroll.zero_slips_generated'),
             ], 422);
@@ -363,9 +324,10 @@ class PayrollRunController extends Controller
             return response()->json(['message' => __('errors.PAYROLL_RUN_CANCEL_NOT_ALLOWED')], 422);
         }
 
-        $payrollRun->update(['status' => 'cancelled']);
+        // Cas d'usage nommable (ADR-0020, lot 1b #6968).
+        $payrollRun = $this->cancelAction->execute($payrollRun);
 
-        return (new PayrollRunResource($payrollRun->refresh()))->response();
+        return (new PayrollRunResource($payrollRun))->response();
     }
 
     /**
