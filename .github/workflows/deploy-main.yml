@@ -392,7 +392,8 @@ jobs:
           # déclencheur (re-run d'un SHA déjà live).
           baseline="${LIVE_BASELINE_VERSION:-unknown}"
           expected_sha="${DEPLOY_SHA:0:7}"
-          echo "Baseline=${baseline} — deploy SHA=${DEPLOY_SHA} (${expected_sha}) — APP_VERSION=${APP_VERSION:-n/a}"
+          expected_version="$(echo "${APP_VERSION}" | tr -d '[:space:]')"
+          echo "Baseline=${baseline} — deploy SHA=${DEPLOY_SHA} (${expected_sha}) — APP_VERSION=${expected_version:-n/a}"
 
           for attempt in {1..60}; do
             main_sha7="$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main 2>/dev/null | awk '{print substr($1,1,7)}' || true)"
@@ -402,13 +403,14 @@ jobs:
               uptime="$(echo "${body}" | sed -n 's/.*"uptime_seconds":\([0-9]*\).*/\1/p' || echo 0)"
               echo "  [${attempt}/60] instance version=${version:-inconnue} (main=${main_sha7:-?}, baseline=${baseline}, uptime=${uptime}s)"
               if [[ -n "${version}" && ( "${version}" == "${expected_sha}" \
+                || ( -n "${expected_version}" && "${version}" == "${expected_version}" ) \
                 || ( "${version}" != "${baseline}" && "${version}" == "${main_sha7}" ) ) ]]; then
                 echo "Render dev deployment healthy — nouvelle instance live : ${version} (SHA déclencheur : ${expected_sha})."
                 {
                   echo "## Déploiement Render dev vérifié"
                   echo "- **SHA live** : \`${version}\` (SHA déclencheur : \`${expected_sha}\`)"
                   echo "- **Baseline avant hook** : \`${baseline}\`"
-                  echo "- **APP_VERSION** : \`${APP_VERSION:-n/a}\`"
+                  echo "- **APP_VERSION** : \`${expected_version:-n/a}\`"
                 } >> "$GITHUB_STEP_SUMMARY"
                 exit 0
               fi
