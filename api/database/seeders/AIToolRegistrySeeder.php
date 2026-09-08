@@ -148,6 +148,27 @@ class AIToolRegistrySeeder extends Seeder
                 'required_role' => 'manager',
                 'module' => 'rh',
             ],
+            // B3a (#6856) — outil écriture BC-06 LEAVE déclaré au contrat A3
+            // (#6850). `parameters` aligné sur l'inputSchema du catalogue
+            // Absence (AbsenceDecisionToolCatalog) ; exécution après
+            // confirmation (flux A4) via WriteActionRunner → Actions
+            // canoniques Planning (ApproveAbsence/RejectAbsence).
+            [
+                'name' => 'absence_decision',
+                'description' => 'Approve or reject a pending absence request (manager, confirmation required before execution).',
+                'parameters' => json_encode([
+                    'type' => 'object',
+                    'properties' => [
+                        'absence_id' => ['type' => 'integer', 'description' => 'The absence request ID'],
+                        'decision' => ['type' => 'string', 'enum' => ['approve', 'reject'], 'description' => "Decision: 'approve' or 'reject'"],
+                        'reason' => ['type' => 'string', 'description' => 'Rejection reason — required when decision=reject'],
+                    ],
+                    'required' => ['absence_id', 'decision'],
+                ]),
+                'required_permissions' => '["absences.approve"]',
+                'required_role' => 'manager',
+                'module' => 'rh',
+            ],
             [
                 'name' => 'get_daily_summary',
                 'description' => 'Get daily summary for an employee (attendance, tasks, estimations).',
