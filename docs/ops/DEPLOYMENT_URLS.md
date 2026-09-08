@@ -18,7 +18,7 @@
 
 > ⚠️ `https://leopardo.vercel.app` répond aussi HTTP 200 (2026-09-05) —
 > projet Vercel distinct à clarifier/rationaliser avec
-> `gestionemployer-backend.vercel.app` (la variable `PROD_WEB_URL` désigne
+> `gestionemployer-backend.vercel.app` (la variable `DEV_WEB_URL` désigne
 > ce dernier comme web dev de référence).
 
 ## Services Render (backend)

@@ -39,7 +39,7 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  DEFAULT_API_BASE_URL: ${{ vars.PROD_API_BASE_URL }}
+  DEFAULT_API_BASE_URL: ${{ vars.DEV_API_BASE_URL }}
 
 jobs:
   distribute-mobile:
@@ -88,14 +88,14 @@ jobs:
             android_package: com.leopardo.rh
 
     steps:
-      - name: Guard PROD_API_BASE_URL (#4524)
+      - name: Guard DEV_API_BASE_URL (#4524)
         shell: bash
         run: |
-          if [[ -z "${{ vars.PROD_API_BASE_URL }}" ]]; then
-            echo "::error::PROD_API_BASE_URL must be set (fail-open fallback removed, issue #4524)."
+          if [[ -z "${{ vars.DEV_API_BASE_URL }}" ]]; then
+            echo "::error::DEV_API_BASE_URL must be set (fail-open fallback removed, issue #4524)."
             exit 1
           fi
-          echo "PROD_API_BASE_URL=${{ vars.PROD_API_BASE_URL }}"
+          echo "DEV_API_BASE_URL=${{ vars.DEV_API_BASE_URL }}"
 
       # Security note (CodeQL actions/untrusted-checkout fix):
       # `github.sha` here is always the verified commit on the protected `main` branch —
@@ -197,7 +197,7 @@ jobs:
             Build: ${{ matrix.app.version_prefix }}-main-${{ github.run_number }}
             Commit: ${{ github.sha }}
             Workflow: ${{ github.workflow }}
-            Backend: ${{ vars.PROD_API_BASE_URL }}
+            Backend: ${{ vars.DEV_API_BASE_URL }}
 
       - name: Verify Firebase App Distribution release is visible
         if: env.MOBILE_DISTRIBUTE_READY == 'true' && env.SHOULD_BUILD == 'true'
