@@ -22317,6 +22317,162 @@ paths:
           $ref: '#/components/responses/Error401'
         '404':
           description: Lead introuvable
+  /crm/leads:
+    get:
+      tags:
+      - CRM
+      summary: Liste paginée des leads du tenant (répertoire client web)
+      description: "Contrat #5712/#6977 — leads non convertis du tenant courant, consommé par le dashboard client (`/crm/leads`). Lecture : managers du tenant (api.manager)."
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          maximum: 100
+          default: 25
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: Liste paginée de leads
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CrmLead'
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                      last_page:
+                        type: integer
+  /crm/accounts:
+    get:
+      tags:
+      - CRM
+      summary: Liste paginée des comptes du tenant (répertoire client web)
+      description: "Contrat #5712/#6977 — comptes actifs (non archivés) du tenant courant, consommé par le dashboard client (`/crm/accounts`). Lecture : managers du tenant (api.manager)."
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          maximum: 100
+          default: 25
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: Liste paginée de comptes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CrmAccount'
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                      last_page:
+                        type: integer
+  /crm/contacts:
+    get:
+      tags:
+      - CRM
+      summary: Liste paginée des contacts du tenant (répertoire client web)
+      description: "Contrat #5712/#6977 — contacts actifs (non archivés) du tenant courant avec compte parent minimal, consommé par le dashboard client (`/crm/contacts`). Lecture : managers du tenant (api.manager)."
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          maximum: 100
+          default: 25
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: Liste paginée de contacts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CrmContact'
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                      last_page:
+                        type: integer
+  /crm/opportunities:
+    get:
+      tags:
+      - CRM
+      summary: Liste paginée des opportunités du tenant (pipeline client web)
+      description: "Contrat #5712/#6977 — opportunités du tenant courant, consommé par le dashboard client (`/crm/pipeline`, kanban par stage). Lecture : managers du tenant (api.manager)."
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          maximum: 100
+          default: 100
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: Liste paginée d'opportunités
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CrmOpportunity'
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                      last_page:
+                        type: integer
   /crm/leads/{crmLead}/convert:
     post:
       tags:
@@ -33943,6 +34099,62 @@ components:
         created_at:
           type: string
           format: date-time
+
+    CrmAccount:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        status:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        owner_id:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+    CrmContact:
+      type: object
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        account_id:
+          type: integer
+          nullable: true
+        account:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
     CrmOpportunity:
       type: object
       properties:

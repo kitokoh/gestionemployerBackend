@@ -15,21 +15,22 @@ declare(strict_types=1);
  * #3727).
  */
 
-use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmCampaignController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmAutomationController;
+use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmCampaignController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmChannelController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmConsentController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmDashboardController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmDedupController;
-use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmExportController;
+use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmDirectoryController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmEmailController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmEmailWebhookController;
+use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmExportController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmImportController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmLeadController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmSearchController;
+use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmSegmentController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmTaskController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmTimelineController;
-use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmSegmentController;
 use App\Modules\CRM\Interfaces\Api\V1\Controllers\CrmWhatsAppWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,7 +51,7 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'token.refresh', 'tenant', 't
         Route::get('/channels/{channel}/messages', [CrmChannelController::class, 'messages']);
         Route::get('/channels/{channel}/conversations', [CrmChannelController::class, 'conversations']);
         Route::get('/channels/{channel}/observability', [CrmChannelController::class, 'observability']);
-    // ── Automatisations CRM (#5728) ─────────────────────────────────────────
+        // ── Automatisations CRM (#5728) ─────────────────────────────────────────
         Route::get('/automations', [CrmAutomationController::class, 'index']);
         Route::post('/automations', [CrmAutomationController::class, 'store']);
         Route::get('/automations/{automation}', [CrmAutomationController::class, 'show']);
@@ -109,6 +110,16 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'token.refresh', 'tenant', 't
         Route::post('/campaigns/{campaign}/finish', [CrmCampaignController::class, 'finish'])->whereNumber('campaign');
     });
 
+    // ── Répertoire CRM — listes paginées tenant (#5712/#6977) ────────────────
+    // Consommées par le dashboard client web (`/crm/leads|accounts|contacts|
+    // pipeline`) ; lecture = managers du tenant (RBAC ADR-CRM-002).
+    Route::middleware('api.manager')->group(function (): void {
+        Route::get('/leads', [CrmDirectoryController::class, 'leads']);
+        Route::get('/accounts', [CrmDirectoryController::class, 'accounts']);
+        Route::get('/contacts', [CrmDirectoryController::class, 'contacts']);
+        Route::get('/opportunities', [CrmDirectoryController::class, 'opportunities']);
+    });
+
     // ── Consentements et préférences de communication (#5722) ───────────────
     Route::middleware('api.manager')->group(function (): void {
         Route::get('/consents', [CrmConsentController::class, 'index']);
@@ -136,19 +147,18 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'token.refresh', 'tenant', 't
     // ── Recherche tenant-scoped accounts/contacts (#5719) ─────────────────────
     Route::get('/search', [CrmSearchController::class, 'index']);
     // ── Dashboard pipeline & qualité (#5721) ────────────────────────────────
-        Route::get('/dashboard/pipeline', [CrmDashboardController::class, 'pipeline']);
-        Route::get('/dashboard/quality', [CrmDashboardController::class, 'quality']);
+    Route::get('/dashboard/pipeline', [CrmDashboardController::class, 'pipeline']);
+    Route::get('/dashboard/quality', [CrmDashboardController::class, 'quality']);
 
     // ── Tâches, timeline (#5720) ──────────────────────────────────────────────
-        Route::get('/tasks', [CrmTaskController::class, 'index']);
-        Route::post('/tasks', [CrmTaskController::class, 'store']);
-        Route::get('/tasks/{task}', [CrmTaskController::class, 'show'])->whereNumber('task');
-        Route::patch('/tasks/{task}', [CrmTaskController::class, 'update'])->whereNumber('task');
-        Route::post('/tasks/{task}/complete', [CrmTaskController::class, 'complete'])->whereNumber('task');
-        Route::post('/tasks/{task}/reopen', [CrmTaskController::class, 'reopen'])->whereNumber('task');
-        Route::delete('/tasks/{task}', [CrmTaskController::class, 'destroy'])->whereNumber('task');
-        Route::get('/accounts/{account}/timeline', [CrmTimelineController::class, 'index'])->whereNumber('account');
-
+    Route::get('/tasks', [CrmTaskController::class, 'index']);
+    Route::post('/tasks', [CrmTaskController::class, 'store']);
+    Route::get('/tasks/{task}', [CrmTaskController::class, 'show'])->whereNumber('task');
+    Route::patch('/tasks/{task}', [CrmTaskController::class, 'update'])->whereNumber('task');
+    Route::post('/tasks/{task}/complete', [CrmTaskController::class, 'complete'])->whereNumber('task');
+    Route::post('/tasks/{task}/reopen', [CrmTaskController::class, 'reopen'])->whereNumber('task');
+    Route::delete('/tasks/{task}', [CrmTaskController::class, 'destroy'])->whereNumber('task');
+    Route::get('/accounts/{account}/timeline', [CrmTimelineController::class, 'index'])->whereNumber('account');
 
 });
 
