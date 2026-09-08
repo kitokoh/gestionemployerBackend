@@ -30,18 +30,23 @@ class GenerateCnssMaDeclaration
         private readonly SocialDeclarationService $declarations,
     ) {}
 
+    /**
+     * @return array{content: string, employee_count: int, filename: string}
+     */
     public function execute(Employee $actor, string $quarter, int $year): array
     {
         $employees = $this->declarations->activeEmployees((string) $actor->company_id);
 
         $quarterMonths = $this->declarations->quarterMonths($quarter);
 
+        /** @var \Illuminate\Support\Collection<int, object{total_gross?: int|float|string|null}> $payrollData */
         $payrollData = $this->declarations->quarterPayrollData(
             (string) $actor->company_id,
             $year,
             $quarterMonths,
         );
 
+        /** @var \Illuminate\Support\Collection<int, object{days_worked?: int|string|null}> $attendanceData */
         $attendanceData = DB::table('attendance_logs')
             ->where('company_id', $actor->company_id)
             ->whereYear('check_in', $year)
@@ -56,14 +61,15 @@ class GenerateCnssMaDeclaration
 
         $company = Company::query()->whereKey($actor->company_id)->first();
 
-        $companyName = $company?->name ?? 'N/A';
+        $companyName = $company->name ?? 'N/A';
         $companyAffiliate = $this->companyRegistrationNumber($company);
 
         $declarationRows = $employees->map(function ($emp) use ($payrollData, $attendanceData): array {
             $payroll = $payrollData->get($emp->id);
             $attendance = $attendanceData->get($emp->id);
 
-            return [
+            /** @var array{employee_id: int, num_cnss: string, last_name: string, first_name: string, cin: string, gross_salary: float, days_worked: int} $row */
+            $row = [
                 'employee_id' => (int) $emp->id,
                 'num_cnss' => (string) ($emp->national_id ?? ''),
                 'last_name' => (string) ($emp->last_name ?? ''),
@@ -72,6 +78,8 @@ class GenerateCnssMaDeclaration
                 'gross_salary' => (float) ($payroll->total_gross ?? 0),
                 'days_worked' => (int) ($attendance->days_worked ?? 0),
             ];
+
+            return $row;
         })->filter(fn (array $row): bool => $row['gross_salary'] > 0);
 
         $generator = new SocialDeclarationGenerator;
@@ -83,11 +91,14 @@ class GenerateCnssMaDeclaration
             $declarationRows->values(),
         );
 
-        return [
+        /** @var array{content: string, employee_count: int, filename: string} $result */
+        $result = [
             'content' => $content,
             'employee_count' => $declarationRows->count(),
             'filename' => sprintf('CNSS_MA_%s_%d_%s.txt', $quarter, $year, now()->format('Ymd')),
         ];
+
+        return $result;
     }
 
     private function companyRegistrationNumber(?Company $company): string
@@ -96,14 +107,12 @@ class GenerateCnssMaDeclaration
             return '';
         }
 
-        $metadata = $company->metadata ?? [];
+        $candidate = $company->metadata['tax_id']
+            ?? $company->metadata['nis']
+            ?? $company->metadata['affiliate_number']
+            ?? $company->metadata['siret']
+            ?? '';
 
-        return (string) (
-            $metadata['tax_id']
-            ?? $metadata['nis']
-            ?? $metadata['affiliate_number']
-            ?? $metadata['siret']
-            ?? ''
-        );
+        return is_scalar($candidate) ? (string) $candidate : '';
     }
 }

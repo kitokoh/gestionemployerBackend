@@ -29,10 +29,14 @@ class GenerateDsnFrDeclaration
         private readonly SocialDeclarationService $declarations,
     ) {}
 
+    /**
+     * @return array{content: string, employee_count: int, filename: string}
+     */
     public function execute(Employee $actor, int $month, int $year): array
     {
         $employees = $this->declarations->activeEmployees((string) $actor->company_id);
 
+        /** @var \Illuminate\Support\Collection<int, object{total_gross?: int|float|string|null, total_net?: int|float|string|null}> $payrollData */
         $payrollData = $this->declarations->monthPayrollData(
             (string) $actor->company_id,
             $year,
@@ -41,13 +45,14 @@ class GenerateDsnFrDeclaration
 
         $company = Company::query()->whereKey($actor->company_id)->first();
 
-        $companyName = $company?->name ?? 'N/A';
+        $companyName = $company->name ?? 'N/A';
         $companySiret = $this->companyRegistrationNumber($company);
 
         $declarationRows = $employees->map(function ($emp) use ($payrollData): array {
             $payroll = $payrollData->get($emp->id);
 
-            return [
+            /** @var array{employee_id: int, nir: string, last_name: string, first_name: string, date_naissance: string, gross_salary: float, net_salary: float, net_imposable?: float, hours_worked?: float, contract_type: string, start_date: string} $row */
+            $row = [
                 'employee_id' => (int) $emp->id,
                 'nir' => (string) ($emp->national_id ?? ''),
                 'last_name' => (string) ($emp->last_name ?? ''),
@@ -60,6 +65,8 @@ class GenerateDsnFrDeclaration
                 'contract_type' => (string) ($emp->contract_type ?? 'CDI'),
                 'start_date' => $this->dateValue($emp->contract_start ?? null),
             ];
+
+            return $row;
         })->filter(fn (array $row): bool => $row['gross_salary'] > 0);
 
         $generator = new SocialDeclarationGenerator;
@@ -71,11 +78,14 @@ class GenerateDsnFrDeclaration
             $declarationRows->values(),
         );
 
-        return [
+        /** @var array{content: string, employee_count: int, filename: string} $result */
+        $result = [
             'content' => $content,
             'employee_count' => $declarationRows->count(),
             'filename' => sprintf('DSN_FR_%02d_%d_%s.dsn', $month, $year, now()->format('Ymd')),
         ];
+
+        return $result;
     }
 
     private function companyRegistrationNumber(?Company $company): string
@@ -84,15 +94,13 @@ class GenerateDsnFrDeclaration
             return '';
         }
 
-        $metadata = $company->metadata ?? [];
+        $candidate = $company->metadata['tax_id']
+            ?? $company->metadata['nis']
+            ?? $company->metadata['affiliate_number']
+            ?? $company->metadata['siret']
+            ?? '';
 
-        return (string) (
-            $metadata['tax_id']
-            ?? $metadata['nis']
-            ?? $metadata['affiliate_number']
-            ?? $metadata['siret']
-            ?? ''
-        );
+        return is_scalar($candidate) ? (string) $candidate : '';
     }
 
     private function dateValue(mixed $value): string
@@ -101,6 +109,6 @@ class GenerateDsnFrDeclaration
             return $value->format('Y-m-d');
         }
 
-        return $value === null ? '' : (string) $value;
+        return is_scalar($value) ? (string) $value : '';
     }
 }
