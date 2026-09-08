@@ -166,9 +166,13 @@ class AIToolExecutionAuditTest extends TestCase
             ->orderBy('id')
             ->get();
         $this->assertCount(2, $chain);
-        $this->assertSame('confirmation_required', $chain[0]->stage);
-        $this->assertSame('executed', $chain[1]->stage);
-        $this->assertSame($conversationId, (int) $chain[0]->conversation_id);
+        $proposalRow = $chain[0] ?? null;
+        $executionRow = $chain[1] ?? null;
+        $this->assertNotNull($proposalRow, 'La proposition doit être journalisée.');
+        $this->assertNotNull($executionRow, "L'exécution confirmée doit être journalisée.");
+        $this->assertSame('confirmation_required', $proposalRow->stage);
+        $this->assertSame('executed', $executionRow->stage);
+        $this->assertSame($conversationId, (int) $proposalRow->conversation_id);
     }
 
     public function test_rejected_write_is_logged_without_business_effect(): void
