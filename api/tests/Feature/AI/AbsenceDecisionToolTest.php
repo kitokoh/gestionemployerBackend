@@ -346,26 +346,30 @@ class AbsenceDecisionToolTest extends TestCase
      * La fixture mvp (CreatesMvpSchema) ne crée pas `leave_balances` (table du
      * domaine congé ajoutée par les vraies migrations tenant) — elle est créée
      * ici à l'identique de la migration canonique pour le seul test qui exerce
-     * la déduction de solde (sans FK, parité fixture).
+     * la déduction de solde (sans FK, parité fixture). Comme cette table
+     * n'appartient pas au périmètre de reset de la fixture, elle est purgée à
+     * chaque setUp : les identifiants rejoués d'un run à l'autre ne doivent
+     * jamais entrer en collision avec la contrainte unique
+     * (employee_id, absence_type_id, year).
      */
     private function ensureLeaveBalancesTable(): void
     {
-        if (Schema::hasTable('leave_balances')) {
-            return;
+        if (! Schema::hasTable('leave_balances')) {
+            Schema::create('leave_balances', function (Blueprint $table) {
+                $table->id();
+                $table->uuid('company_id')->index();
+                $table->unsignedInteger('employee_id');
+                $table->unsignedInteger('absence_type_id');
+                $table->decimal('balance', 6, 2)->default(0);
+                $table->decimal('used', 6, 2)->default(0);
+                $table->decimal('pending', 6, 2)->default(0);
+                $table->unsignedSmallInteger('year');
+                $table->timestampTz('updated_at')->useCurrent();
+
+                $table->unique(['employee_id', 'absence_type_id', 'year']);
+            });
         }
 
-        Schema::create('leave_balances', function (Blueprint $table) {
-            $table->id();
-            $table->uuid('company_id')->index();
-            $table->unsignedInteger('employee_id');
-            $table->unsignedInteger('absence_type_id');
-            $table->decimal('balance', 6, 2)->default(0);
-            $table->decimal('used', 6, 2)->default(0);
-            $table->decimal('pending', 6, 2)->default(0);
-            $table->unsignedSmallInteger('year');
-            $table->timestampTz('updated_at')->useCurrent();
-
-            $table->unique(['employee_id', 'absence_type_id', 'year']);
-        });
+        \Illuminate\Support\Facades\DB::table('leave_balances')->delete();
     }
 }
