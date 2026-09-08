@@ -6,24 +6,20 @@ namespace App\Modules\Payroll\Interfaces\Api\V1\Controllers;
 
 use App\Core\Auth\Domain\Models\Employee;
 use App\Http\Controllers\Controller;
-use App\Jobs\GeneratePaymentDocumentJob;
 use App\Modules\Payroll\Application\Actions\ConfirmPaymentItemReception;
 use App\Modules\Payroll\Application\Actions\CreatePaymentBatch;
-use App\Modules\Payroll\Domain\Models\LedgerEntry;
+use App\Modules\Payroll\Application\Actions\MarkPaymentBatchPaid;
 use App\Modules\Payroll\Domain\Models\PaymentBatch;
 use App\Modules\Payroll\Domain\Models\PaymentItem;
-use App\Modules\Payroll\Infrastructure\Services\LedgerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class PaymentBatchController extends Controller
 {
     public function __construct(
-        private readonly LedgerService $ledgerService,
         private readonly CreatePaymentBatch $createBatch,
         private readonly ConfirmPaymentItemReception $confirmReception,
+        private readonly MarkPaymentBatchPaid $markBatchPaid,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -89,51 +85,10 @@ class PaymentBatchController extends Controller
         $actor = $request->user();
         $this->ensureBatchCompany($paymentBatch, $actor);
 
-        if (! in_array($paymentBatch->status, [PaymentBatch::STATUS_DRAFT, PaymentBatch::STATUS_PROCESSING], true)) {
-            throw ValidationException::withMessages([
-                'status' => ['Ce lot de paiement ne peut plus etre marque comme paye.'],
-            ]);
-        }
-
-        $batch = DB::transaction(function () use ($paymentBatch, $actor): PaymentBatch {
-            $paymentBatch->forceFill([
-                'status' => PaymentBatch::STATUS_PAID,
-                'marked_paid_by' => $actor->id,
-                'marked_paid_at' => now(),
-            ])->save();
-
-            PaymentItem::query()
-                ->where('payment_batch_id', $paymentBatch->id)
-                ->where('company_id', $actor->company_id)
-                ->update([
-                    'status' => PaymentItem::STATUS_PAID,
-                    'paid_at' => now(),
-                ]);
-
-            return $paymentBatch->fresh(['items.paySlip', 'items.employee']);
-        });
-
-        foreach ($batch->items as $item) {
-            $document = null;
-            if ($item->pay_slip_id && $item->paySlip) {
-                $document = GeneratePaymentDocumentJob::dispatchForPaySlip($item->paySlip, $actor->id);
-            }
-
-            /** @var Employee|null $itemEmployee */
-            $itemEmployee = $item->employee ?? Employee::query()->find($item->employee_id);
-            if ($itemEmployee !== null) {
-                $this->ledgerService->record(
-                    employee: $itemEmployee,
-                    entryType: LedgerEntry::TYPE_PAYMENT,
-                    amount: abs((float) $item->amount),
-                    description: 'Bulk payment batch #'.$batch->id,
-                    source: $item,
-                    paymentDocumentId: $document?->id,
-                    createdBy: $actor->id,
-                    currency: $item->currency,
-                );
-            }
-        }
+        // Cas d'usage nommable (ADR-0020, lot 4 paiements #6968) : garde de
+        // statut + transaction (batch→paid, items→paid) + documents de
+        // paiement + écritures de ledger dans MarkPaymentBatchPaid.
+        $batch = $this->markBatchPaid->execute($actor, $paymentBatch);
 
         return response()->json([
             'data' => $this->batchPayload($batch, includeItems: true),
