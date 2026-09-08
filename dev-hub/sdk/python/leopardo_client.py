@@ -1196,70 +1196,6 @@ class LeopardoClient:
         """Rejeter un evenement de carriere (pending → rejected)"""
         return self.request("PUT", "/career-events/{careerEvent}/reject", **kwargs)
 
-    def get_catalog_categories(self, **kwargs):
-        """Lister les categories du catalogue (membres du tenant)"""
-        return self.request("GET", "/catalog/categories", **kwargs)
-
-    def post_catalog_categories(self, **kwargs):
-        """Creer une categorie (gestion principal/rh)"""
-        return self.request("POST", "/catalog/categories", **kwargs)
-
-    def delete_catalog_categories_by_category(self, **kwargs):
-        """Supprimer une categorie (gestion principal/rh)"""
-        return self.request("DELETE", "/catalog/categories/{category}", **kwargs)
-
-    def get_catalog_categories_by_category(self, **kwargs):
-        """Detail d'une categorie (membres du tenant)"""
-        return self.request("GET", "/catalog/categories/{category}", **kwargs)
-
-    def put_catalog_categories_by_category(self, **kwargs):
-        """Mettre a jour une categorie (gestion principal/rh)"""
-        return self.request("PUT", "/catalog/categories/{category}", **kwargs)
-
-    def get_catalog_inquiries(self, **kwargs):
-        """Lister les demandes de devis B2B du tenant (back-office)"""
-        return self.request("GET", "/catalog/inquiries", **kwargs)
-
-    def delete_catalog_inquiries_by_inquiry(self, **kwargs):
-        """Effacer une demande de devis (droit RGPD, canal tenant)"""
-        return self.request("DELETE", "/catalog/inquiries/{inquiry}", **kwargs)
-
-    def patch_catalog_inquiries_by_inquiry_status(self, **kwargs):
-        """Transition de statut d'une demande de devis (back-office)"""
-        return self.request("PATCH", "/catalog/inquiries/{inquiry}/status", **kwargs)
-
-    def get_catalog_inquiries_export(self, **kwargs):
-        """Exporter les demandes de devis B2B en CSV (back-office)"""
-        return self.request("GET", "/catalog/inquiries/export", **kwargs)
-
-    def get_catalog_products(self, **kwargs):
-        """Lister les produits du catalogue (membres du tenant)"""
-        return self.request("GET", "/catalog/products", **kwargs)
-
-    def post_catalog_products(self, **kwargs):
-        """Creer un produit (gestion principal/rh)"""
-        return self.request("POST", "/catalog/products", **kwargs)
-
-    def delete_catalog_products_by_product(self, **kwargs):
-        """Supprimer un produit (gestion principal/rh)"""
-        return self.request("DELETE", "/catalog/products/{product}", **kwargs)
-
-    def get_catalog_products_by_product(self, **kwargs):
-        """Detail d'un produit (membres du tenant)"""
-        return self.request("GET", "/catalog/products/{product}", **kwargs)
-
-    def put_catalog_products_by_product(self, **kwargs):
-        """Mettre a jour un produit (gestion principal/rh)"""
-        return self.request("PUT", "/catalog/products/{product}", **kwargs)
-
-    def post_catalog_products_by_product_publish(self, **kwargs):
-        """Publier un produit (statut published)"""
-        return self.request("POST", "/catalog/products/{product}/publish", **kwargs)
-
-    def post_catalog_products_by_product_unpublish(self, **kwargs):
-        """Depublier un produit (statut draft)"""
-        return self.request("POST", "/catalog/products/{product}/unpublish", **kwargs)
-
     def post_client_events(self, **kwargs):
         """Persister un evenement UX client tenant-scope"""
         return self.request("POST", "/client-events", **kwargs)
@@ -3136,17 +3072,9 @@ class LeopardoClient:
         """Postuler à une offre publique (anti-doublon par email, #3860)"""
         return self.request("POST", "/public/careers/{companySlug}/jobs/{jobPosting}/apply", **kwargs)
 
-    def get_public_catalog_by_companyslug(self, **kwargs):
-        """Catalogue public d'un tenant (categories + produits publies, sans auth)"""
-        return self.request("GET", "/public/catalog/{companySlug}", **kwargs)
-
-    def post_public_catalog_by_companyslug_inquiries(self, **kwargs):
-        """Demander un devis B2B (formulaire public, sans auth)"""
-        return self.request("POST", "/public/catalog/{companySlug}/inquiries", **kwargs)
-
-    def get_public_catalog_by_companyslug_products_by_productslug(self, **kwargs):
-        """Fiche publique d'un produit publie (sans auth)"""
-        return self.request("GET", "/public/catalog/{companySlug}/products/{productSlug}", **kwargs)
+    def get_public_vitrine_by_slug(self, **kwargs):
+        """Vitrine publique d'un tenant (BC-27 #6867)"""
+        return self.request("GET", "/public/vitrine/{slug}", **kwargs)
 
     def post_push_notifications_send(self, **kwargs):
         """Envoyer une notification push de test a un employe"""
@@ -3387,6 +3315,34 @@ class LeopardoClient:
     def post_schedules_by_schedule_assign_employees(self, **kwargs):
         """Affecter un horaire/regle entreprise a des employes"""
         return self.request("POST", "/schedules/{schedule}/assign-employees", **kwargs)
+
+    def get_showcase(self, **kwargs):
+        """Vitrine du tenant courant (gestion)"""
+        return self.request("GET", "/showcase", **kwargs)
+
+    def post_showcase(self, **kwargs):
+        """Creation 1-clic de la vitrine (US1)"""
+        return self.request("POST", "/showcase", **kwargs)
+
+    def get_showcase_sections(self, **kwargs):
+        """Liste ordonnee des sections de la vitrine (BC-27 #6866)"""
+        return self.request("GET", "/showcase/sections", **kwargs)
+
+    def post_showcase_sections(self, **kwargs):
+        """Ajout d'une section (content valide par JSON Schema du type)"""
+        return self.request("POST", "/showcase/sections", **kwargs)
+
+    def delete_showcase_sections_by_section(self, **kwargs):
+        """Suppression d'une section"""
+        return self.request("DELETE", "/showcase/sections/{section}", **kwargs)
+
+    def patch_showcase_sections_by_section(self, **kwargs):
+        """Mise a jour d'une section (PATCH partiel type et/ou content)"""
+        return self.request("PATCH", "/showcase/sections/{section}", **kwargs)
+
+    def post_showcase_sections_reorder(self, **kwargs):
+        """Reordonnancement complet des sections (ids = ordre cible)"""
+        return self.request("POST", "/showcase/sections/reorder", **kwargs)
 
     def get_sites(self, **kwargs):
         """Lister les sites"""
