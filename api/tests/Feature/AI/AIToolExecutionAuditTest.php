@@ -122,6 +122,21 @@ class AIToolExecutionAuditTest extends TestCase
             'source' => 'assistant',
         ]);
 
+        // Sanitisation A5/A6 : les dates ISO et l'UUID (faux positifs de la
+        // règle « téléphone ») ne sont PAS masqués — le journal reste
+        // exploitable ; tool_input est stocké en JSON.
+        $proposal = DB::table('ai_tool_executions')
+            ->where('company_id', $company->id)
+            ->where('pending_action_id', $pendingId)
+            ->first();
+        $this->assertNotNull($proposal);
+        $input = json_decode((string) $proposal->tool_input, true);
+        $this->assertIsArray($input);
+        $this->assertSame('2026-06-10', $input['start_date'] ?? null);
+        $this->assertSame('2026-06-12', $input['end_date'] ?? null);
+        $this->assertStringContainsString('2026-06-10', (string) $proposal->result_summary);
+        $this->assertStringNotContainsString('[téléphone]', (string) $proposal->result_summary);
+
         // 2. Confirmation humaine → exécution, reliée au même pending_action_id.
         $this->postJson("/api/v1/ai/actions/{$pendingId}/confirm")
             ->assertOk()
