@@ -57,6 +57,24 @@ class SimulateCotisations
         private readonly PayrollCalculationAuditRecorder $auditRecorder,
     ) {}
 
+    /**
+     * @return array{
+     *     gross: float,
+     *     country_code: string,
+     *     rules_meta: array{short_name: string, confidence: string},
+     *     employee_contributions: list<array{name: mixed, code: mixed, rate: mixed, cap: mixed, amount: float}>,
+     *     employer_contributions: list<array{name: mixed, code: mixed, rate: mixed, cap: mixed, amount: float}>,
+     *     total_employee_deduction: float|int,
+     *     total_employer_cost: float|int,
+     *     taxable_gross: float,
+     *     income_tax: float|int,
+     *     bracket_tax: float|int,
+     *     total_deductions: float,
+     *     net_before_tax: float,
+     *     net_salary: float|int,
+     *     total_cost_employer: float|int
+     * }
+     */
     public function execute(
         string $companyId,
         string $countryCode,
