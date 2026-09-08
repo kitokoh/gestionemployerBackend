@@ -135,11 +135,11 @@ jobs:
             -H "Authorization: Bearer ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/deploy-main.yml/dispatches" \
-            -d '{"ref":"main"}')"
+            -d '{"ref":"main","inputs":{"force_deploy":true}}')"
           echo "dispatch deploy-main → HTTP ${code}"
           [[ "${code}" == "204" ]] || { echo "::error::dispatch échoué (${code}) : $(cat /tmp/dispatch.json)"; exit 1; }
           {
             echo "## Rattrapage deploy-main déclenché"
             echo "- Dev en retard : SHA live ≠ HEAD de main."
-            echo "- deploy-main redéclenché sur \`main\` (tests HEAD verts)."
+            echo "- deploy-main redéclenché sur \`main\` (tests HEAD verts) avec \`force_deploy: true\` (bypass api_changed — #6973)."
           } >> "$GITHUB_STEP_SUMMARY"
