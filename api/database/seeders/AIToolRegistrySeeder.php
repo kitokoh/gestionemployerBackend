@@ -169,6 +169,26 @@ class AIToolRegistrySeeder extends Seeder
                 'required_role' => 'manager',
                 'module' => 'rh',
             ],
+            // B3b (#6857) — outil écriture BC-05 WORKFORCE déclaré au contrat
+            // A3 (#6850). `parameters` aligné sur l'inputSchema du catalogue
+            // Planning (ShiftAssignToolCatalog) ; exécution après confirmation
+            // (flux A4) via WriteActionRunner, parité
+            // ScheduleController::assignEmployees.
+            [
+                'name' => 'shift_assign',
+                'description' => 'Assign a shift (schedule) to an employee of the tenant (manager, confirmation required before execution).',
+                'parameters' => json_encode([
+                    'type' => 'object',
+                    'properties' => [
+                        'schedule_id' => ['type' => 'integer', 'description' => 'The schedule (shift) ID to assign'],
+                        'employee_id' => ['type' => 'integer', 'description' => 'The employee ID to assign'],
+                    ],
+                    'required' => ['schedule_id', 'employee_id'],
+                ]),
+                'required_permissions' => '["schedules.assign"]',
+                'required_role' => 'manager',
+                'module' => 'rh',
+            ],
             [
                 'name' => 'get_daily_summary',
                 'description' => 'Get daily summary for an employee (attendance, tasks, estimations).',

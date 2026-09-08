@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\AI;
 
 use App\Core\Auth\Domain\Models\Employee;
+use App\Core\Tenant\Infrastructure\Services\TenantCacheService;
 use App\Modules\Planning\Application\Actions\ApproveAbsence;
 use App\Modules\Planning\Application\Actions\RejectAbsence;
 use App\Modules\Planning\Domain\Exceptions\AbsenceNotPendingException;
 use App\Modules\Planning\Domain\Exceptions\InsufficientLeaveBalanceException;
 use App\Modules\Planning\Domain\Models\Absence;
 use App\Modules\Planning\Domain\Models\AbsenceType;
+use App\Modules\Planning\Domain\Models\Schedule;
 use Illuminate\Support\Carbon;
 
 class WriteActionRunner
@@ -22,6 +24,10 @@ class WriteActionRunner
         // que les endpoints REST du module façade Absence.
         private readonly ApproveAbsence $approveAbsence,
         private readonly RejectAbsence $rejectAbsence,
+        // B3b (#6857) — l'outil `shift_assign` invalide le cache employés du
+        // tenant après affectation (même service que
+        // ScheduleController::assignEmployees).
+        private readonly TenantCacheService $tenantCache,
     ) {}
 
     /**
@@ -35,6 +41,7 @@ class WriteActionRunner
             'create_absence',
             'approve_absence',
             'absence_decision',
+            'shift_assign',
         ];
     }
 
@@ -67,6 +74,9 @@ class WriteActionRunner
             // B3a (#6856) — décision (approbation/refus motivé) via les Actions
             // canoniques Planning, parité REST AbsenceController approve/reject.
             'absence_decision' => fn (array $arguments): array => $this->decideAbsence($companyId, $userId, $arguments),
+            // B3b (#6857) — affectation d'un shift (schedule) à un employé,
+            // parité ScheduleController::assignEmployees (BC-05 WORKFORCE).
+            'shift_assign' => fn (array $arguments): array => $this->assignShift($companyId, $userId, $arguments),
         ];
     }
 
@@ -161,6 +171,74 @@ class WriteActionRunner
         } catch (InsufficientLeaveBalanceException $exception) {
             return ['error' => $exception->errorCode(), 'message' => $exception->getMessage()];
         }
+    }
+
+    /**
+     * B3b (#6857) — affectation d'un shift (gabarit horaire `Schedule`) à un
+     * employé, exécutée APRÈS confirmation humaine (flux A4). Parité exacte
+     * avec l'endpoint REST canonique
+     * `POST /api/v1/schedules/{schedule}/assign-employees`
+     * (ScheduleController::assignEmployees, module Planning, BC-05 WORKFORCE) :
+     * manager du tenant uniquement (défense en profondeur par-dessus la
+     * matrice ai.tool_permissions) ; schedule et employé du tenant ; manager
+     * d'équipe (dept/superviseur) borné à son périmètre (`visibleToManager`,
+     * PA2-SEC-002/003) ; invalidation du cache employés après affectation.
+     *
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function assignShift(string $companyId, int $userId, array $arguments): array
+    {
+        /** @var Employee|null $actor */
+        $actor = Employee::query()
+            ->where('company_id', $companyId)
+            ->where('id', $userId)
+            ->first();
+
+        if ($actor === null) {
+            return ['error' => 'Employee not found'];
+        }
+
+        if (! $actor->isManager()) {
+            return ['error' => 'AI_TOOL_PERMISSION_DENIED', 'message' => 'Manager role required to assign shifts'];
+        }
+
+        $scheduleId = $this->intArgument($arguments, 'schedule_id', 0);
+        $schedule = Schedule::query()
+            ->where('company_id', $companyId)
+            ->where('id', $scheduleId)
+            ->first();
+
+        if ($schedule === null) {
+            return ['error' => 'Schedule not found'];
+        }
+
+        $employeeId = $this->intArgument($arguments, 'employee_id', 0);
+        $employee = Employee::query()
+            ->where('company_id', $companyId)
+            ->when($actor->isTeamScoped(), static fn ($query) => $query->visibleToManager($actor))
+            ->where('id', $employeeId)
+            ->first();
+
+        if ($employee === null) {
+            return [
+                'error' => 'Employee not found',
+                'message' => 'Only employees from the current company (and manager scope) can be assigned',
+            ];
+        }
+
+        $employee->update(['schedule_id' => $schedule->id]);
+
+        // Même invalidation de cache que le REST assignEmployees : les agrégats
+        // employés (par schedule) ne doivent pas servir une valeur périmée.
+        $this->tenantCache->invalidateEmployees((string) $companyId);
+
+        return [
+            'employee_id' => $employee->id,
+            'schedule_id' => $schedule->id,
+            'schedule_name' => $schedule->name,
+            'status' => 'assigned',
+        ];
     }
 
     /**
