@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Attendance;
 
-use App\Modules\Attendance\Domain\Models\AttendanceLog;
-use App\Core\Tenant\Domain\Models\Company;
 use App\Core\Auth\Domain\Models\Employee;
+use App\Core\Tenant\Domain\Models\Company;
+use App\Modules\Attendance\Domain\Models\AttendanceLog;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
@@ -64,8 +64,10 @@ class TodayAndHistoryTest extends TestCase
 
     public function test_today_endpoint_reports_checked_in_false_after_check_out(): void
     {
-        $company = Company::factory()->create();
+        /** @var Company $company */
+        $company = Company::factory()->create(['timezone' => 'UTC']);
 
+        /** @var Employee $employee */
         $employee = Employee::factory()->create([
             'company_id' => $company->id,
             'role' => 'employee',
@@ -330,4 +332,3 @@ class TodayAndHistoryTest extends TestCase
         $response->assertJsonValidationErrors(['employee_id']);
     }
 }
-
