@@ -11,6 +11,21 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    # #6973 (réouverte 2026-09-08) : sous rafale de merges, la gate interne
+    # trouve la conclusion du run Tests du SHA = « cancelled » → job deploy
+    # skippé ; et un HEAD de main sans diff api/ (ex. commit .github/docs)
+    # rend api_changed=false → le re-dispatch de rattrapage (#6984) est lui
+    # aussi skippé → boucle horaire sans fin, tier dev figé sur un vieux SHA.
+    # force_deploy permet à un déclenchement manuel ou au workflow de
+    # rattrapage de déployer le HEAD de main malgré ces deux faux négatifs
+    # (le code à déployer a déjà passé les checks requis de la PR AVANT le
+    # merge, et Render construit le HEAD de main : rien n'est déployé qui
+    # n'ait été testé). Chemin push : inchangé (aucun impact).
+    inputs:
+      force_deploy:
+        description: "Forcer le déploiement du HEAD de main (api_changed bypassé) — usage manuel/catchup uniquement"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -322,7 +337,11 @@ jobs:
     # des fichiers api/** (ou CI backend) ont changé. Un merge web/mobile/docs
     # ne doit plus déclencher un rebuild de l'API (et autoDeploy Render est à
     # passer à false — voir render.yaml).
-    if: needs.prepare.outputs.should_deploy == 'true' && needs.prepare.outputs.api_changed == 'true'
+    # #6973 : force_deploy (workflow_dispatch uniquement) bypass api_changed
+    # pour le rattrapage manuel/catchup quand le HEAD de main n'a pas de diff
+    # api/ mais que le tier dev est en retard (SHA live ≠ HEAD). En push,
+    # github.event.inputs.force_deploy est vide → comportement inchangé.
+    if: needs.prepare.outputs.should_deploy == 'true' && (needs.prepare.outputs.api_changed == 'true' || github.event.inputs.force_deploy == 'true')
     permissions:
       contents: read
 
