@@ -7,18 +7,14 @@ namespace App\Modules\Payroll\Interfaces\Api\V1\Controllers;
 use App\Core\Auth\Domain\Models\AuditLog;
 use App\Core\Auth\Domain\Models\Employee;
 use App\Http\Controllers\Controller;
-use App\Modules\Payroll\Domain\Contracts\CountryRulesInterface;
-use App\Modules\Payroll\Domain\Exceptions\CountryRulesContextMismatchException;
-use App\Modules\Payroll\Domain\Exceptions\UnsupportedCountryRulesException;
-use App\Modules\Payroll\Domain\Models\PayrollCalculationAudit;
-use App\Modules\Payroll\Infrastructure\Services\PayrollCalculationAuditRecorder;
+use App\Modules\Payroll\Application\Actions\SimulateCotisations;
+use App\Modules\Payroll\Domain\Exceptions\PayrollPlaceholderAcknowledgementRequiredException;
 use App\Modules\Payroll\Infrastructure\Services\PayrollCalculationPresenter;
 use App\Modules\Payroll\Infrastructure\Services\PayrollCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
@@ -38,13 +34,19 @@ use Illuminate\Validation\Rule;
  *   - sous `contract`, le contrat complet et explicable (pays, devise,
  *     identifiant/version des règles, période, politique d'arrondi,
  *     bracket_tax, retenues totales…) — docs/payroll/CALCULATION_CONTRACT.md.
+ *
+ * Couche Application (ADR-0020, lot 6 — #6968) : le cas d'usage nommable
+ * vit dans `SimulateCotisations` ; ce contrôleur ne garde que l'interface
+ * HTTP — autorisation (manager principal/comptable), validation,
+ * corrélation #1874, audit HTTP de l'acceptation « placeholder » (#1872),
+ * présentation du contrat et enveloppe de réponse.
  */
 class CotisationSimulationController extends Controller
 {
     public function __construct(
         private readonly PayrollCalculator $payrollCalculator,
         private readonly PayrollCalculationPresenter $presenter,
-        private readonly PayrollCalculationAuditRecorder $auditRecorder,
+        private readonly SimulateCotisations $simulateCotisations,
     ) {}
 
     public function simulate(Request $request): JsonResponse
@@ -66,11 +68,12 @@ class CotisationSimulationController extends Controller
             'acknowledge_placeholder' => ['nullable', 'boolean'],
         ]);
 
-        /** @var array{gross_salary: float|string, country_code: string, rules_period?: string|null, acknowledge_placeholder?: bool} $validated */
+        /** @var array{gross_salary: float|string, country_code: string, rules_period?: string|null, acknowledge_placeholder?: bool|null} $validated */
         $gross = (float) $validated['gross_salary'];
         $countryCode = $validated['country_code'];
         $rulesPeriodValue = $validated['rules_period'] ?? null;
         $rulesPeriod = $rulesPeriodValue !== null ? Carbon::parse($rulesPeriodValue) : null;
+        $acknowledged = $request->boolean('acknowledge_placeholder');
 
         // Issue #1874 — identifiant de corrélation de la requête (logs ↔
         // réponse ↔ audit) : X-Correlation-ID / X-Request-Id header (repli
@@ -78,29 +81,33 @@ class CotisationSimulationController extends Controller
         $correlationId = correlation_id();
         Log::withContext(['correlation_id' => $correlationId]);
 
-        // Pays inconnu → 422 explicite (UnsupportedCountryRulesException,
-        // rendue par le handler d'exceptions avec un message métier clair).
-        // Issue #1924/#1871 — le tenant et la période effective sont transmis
-        // afin que les overrides entreprise et les règles historiques soient
-        // identiques à ceux appliqués par un bulletin réel.
         $companyId = (string) $actor->company_id;
-        $rules = $this->resolveRules($correlationId, $companyId, $countryCode, $gross, $rulesPeriod);
 
-        // Issue #1872 — les règles « placeholder » (BJ/TG/NE/CF/TD/GQ : aucune
-        // valeur légale sourcée) ne peuvent pas alimenter une simulation sans
-        // confirmation explicite ; l'acceptation est AUDITÉE (tenant, pays,
-        // acteur) — jamais de secrets ni de données biométriques.
-        if ($rules->confidenceLevel() === 'placeholder') {
-            $acknowledged = $request->boolean('acknowledge_placeholder');
-            if (! $acknowledged) {
-                return response()->json([
-                    'message' => __('payroll.placeholder_acknowledge_required', ['country' => $countryCode]),
-                    'errors' => [
-                        'acknowledge_placeholder' => [__('payroll.placeholder_acknowledge_required', ['country' => $countryCode])],
-                    ],
-                ], 422);
-            }
+        // Cas d'usage nommable (ADR-0020, lot 6 #6968) — résolution des
+        // règles tenant+période (#1924), garde placeholder (#1872 → 422),
+        // ventilation salarial/patronal et audit dans SimulateCotisations.
+        try {
+            $result = $this->simulateCotisations->execute(
+                $companyId,
+                $countryCode,
+                $gross,
+                $rulesPeriod,
+                $acknowledged,
+                $correlationId,
+            );
+        } catch (PayrollPlaceholderAcknowledgementRequiredException $e) {
+            return response()->json([
+                'message' => __('payroll.placeholder_acknowledge_required', ['country' => $e->countryCode]),
+                'errors' => [
+                    'acknowledge_placeholder' => [__('payroll.placeholder_acknowledge_required', ['country' => $e->countryCode])],
+                ],
+            ], 422);
+        }
 
+        // Issue #1872 — l'acceptation d'une règle « placeholder » est
+        // AUDITÉE (tenant, pays, acteur, navigateur) — jamais de secrets ni
+        // de données biométriques.
+        if ($result['rules_meta']['confidence'] === 'placeholder' && $acknowledged) {
             AuditLog::create([
                 'company_id' => $actor->company_id,
                 'user_id' => $actor->id,
@@ -110,7 +117,7 @@ class CotisationSimulationController extends Controller
                 'old_values' => [],
                 'new_values' => [
                     'country_code' => $countryCode,
-                    'rules_identifier' => (new \ReflectionClass($rules))->getShortName(),
+                    'rules_identifier' => $result['rules_meta']['short_name'],
                     'confidence_level' => 'placeholder',
                 ],
                 'ip_address' => $request->ip(),
@@ -118,149 +125,35 @@ class CotisationSimulationController extends Controller
             ]);
         }
 
-        // Issue #1869 — mêmes appels métier que PayrollCalculator::calculateSlip().
-        $breakdown = $this->payrollCalculator->computeNetBreakdown($gross, $rules);
-        $social = $breakdown['social'];
-
-        $employeeContributions = [];
-        $employerContributions = [];
-        foreach ($rules->socialContributions() as $contribution) {
-            // Issue #2220 — la base suit la VRAIE règle du moteur :
-            //  1. assiette_rate (ex. CSG/CRDS FR sur 98,25 % du brut) ;
-            //  2. tranche floor/ceiling (ex. IPRES T2 SN 432 001–2 160 000) ;
-            //  3. cap simple (plafond classique) ;
-            //  4. sinon brut entier.
-            if (isset($contribution['assiette_rate'])) {
-                $base = $gross * ((float) $contribution['assiette_rate'] / 100);
-            } elseif (isset($contribution['floor'])) {
-                $base = $gross > (float) $contribution['floor']
-                    ? min($gross, (float) ($contribution['ceiling'] ?? PHP_FLOAT_MAX)) - (float) $contribution['floor']
-                    : 0.0;
-            } else {
-                $base = ($contribution['cap'] ?? null) === null
-                    ? $gross
-                    : min($gross, (float) $contribution['cap']);
-            }
-
-            $item = [
-                'name' => $contribution['name'],
-                'code' => $contribution['code'],
-                'rate' => $contribution['rate'],
-                'cap' => $contribution['cap'] ?? null,
-                'amount' => round($base * (float) $contribution['rate'] / 100, 2),
-            ];
-
-            if ($contribution['type'] === 'employee') {
-                $employeeContributions[] = $item;
-            } else {
-                $employerContributions[] = $item;
-            }
-        }
-
-        // Issue #1874 — audit de la simulation (résultats agrégés uniquement,
-        // jamais de salaires individuels ni de secrets).
-        $this->auditRecorder->recordSimulation(
-            $correlationId,
-            $companyId,
-            $countryCode,
-            ['gross_salary' => $gross, 'rules_period' => $rulesPeriod?->toDateString()],
-            [
-                'total_employee_deduction' => round($social['employee'], 2),
-                'total_employer_cost' => round($social['employer'], 2),
-                'income_tax' => $breakdown['income_tax'],
-                'bracket_tax' => $breakdown['bracket_tax'],
-                'total_deductions' => round($breakdown['base_deductions'], 2),
-                'net_salary' => $breakdown['net_salary'],
-                'total_cost_employer' => $breakdown['total_cost'],
-            ],
-            PayrollCalculationAudit::STATUS_SUCCESS,
-            null,
-            $rules->rulesVersion(),
-            (new \ReflectionClass($rules))->getShortName(),
-        );
-
         return response()->json([
             'data' => [
                 // Issue #1874 — corrélation requête ↔ logs ↔ audit.
                 'correlation_id' => $correlationId,
                 // ── Champs historiques (rétro-compatibles) ───────────────────
-                'country_code' => $countryCode,
-                'gross_salary' => $gross,
-                'employee_contributions' => $employeeContributions,
-                'employer_contributions' => $employerContributions,
-                'total_employee_deduction' => $social['employee'],
-                'total_employer_cost' => $social['employer'],
-                'taxable_gross' => round($breakdown['taxable_gross'], 2),
-                'income_tax' => $breakdown['income_tax'],
-                'bracket_tax' => $breakdown['bracket_tax'],
-                'total_deductions' => round($breakdown['base_deductions'], 2),
-                // Rétro-compatible : brut − cotisations salariales (sans impôt).
-                'net_before_tax' => round($gross - $social['employee'], 2),
+                'country_code' => $result['country_code'],
+                'gross_salary' => $result['gross'],
+                'employee_contributions' => $result['employee_contributions'],
+                'employer_contributions' => $result['employer_contributions'],
+                'total_employee_deduction' => $result['total_employee_deduction'],
+                'total_employer_cost' => $result['total_employer_cost'],
+                'taxable_gross' => $result['taxable_gross'],
+                'income_tax' => $result['income_tax'],
+                'bracket_tax' => $result['bracket_tax'],
+                'total_deductions' => $result['total_deductions'],
+                'net_before_tax' => $result['net_before_tax'],
                 // Net réel = brut − retenues totales (issue #1782 + #1869).
-                'net_salary' => $breakdown['net_salary'],
-                'total_cost_employer' => $breakdown['total_cost'],
+                'net_salary' => $result['net_salary'],
+                'total_cost_employer' => $result['total_cost_employer'],
                 // ── Contrat complet et explicable (issue #1869) ──────────────
                 // Le contrat reflète les overrides entreprise et la période
                 // effective, comme le bulletin réel.
                 'contract' => $this->presenter->present(
-                    $countryCode,
-                    $gross,
+                    $result['country_code'],
+                    $result['gross'],
                     $companyId,
-                    $rulesPeriod
+                    $rulesPeriod,
                 ),
             ],
         ]);
-    }
-
-    /**
-     * Résout les règles pays pour la simulation ; toute erreur de résolution
-     * est tracée dans l'audit (rule_missing / validation_error /
-     * provider_error) puis relancée — la réponse HTTP reste inchangée.
-     */
-    private function resolveRules(
-        string $correlationId,
-        string $companyId,
-        string $countryCode,
-        float $gross,
-        ?Carbon $rulesPeriod
-    ): CountryRulesInterface {
-        $input = ['gross_salary' => $gross, 'rules_period' => $rulesPeriod?->toDateString()];
-
-        try {
-            return $this->payrollCalculator->rulesResolver()->resolve($countryCode, $companyId, $rulesPeriod);
-        } catch (UnsupportedCountryRulesException $exception) {
-            $this->auditRecorder->recordSimulation(
-                $correlationId,
-                $companyId,
-                $countryCode,
-                $input,
-                null,
-                PayrollCalculationAudit::STATUS_RULE_MISSING
-            );
-
-            throw $exception;
-        } catch (CountryRulesContextMismatchException $exception) {
-            $this->auditRecorder->recordSimulation(
-                $correlationId,
-                $companyId,
-                $countryCode,
-                $input,
-                null,
-                PayrollCalculationAudit::STATUS_VALIDATION_ERROR
-            );
-
-            throw $exception;
-        } catch (\Throwable $exception) {
-            $this->auditRecorder->recordSimulation(
-                $correlationId,
-                $companyId,
-                $countryCode,
-                $input,
-                null,
-                PayrollCalculationAudit::STATUS_PROVIDER_ERROR
-            );
-
-            throw $exception;
-        }
     }
 }
