@@ -167,7 +167,7 @@ class AIGatewayController extends Controller
             toolInput: is_array($pending['arguments']) ? $pending['arguments'] : [],
             stage: 'rejected',
             success: true,
-            resultSummary: 'Action rejetée par l\'utilisateur',
+            resultSummary: (string) __('errors.AI_ACTION_REJECTED'),
         );
 
         return response()->json([
