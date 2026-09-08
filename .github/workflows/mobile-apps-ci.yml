@@ -197,7 +197,7 @@ jobs:
         working-directory: front/mobile_apps/leopardo_core
         run: |
           flutter pub get
-          dart run build_runner build --delete-conflicting-outputs
+          dart run build_runner build
 
       - name: Validate ARB keys exist in generated localizations
         # #4762 (récurrence) : toute clé ARB absente des générés casse la
@@ -323,7 +323,7 @@ jobs:
         run: |
           flutter pub get
           flutter gen-l10n
-          dart run build_runner build --delete-conflicting-outputs
+          dart run build_runner build
 
       - name: Restore Firebase config from secret (issue #1467)
         # google-services.json n'est PLUS committé (clé API réelle exposée) :
