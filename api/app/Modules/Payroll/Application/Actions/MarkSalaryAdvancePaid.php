@@ -101,15 +101,19 @@ class MarkSalaryAdvancePaid
 
         $document = GeneratePaymentDocumentJob::dispatchForSalaryAdvance($advance, $actor->id);
 
-        $this->ledger->record(
-            employee: $advance->employee ?? Employee::query()->find($advance->employee_id),
-            entryType: LedgerEntry::TYPE_ADVANCE,
-            amount: -abs((float) $advance->amount),
-            description: 'Salary advance paid: '.($advance->payment_reference ?? 'no reference'),
-            source: $advance,
-            paymentDocumentId: $document->id,
-            createdBy: $actor->id,
-        );
+        /** @var Employee|null $itemEmployee */
+        $itemEmployee = $advance->employee ?? Employee::query()->find($advance->employee_id);
+        if ($itemEmployee !== null) {
+            $this->ledger->record(
+                employee: $itemEmployee,
+                entryType: LedgerEntry::TYPE_ADVANCE,
+                amount: -abs((float) $advance->amount),
+                description: 'Salary advance paid: '.($advance->payment_reference ?? 'no reference'),
+                source: $advance,
+                paymentDocumentId: $document->id,
+                createdBy: $actor->id,
+            );
+        }
 
         $this->advances->notify($advance, 'salary_advance_payment_declared');
 
