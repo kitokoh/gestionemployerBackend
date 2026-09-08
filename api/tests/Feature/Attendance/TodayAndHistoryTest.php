@@ -65,7 +65,7 @@ class TodayAndHistoryTest extends TestCase
     public function test_today_endpoint_reports_checked_in_false_after_check_out(): void
     {
         /** @var Company $company */
-        $company = Company::factory()->create();
+        $company = Company::factory()->create(['timezone' => 'UTC']);
 
         /** @var Employee $employee */
         $employee = Employee::factory()->create([
