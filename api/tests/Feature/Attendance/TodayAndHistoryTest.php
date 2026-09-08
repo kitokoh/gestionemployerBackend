@@ -62,6 +62,38 @@ class TodayAndHistoryTest extends TestCase
         $today->assertJsonPath('data.item.check_in_time', '08:00');
     }
 
+    public function test_today_endpoint_reports_checked_in_false_after_check_out(): void
+    {
+        $company = Company::factory()->create();
+
+        $employee = Employee::factory()->create([
+            'company_id' => $company->id,
+            'role' => 'employee',
+            'status' => 'active',
+        ]);
+
+        Sanctum::actingAs($employee);
+
+        $this->travelTo(Carbon::parse('2026-04-04 08:00:00', 'UTC'));
+        $this->postJson('/api/v1/attendance/check-in')->assertStatus(201);
+
+        // Session ouverte → checked_in: true.
+        $this->getJson('/api/v1/attendance/today')
+            ->assertOk()
+            ->assertJsonPath('data.item.checked_in', true)
+            ->assertJsonPath('data.item.check_out', null);
+
+        // Check-out → la session du jour est fermée.
+        $this->travelTo(Carbon::parse('2026-04-04 17:00:00', 'UTC'));
+        $this->postJson('/api/v1/attendance/check-out')->assertOk();
+
+        // L'employé ne doit plus être marqué « en service » (#6962).
+        $this->getJson('/api/v1/attendance/today')
+            ->assertOk()
+            ->assertJsonPath('data.item.checked_in', false)
+            ->assertJsonPath('data.item.check_out_time', '17:00');
+    }
+
     public function test_employee_history_returns_only_self(): void
     {
         $company = Company::query()->create([
