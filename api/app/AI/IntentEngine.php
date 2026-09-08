@@ -209,6 +209,12 @@ class IntentEngine
                     ? ' — motif : '.$this->stringArgument($arguments, 'reason', '(non précisé)')
                     : '',
             ),
+            // B3b (#6857) — affectation d'un shift à un employé.
+            'shift_assign' => sprintf(
+                'Affecter le shift #%s à l\'employé #%s',
+                $this->stringArgument($arguments, 'schedule_id', '?'),
+                $this->stringArgument($arguments, 'employee_id', '?'),
+            ),
             default => "Confirmer l'action {$toolName}",
         };
     }
