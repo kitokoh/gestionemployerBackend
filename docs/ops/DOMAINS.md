@@ -51,6 +51,40 @@ reste une responsabilité d'infrastructure distincte (#3452).
 | `demo.leopardo.app` | App démo Edge (test SignupForm) | `target` | NXDOMAIN — #3452. |
 | `client-a.leopardo-rh.com` | Exemple illustratif tenant (docs MULTITENANCY) | `target` | Usage documentaire uniquement. |
 
+## Surfaces verticales — sous-domaines Vercel v1 (issue #6918)
+
+Chaque verticale (Restaurant, Travel, Fuel, Edu, Delivery) reste accessible
+depuis la plateforme centrale **et** expose ses surfaces publiques sur son
+propre sous-domaine Vercel (décision fondateur 2026-09-06, #6918). Pattern :
+**1 verticale = 1 projet Vercel = 1 sous-domaine**.
+
+- `leopardo-<verticale>.vercel.app` — tier dev/continu, compte Vercel `africanovatech` ;
+- `leopardo-<verticale>-prod.vercel.app` — tier prod, compte Vercel `ibrahimkoubaye` ;
+- Bascule v2 (domaines achetés) : domaine personnalisé `<verticale>.<domaine principal>`
+  sur le même projet Vercel → zéro rework (v2, hors périmètre #6918).
+- Repli documenté si Vercel bloquait : Cloudflare Pages derrière CNAME (le
+  blocage des sous-domaines Pages gratuits est par hostname, pas par compte).
+- Les pages servies à ce jour sont des **pages de validation** (HTTP 200,
+  vérifié 2026-09-06) ; les vraies applications verticales les remplaceront —
+  pilote Restaurant : issue #6920.
+
+| Domaine | Statut | Note |
+|---|---|---|
+| `leopardo-resto.vercel.app` | `live` | Verticale Restaurant — dev, projet `prj_i8rEi8fCwkkC4TEfAjIXue0fTNKP` ; page de validation, vraie app #6920. |
+| `leopardo-travel.vercel.app` | `live` | Verticale Travel — dev, projet `prj_9zeAXtwVQXgLoVcEurVzJnuVFQZr` ; page de validation. |
+| `leopardo-fuel.vercel.app` | `live` | Verticale Fuel — dev, projet `prj_Tbnb0Grlsdqw3Ce3vkxIrmiKfl4u` ; page de validation. |
+| `leopardo-edu.vercel.app` | `live` | Verticale Edu — dev, projet `prj_fKKFiaiSAMhymCo5BvHW0wD75mb3` ; page de validation. |
+| `leopardo-delivery.vercel.app` | `live` | Verticale Delivery — dev, projet `prj_SUTHkL4joPdi5REZc5chw7ugX86i` ; page de validation. |
+| `leopardo-resto-prod.vercel.app` | `live` | Verticale Restaurant — prod, projet `prj_YMFmR1mJlS1ZjzBQ7Dx8GAzRdgx3` ; page de validation. |
+| `leopardo-travel-prod.vercel.app` | `live` | Verticale Travel — prod, projet `prj_1Y1rr2syuPjMFZWh9EWEK5UOnZOJ` ; page de validation. |
+| `leopardo-fuel-prod.vercel.app` | `live` | Verticale Fuel — prod, projet `prj_qB0D9JbcoFXeGCx1PuA1gydCfPk9` ; page de validation. |
+| `leopardo-edu-prod.vercel.app` | `live` | Verticale Edu — prod, projet `prj_unI8uJqhyGoHXVL8zkXvu4DiY1cS` ; page de validation. |
+| `leopardo-delivery-prod.vercel.app` | `live` | Verticale Delivery — prod, projet `prj_nkmn7sTTn0wtoZ2FS7uY1LaszLyw` ; page de validation. |
+
+CORS/SANCTUM_STATEFUL_DOMAINS côté API et liens du hub central : à raccorder
+via ce registre (pas de hardcode) quand une vraie application verticale utilise
+le sous-domaine (suivi #6918/#6920).
+
 ## Règles
 
 1. **Valeur de build** : les defaults (workflows, `backend-url.ts`, `next.config.ts`,
