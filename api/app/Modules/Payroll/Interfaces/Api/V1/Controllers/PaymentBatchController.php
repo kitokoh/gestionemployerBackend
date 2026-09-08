@@ -7,14 +7,12 @@ namespace App\Modules\Payroll\Interfaces\Api\V1\Controllers;
 use App\Core\Auth\Domain\Models\Employee;
 use App\Http\Controllers\Controller;
 use App\Jobs\GeneratePaymentDocumentJob;
+use App\Modules\Payroll\Application\Actions\ConfirmPaymentItemReception;
+use App\Modules\Payroll\Application\Actions\CreatePaymentBatch;
 use App\Modules\Payroll\Domain\Models\LedgerEntry;
 use App\Modules\Payroll\Domain\Models\PaymentBatch;
-use App\Modules\Payroll\Domain\Models\PaymentConfirmation;
 use App\Modules\Payroll\Domain\Models\PaymentItem;
-use App\Modules\Payroll\Domain\Models\PayrollRun;
-use App\Modules\Payroll\Domain\Models\PaySlip;
 use App\Modules\Payroll\Infrastructure\Services\LedgerService;
-use App\Modules\Payroll\Infrastructure\Services\PaymentConsentSignatureService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +22,8 @@ class PaymentBatchController extends Controller
 {
     public function __construct(
         private readonly LedgerService $ledgerService,
-        private readonly PaymentConsentSignatureService $consentSignatureService,
+        private readonly CreatePaymentBatch $createBatch,
+        private readonly ConfirmPaymentItemReception $confirmReception,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -59,58 +58,16 @@ class PaymentBatchController extends Controller
             'metadata' => ['nullable', 'array'],
         ]);
 
-        $run = PayrollRun::query()
-            ->where('company_id', $actor->company_id)
-            ->findOrFail((int) $validated['payroll_run_id']);
-
-        if (! in_array($run->status, ['calculated', 'validated', 'paid'], true)) {
-            throw ValidationException::withMessages([
-                'payroll_run_id' => [__('errors.PAYMENT_BATCH_RUN_INVALID')],
-            ]);
-        }
-
-        $slips = PaySlip::query()
-            ->where('company_id', $actor->company_id)
-            ->where('payroll_run_id', $run->id)
-            ->whereIn('status', ['calculated', 'validated', 'sent'])
-            ->get();
-
-        if ($slips->isEmpty()) {
-            throw ValidationException::withMessages([
-                'payroll_run_id' => ['Aucun bulletin payable trouve pour ce cycle.'],
-            ]);
-        }
-
-        $currency = strtoupper((string) ($validated['currency'] ?? currentCompany()->currency ?? 'DZD'));
-
-        $batch = DB::transaction(function () use ($actor, $run, $slips, $currency, $validated): PaymentBatch {
-            $batch = PaymentBatch::query()->create([
-                'company_id' => $actor->company_id,
-                'payroll_run_id' => $run->id,
-                'period_start' => $run->period_start,
-                'period_end' => $run->period_end,
-                'status' => PaymentBatch::STATUS_DRAFT,
-                'total_amount' => $slips->sum('net_salary'),
-                'currency' => $currency,
-                'items_count' => $slips->count(),
-                'created_by' => $actor->id,
-                'metadata' => $validated['metadata'] ?? null,
-            ]);
-
-            foreach ($slips as $slip) {
-                PaymentItem::query()->create([
-                    'company_id' => $actor->company_id,
-                    'payment_batch_id' => $batch->id,
-                    'employee_id' => $slip->employee_id,
-                    'pay_slip_id' => $slip->id,
-                    'amount' => $slip->net_salary,
-                    'currency' => $currency,
-                    'status' => PaymentItem::STATUS_PENDING,
-                ]);
-            }
-
-            return $batch->fresh(['items.employee']);
-        });
+        // Cas d'usage nommable (ADR-0020, lot 4 paiements #6968) : gardes
+        // métier + transaction dans CreatePaymentBatch.
+        $currency = isset($validated['currency']) ? (string) $validated['currency'] : null;
+        $metadata = is_array($validated['metadata'] ?? null) ? $validated['metadata'] : null;
+        $batch = $this->createBatch->execute(
+            $actor,
+            (int) $validated['payroll_run_id'],
+            $currency,
+            $metadata,
+        );
 
         return response()->json(['data' => $this->batchPayload($batch, includeItems: true)], 201);
     }
@@ -193,70 +150,23 @@ class PaymentBatchController extends Controller
             abort(404);
         }
 
-        if ($paymentItem->status === PaymentItem::STATUS_PENDING) {
-            throw ValidationException::withMessages([
-                'status' => ['Le paiement doit etre declare par le manager avant confirmation.'],
-            ]);
-        }
-
         $validated = $request->validate([
             'device_signature' => ['nullable', 'string', 'max:255'],
             'document_version' => ['nullable', 'string', 'max:40'],
             'metadata' => ['nullable', 'array'],
         ]);
 
-        $confirmation = DB::transaction(function () use ($request, $paymentItem, $actor, $validated): PaymentConfirmation {
-            $existing = PaymentConfirmation::query()->where('payment_item_id', $paymentItem->id)->first();
-
-            if ($existing !== null) {
-                return $existing;
-            }
-
-            $confirmedAt = now();
-            $documentVersion = (string) ($validated['document_version'] ?? 'v1');
-
-            $confirmation = PaymentConfirmation::query()->create([
-                'company_id' => $actor->company_id,
-                'payment_batch_id' => $paymentItem->payment_batch_id,
-                'payment_item_id' => $paymentItem->id,
-                'employee_id' => $actor->id,
-                'status' => 'confirmed',
-                'confirmed_at' => $confirmedAt,
-                'device_signature' => $validated['device_signature'] ?? null,
-                'ip_address' => $request->ip(),
-                'user_agent' => substr((string) $request->userAgent(), 0, 500),
-                'document_version' => $documentVersion,
-                'metadata' => $validated['metadata'] ?? null,
-            ]);
-
-            // PA2-PAY-016 - Timestamped consent hash binding this confirmation
-            // to the payment item, amount, currency and instant, without a
-            // premature PKI/certificate stack.
-            //
-            // Le hash est calculé sur la valeur `confirmed_at` RÉELLEMENT
-            // persistée (la colonne est timestamp(0) : PostgreSQL arrondit à la
-            // seconde — hasher `now()` avec les millisecondes rendrait la
-            // signature invérifiable après lecture, car le payload différerait).
-            // `refresh()` recharge la valeur arrondie par le serveur.
-            $confirmation->refresh();
-            $documentHash = $this->consentSignatureService->hash(
-                $this->consentSignatureService->buildPayload(
-                    $paymentItem,
-                    $confirmation->confirmed_at,
-                    $documentVersion
-                )
-            );
-            $confirmation->forceFill(['document_hash' => $documentHash])->save();
-
-            $paymentItem->forceFill([
-                'status' => PaymentItem::STATUS_CONFIRMED,
-                'confirmed_at' => $confirmation->confirmed_at,
-            ])->save();
-
-            $this->refreshBatchConfirmationStatus($paymentItem->batch);
-
-            return $confirmation;
-        });
+        // Cas d'usage nommable (ADR-0020, lot 4 paiements #6968) : garde
+        // d'état + transaction + consentement horodaté (PA2-PAY-016) dans
+        // ConfirmPaymentItemReception. Les métadonnées HTTP (ip, user_agent)
+        // sont passées en paramètres, l'enveloppe de réponse reste ici.
+        $confirmation = $this->confirmReception->execute(
+            $paymentItem,
+            $actor,
+            (string) $request->ip(),
+            $request->userAgent() !== null ? substr((string) $request->userAgent(), 0, 500) : null,
+            $validated,
+        );
 
         return response()->json([
             'data' => [
@@ -275,25 +185,6 @@ class PaymentBatchController extends Controller
     {
         if ($batch->company_id !== $actor->company_id) {
             abort(404);
-        }
-    }
-
-    private function refreshBatchConfirmationStatus(PaymentBatch $batch): void
-    {
-        $total = $batch->items()->count();
-        $confirmed = $batch->items()->where('status', PaymentItem::STATUS_CONFIRMED)->count();
-
-        if ($total > 0 && $confirmed === $total) {
-            $batch->forceFill([
-                'status' => PaymentBatch::STATUS_CONFIRMED,
-                'confirmed_at' => now(),
-            ])->save();
-
-            return;
-        }
-
-        if ($confirmed > 0) {
-            $batch->forceFill(['status' => PaymentBatch::STATUS_PARTIALLY_CONFIRMED])->save();
         }
     }
 
