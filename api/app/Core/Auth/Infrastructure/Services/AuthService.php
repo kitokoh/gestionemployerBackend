@@ -202,6 +202,10 @@ readonly class AuthService
 
             $tokenResult = $employee->createToken($tokenName, $abilities, $expiresAt);
 
+            // Issue #7009 : quota de tokens actifs — purge des plus anciens
+            // au-delà de config('auth.max_active_tokens_per_user').
+            app(TokenQuotaService::class)->prune($employee);
+
             return [
                 'employee' => $employee,
                 'token' => $tokenResult->plainTextToken,
@@ -494,6 +498,10 @@ readonly class AuthService
             }
 
             $tokenResult = $employee->createToken($tokenName, $abilities, $expiresAt);
+
+            // Issue #7009 : quota de tokens actifs — purge des plus anciens
+            // au-delà de config('auth.max_active_tokens_per_user').
+            app(TokenQuotaService::class)->prune($employee);
 
             return [
                 'employee' => $employee,
