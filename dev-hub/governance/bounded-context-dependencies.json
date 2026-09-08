@@ -525,6 +525,12 @@
       "note": "BC-13 → BC-02 — dépendance réelle constatée (rebaseline MAT-002 2026-09-05, audit PM)"
     },
     {
+      "from": "BC-13",
+      "to": "BC-23",
+      "baseline": true,
+      "note": "BC-13 → BC-23 — NotifyTeamToolCatalog + NotificationServiceProvider importent le contrat AIToolDefinition/AIToolDefinitionRegistry (B3c #6858)"
+    },
+    {
       "from": "BC-15",
       "to": "BC-01",
       "baseline": true,

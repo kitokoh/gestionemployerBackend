@@ -101,6 +101,10 @@ return [
     'write_tools' => [
         'create_absence',
         'approve_absence',
+        // B3c (#6858) — envoi d'un message à une équipe (annonce tenant,
+        // BC-13 COMMS), parité AnnouncementController, exécution après
+        // confirmation (flux A4, contrat A3 #6850).
+        'notify_team',
     ],
 
     // BC-23-D05 (issue #6237) — matrice de permissions par outil AI
@@ -133,6 +137,10 @@ return [
         'employee_leave_balance' => ['role' => 'employee', 'permissions' => ['leave.view']],
         'create_absence' => ['role' => 'employee', 'permissions' => ['absences.create']],
         'approve_absence' => ['role' => 'manager', 'permissions' => ['absences.approve']],
+        // B3c (#6858) — outil envoi BC-13 COMMS (contrat A3, #6850) : message
+        // à une équipe via le système d'annonces (parité AnnouncementController,
+        // api.manager + authorizeAudience — principal/RH pour company).
+        'notify_team' => ['role' => 'manager', 'permissions' => ['announcements.create']],
     ],
 
     // BC-23-D05 (issue #6237) — permissions accordées par rôle (résolution du
@@ -159,6 +167,7 @@ return [
             'attendance.view',
             'absences.approve',
             'payroll.view',
+            'announcements.create',
         ],
         'admin' => [
             'employees.view',
@@ -172,6 +181,7 @@ return [
             'attendance.view',
             'absences.approve',
             'payroll.view',
+            'announcements.create',
         ],
         'super_admin' => [
             'employees.view',
@@ -185,6 +195,7 @@ return [
             'attendance.view',
             'absences.approve',
             'payroll.view',
+            'announcements.create',
         ],
     ],
 
@@ -226,6 +237,14 @@ return [
     // A2 (#6849) — texte scriptable de l'adaptateur FAKE (tests uniquement).
     'stt' => [
         'fake_text' => env('AI_STT_FAKE_TEXT'),
+    ],
+
+    // B3c (#6858) — anti-spam du canal « message d'équipe » de l'assistant :
+    // plafond d'envois par acteur et par heure (au-delà du throttling HTTP
+    // `throttle:ai-sensitive` déjà appliqué aux routes /ai/*). S'applique
+    // aux envois réellement confirmés (pas aux propositions).
+    'notify_team_rate' => [
+        'max_per_hour' => 10,
     ],
 
     // AI-002 (#6771) — OCR des compteurs FuelStation : seuil de confiance

@@ -148,6 +148,28 @@ class AIToolRegistrySeeder extends Seeder
                 'required_role' => 'manager',
                 'module' => 'rh',
             ],
+            // B3c (#6858) — outil envoi BC-13 COMMS déclaré au contrat A3
+            // (#6850). `parameters` aligné sur l'inputSchema du catalogue
+            // Notification (NotifyTeamToolCatalog) ; exécution après
+            // confirmation (flux A4) via WriteActionRunner →
+            // AnnouncementService (parité AnnouncementController).
+            [
+                'name' => 'notify_team',
+                'description' => 'Send a short message to a team (whole company for principal/RH, or one department) — confirmation required before send, rate-limited.',
+                'parameters' => json_encode([
+                    'type' => 'object',
+                    'properties' => [
+                        'title' => ['type' => 'string', 'description' => 'Message title (max 200)'],
+                        'message' => ['type' => 'string', 'description' => 'Message body (max 5000)'],
+                        'audience_type' => ['type' => 'string', 'enum' => ['company', 'department'], 'description' => "Target audience: 'company' (principal/RH only) or 'department' (default)"],
+                        'department_id' => ['type' => 'integer', 'description' => 'Target department ID — required when audience_type=department'],
+                    ],
+                    'required' => ['title', 'message'],
+                ]),
+                'required_permissions' => '["announcements.create"]',
+                'required_role' => 'manager',
+                'module' => 'notification',
+            ],
             [
                 'name' => 'get_daily_summary',
                 'description' => 'Get daily summary for an employee (attendance, tasks, estimations).',
