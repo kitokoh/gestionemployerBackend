@@ -200,6 +200,15 @@ class IntentEngine
                 'Approuver l\'absence #%s',
                 $absenceId,
             ),
+            // B3a (#6856) — décision (approbation/refus motivé).
+            'absence_decision' => sprintf(
+                '%s la demande d\'absence #%s%s',
+                $this->stringArgument($arguments, 'decision', '') === 'reject' ? 'Refuser' : 'Approuver',
+                $absenceId,
+                $this->stringArgument($arguments, 'decision', '') === 'reject'
+                    ? ' — motif : '.$this->stringArgument($arguments, 'reason', '(non précisé)')
+                    : '',
+            ),
             default => "Confirmer l'action {$toolName}",
         };
     }

@@ -2,8 +2,8 @@
 
 namespace App\Http\Resources\Api\V1;
 
-use App\Modules\Attendance\Domain\Models\AttendanceLog;
 use App\Core\Auth\Domain\Models\Employee;
+use App\Modules\Attendance\Domain\Models\AttendanceLog;
 use App\Modules\Planning\Infrastructure\Services\EstimationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -56,7 +56,7 @@ class AttendanceTodayResource extends JsonResource
             // Session réellement OUVERTE (check_in posé, check_out absent) — après
             // le check-out du jour, la session la plus récente a check_in ET
             // check_out renseignés : l'employé n'est plus « en service » (#6962).
-            'checked_in' => $this->log?->check_in !== null && $this->log?->check_out === null,
+            'checked_in' => $this->log !== null && $this->log->check_in !== null && $this->log->check_out === null,
             'session_number' => (int) ($this->log?->session_number ?? 0),
             'check_in' => $this->log?->check_in?->toIso8601String(),
             'check_out' => $this->log?->check_out?->toIso8601String(),
@@ -78,4 +78,3 @@ class AttendanceTodayResource extends JsonResource
         ];
     }
 }
-

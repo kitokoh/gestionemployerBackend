@@ -5,12 +5,25 @@ declare(strict_types=1);
 namespace App\AI;
 
 use App\Core\Auth\Domain\Models\Employee;
+use App\Modules\Planning\Application\Actions\ApproveAbsence;
+use App\Modules\Planning\Application\Actions\RejectAbsence;
+use App\Modules\Planning\Domain\Exceptions\AbsenceNotPendingException;
+use App\Modules\Planning\Domain\Exceptions\InsufficientLeaveBalanceException;
 use App\Modules\Planning\Domain\Models\Absence;
 use App\Modules\Planning\Domain\Models\AbsenceType;
 use Illuminate\Support\Carbon;
 
 class WriteActionRunner
 {
+    public function __construct(
+        // B3a (#6856) — l'outil `absence_decision` exécute les Actions
+        // canoniques Planning (ApproveAbsence/RejectAbsence → AbsenceService),
+        // propriétaire du domaine absence/congé (PA2-ARCH-002) — même chemin
+        // que les endpoints REST du module façade Absence.
+        private readonly ApproveAbsence $approveAbsence,
+        private readonly RejectAbsence $rejectAbsence,
+    ) {}
+
     /**
      * Issue #5625 : liste statique des write tools qui ont un handler PHP.
      *
@@ -21,6 +34,7 @@ class WriteActionRunner
         return [
             'create_absence',
             'approve_absence',
+            'absence_decision',
         ];
     }
 
@@ -50,6 +64,9 @@ class WriteActionRunner
         return [
             'create_absence' => fn (array $arguments): array => $this->createAbsence($companyId, $userId, $arguments),
             'approve_absence' => fn (array $arguments): array => $this->approveAbsence($companyId, $userId, $arguments),
+            // B3a (#6856) — décision (approbation/refus motivé) via les Actions
+            // canoniques Planning, parité REST AbsenceController approve/reject.
+            'absence_decision' => fn (array $arguments): array => $this->decideAbsence($companyId, $userId, $arguments),
         ];
     }
 
@@ -61,6 +78,89 @@ class WriteActionRunner
     public function supportedWriteTools(): array
     {
         return array_keys($this->writeToolHandlers('', 0));
+    }
+
+    /**
+     * B3a (#6856) — décision sur une demande d'absence (approbation ou refus
+     * motivé), exécutée APRÈS confirmation humaine (flux A4) via les Actions
+     * canoniques Planning (ApproveAbsence/RejectAbsence → AbsenceService,
+     * PA2-ARCH-002) — mêmes transitions de statut, mêmes événements métier
+     * (AbsenceApproved/AbsenceRejected) et même journal d'audit que les
+     * endpoints REST `POST|PUT /api/v1/absences/{absence}/approve|reject`
+     * (module façade Absence).
+     *
+     * Parité REST AbsenceController : seul un manager du tenant peut décider
+     * (défense en profondeur par-dessus la matrice ai.tool_permissions, rôle
+     * manager + absences.approve) ; une absence hors tenant est introuvable
+     * (isolation fail-closed) ; un refus exige un motif (≤ 1000 caractères,
+     * même règle que RejectAbsenceRequest).
+     *
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function decideAbsence(string $companyId, int $userId, array $arguments): array
+    {
+        /** @var Employee|null $actor */
+        $actor = Employee::query()
+            ->where('company_id', $companyId)
+            ->where('id', $userId)
+            ->first();
+
+        if ($actor === null) {
+            return ['error' => 'Employee not found'];
+        }
+
+        if (! $actor->isManager()) {
+            return ['error' => 'AI_TOOL_PERMISSION_DENIED', 'message' => 'Manager role required to decide on absences'];
+        }
+
+        $absenceId = $this->intArgument($arguments, 'absence_id', 0);
+        $absence = Absence::query()
+            ->where('company_id', $companyId)
+            ->where('id', $absenceId)
+            ->first();
+
+        if ($absence === null) {
+            return ['error' => 'Absence not found'];
+        }
+
+        $decision = $this->stringArgument($arguments, 'decision', '');
+        if (! in_array($decision, ['approve', 'reject'], true)) {
+            return ['error' => 'INVALID_DECISION', 'message' => "decision must be 'approve' or 'reject'"];
+        }
+
+        try {
+            if ($decision === 'approve') {
+                $approved = $this->approveAbsence->execute($absence, $actor);
+
+                return [
+                    'absence_id' => $approved->id,
+                    'status' => $approved->status,
+                    'approved_by' => $approved->approved_by,
+                ];
+            }
+
+            $reason = trim($this->stringArgument($arguments, 'reason', ''));
+            if ($reason === '') {
+                return ['error' => 'ABSENCE_REJECT_REASON_REQUIRED', 'message' => 'A rejection reason is required (parité RejectAbsenceRequest)'];
+            }
+
+            if (mb_strlen($reason) > 1000) {
+                return ['error' => 'ABSENCE_REJECT_REASON_TOO_LONG', 'message' => 'Rejection reason must not exceed 1000 characters'];
+            }
+
+            $rejected = $this->rejectAbsence->execute($absence, $reason);
+
+            return [
+                'absence_id' => $rejected->id,
+                'status' => $rejected->status,
+                'rejected_reason' => $rejected->rejected_reason,
+            ];
+        } catch (AbsenceNotPendingException $exception) {
+            return ['error' => $exception->errorCode(), 'message' => $exception->getMessage()];
+        } catch (InsufficientLeaveBalanceException $exception) {
+            return ['error' => $exception->errorCode(), 'message' => $exception->getMessage()];
+        }
     }
 
     /**
