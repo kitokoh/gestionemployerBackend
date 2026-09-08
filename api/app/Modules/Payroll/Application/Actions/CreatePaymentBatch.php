@@ -41,6 +41,9 @@ class CreatePaymentBatch
         private readonly ConnectionInterface $db,
     ) {}
 
+    /**
+     * @param  array<string, mixed>|null  $metadata
+     */
     public function execute(
         Employee $manager,
         int $payrollRunId,
@@ -71,7 +74,7 @@ class CreatePaymentBatch
 
         $resolvedCurrency = strtoupper((string) ($currency ?? currentCompany()->currency ?? 'DZD'));
 
-        return $this->db->transaction(function () use ($manager, $run, $slips, $resolvedCurrency, $metadata): PaymentBatch {
+        $batch = $this->db->transaction(function () use ($manager, $run, $slips, $resolvedCurrency, $metadata): ?PaymentBatch {
             $batch = PaymentBatch::query()->create([
                 'company_id' => $manager->company_id,
                 'payroll_run_id' => $run->id,
@@ -99,5 +102,11 @@ class CreatePaymentBatch
 
             return $batch->fresh(['items.employee']);
         });
+
+        if (! $batch instanceof PaymentBatch) {
+            throw new \RuntimeException('Échec de la création du lot de paiement.');
+        }
+
+        return $batch;
     }
 }

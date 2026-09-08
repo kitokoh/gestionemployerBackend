@@ -42,6 +42,9 @@ class ConfirmPaymentItemReception
         private readonly PaymentConsentSignatureService $consentSignatureService,
     ) {}
 
+    /**
+     * @param  array{device_signature?: string|null, document_version?: string|null, metadata?: array<string, mixed>|null}  $validated
+     */
     public function execute(
         PaymentItem $paymentItem,
         Employee $employee,
@@ -55,7 +58,7 @@ class ConfirmPaymentItemReception
             ]);
         }
 
-        return $this->db->transaction(function () use ($paymentItem, $employee, $ipAddress, $userAgent, $validated): PaymentConfirmation {
+        $confirmation = $this->db->transaction(function () use ($paymentItem, $employee, $ipAddress, $userAgent, $validated): PaymentConfirmation {
             $existing = PaymentConfirmation::query()
                 ->where('payment_item_id', $paymentItem->id)
                 ->first();
@@ -109,6 +112,12 @@ class ConfirmPaymentItemReception
 
             return $confirmation;
         });
+
+        if (! $confirmation instanceof PaymentConfirmation) {
+            throw new \RuntimeException('Échec de l\'enregistrement de la confirmation de paiement.');
+        }
+
+        return $confirmation;
     }
 
     private function refreshBatchConfirmationStatus(PaymentBatch $batch): void

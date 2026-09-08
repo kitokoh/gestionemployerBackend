@@ -47,7 +47,7 @@ class MarkPaymentBatchPaid
             ]);
         }
 
-        $batch = $this->db->transaction(function () use ($paymentBatch, $manager): PaymentBatch {
+        $batch = $this->db->transaction(function () use ($paymentBatch, $manager): ?PaymentBatch {
             $paymentBatch->forceFill([
                 'status' => PaymentBatch::STATUS_PAID,
                 'marked_paid_by' => $manager->id,
@@ -64,6 +64,10 @@ class MarkPaymentBatchPaid
 
             return $paymentBatch->fresh(['items.paySlip', 'items.employee']);
         });
+
+        if (! $batch instanceof PaymentBatch) {
+            throw new \RuntimeException('Échec du marquage du lot comme payé.');
+        }
 
         foreach ($batch->items as $item) {
             $document = null;
