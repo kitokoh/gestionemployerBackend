@@ -20,7 +20,7 @@ final class SetPlatformUserActiveAction
     }
 
     /**
-     * @return array{status: 'not_found'|'self_disable'|'updated', row?: \stdClass}
+     * @return array{status: 'not_found'}|array{status: 'self_disable'}|array{status: 'updated', row: \stdClass}
      */
     public function execute(int $userId, bool $isActive, ?string $actorEmail): array
     {

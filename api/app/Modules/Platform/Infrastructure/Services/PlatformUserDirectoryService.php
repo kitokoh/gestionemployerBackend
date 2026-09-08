@@ -117,7 +117,7 @@ final class PlatformUserDirectoryService
     /**
      * Activation/désactivation d'un utilisateur plateforme.
      *
-     * @return array{status: 'not_found'|'self_disable'|'updated', row?: \stdClass}
+     * @return array{status: 'not_found'}|array{status: 'self_disable'}|array{status: 'updated', row: \stdClass}
      */
     public function setActive(int $userId, bool $isActive, ?string $actorEmail): array
     {
