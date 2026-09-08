@@ -1,0 +1,106 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Payroll\Application\Actions;
+
+use App\Core\Auth\Domain\Models\Employee;
+use App\Core\Tenant\Domain\Models\Company;
+use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationGenerator;
+use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationService;
+use DateTimeInterface;
+
+/**
+ * Cas d'usage : DSN mensuelle (FR) — une ligne par employé actif du mois
+ * (NIR, identité, date de naissance, brut/net/net imposable, heures,
+ * contrat), agrégée depuis les bulletins (route …/generate-dsn-fr).
+ *
+ * Orchestration pure et nommable (ADR-0020, lot 3b déclarations — #6968) :
+ * la collecte (employés actifs, données de paie mensuelles) et le formatage
+ * restent dans `SocialDeclarationService` / `SocialDeclarationGenerator`
+ * (Infrastructure). L'Action retourne le contenu prêt à servir ; l'interface
+ * (contrôleur) conserve l'autorisation, la validation et l'enveloppe HTTP.
+ *
+ * @return array{content: string, employee_count: int, filename: string}
+ */
+class GenerateDsnFrDeclaration
+{
+    public function __construct(
+        private readonly SocialDeclarationService $declarations,
+    ) {}
+
+    public function execute(Employee $actor, int $month, int $year): array
+    {
+        $employees = $this->declarations->activeEmployees((string) $actor->company_id);
+
+        $payrollData = $this->declarations->monthPayrollData(
+            (string) $actor->company_id,
+            $year,
+            $month,
+        );
+
+        $company = Company::query()->whereKey($actor->company_id)->first();
+
+        $companyName = $company?->name ?? 'N/A';
+        $companySiret = $this->companyRegistrationNumber($company);
+
+        $declarationRows = $employees->map(function ($emp) use ($payrollData): array {
+            $payroll = $payrollData->get($emp->id);
+
+            return [
+                'employee_id' => (int) $emp->id,
+                'nir' => (string) ($emp->national_id ?? ''),
+                'last_name' => (string) ($emp->last_name ?? ''),
+                'first_name' => (string) ($emp->first_name ?? ''),
+                'date_naissance' => $this->dateValue($emp->date_of_birth ?? null),
+                'gross_salary' => (float) ($payroll->total_gross ?? 0),
+                'net_salary' => (float) ($payroll->total_net ?? 0),
+                'net_imposable' => (float) ($payroll->total_net ?? 0),
+                'hours_worked' => 151.67,
+                'contract_type' => (string) ($emp->contract_type ?? 'CDI'),
+                'start_date' => $this->dateValue($emp->contract_start ?? null),
+            ];
+        })->filter(fn (array $row): bool => $row['gross_salary'] > 0);
+
+        $generator = new SocialDeclarationGenerator;
+        $content = $generator->generateDsnFr(
+            $companyName,
+            $companySiret,
+            str_pad((string) $month, 2, '0', STR_PAD_LEFT),
+            $year,
+            $declarationRows->values(),
+        );
+
+        return [
+            'content' => $content,
+            'employee_count' => $declarationRows->count(),
+            'filename' => sprintf('DSN_FR_%02d_%d_%s.dsn', $month, $year, now()->format('Ymd')),
+        ];
+    }
+
+    private function companyRegistrationNumber(?Company $company): string
+    {
+        if ($company === null) {
+            return '';
+        }
+
+        $metadata = $company->metadata ?? [];
+
+        return (string) (
+            $metadata['tax_id']
+            ?? $metadata['nis']
+            ?? $metadata['affiliate_number']
+            ?? $metadata['siret']
+            ?? ''
+        );
+    }
+
+    private function dateValue(mixed $value): string
+    {
+        if ($value instanceof DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        return $value === null ? '' : (string) $value;
+    }
+}
