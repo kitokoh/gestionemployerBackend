@@ -108,6 +108,35 @@ class Orchestrator
 
                 $results = $this->intentEngine->executeToolCalls($response, $request->companyId, $request->userId);
 
+                // A5 (#6852) : chaque outil exécuté ou proposé est journalisé
+                // (ai_tool_executions) avec le contexte de conversation — la
+                // chaîne conversation → action → effet devient rejouable.
+                foreach ($response->toolCalls as $index => $toolCall) {
+                    $result = $results[$index] ?? null;
+                    if ($result === null) {
+                        continue;
+                    }
+
+                    $decoded = json_decode($result->content, true);
+                    $confirmationRequired = is_array($decoded) && ($decoded['status'] ?? null) === 'confirmation_required';
+
+                    $this->auditLogger->logToolExecution(
+                        companyId: $request->companyId,
+                        userId: $request->userId,
+                        conversationId: $conversationId,
+                        pendingActionId: is_array($decoded) && is_string($decoded['pending_action_id'] ?? null)
+                            ? $decoded['pending_action_id']
+                            : null,
+                        toolName: $toolCall->name,
+                        toolInput: $toolCall->arguments,
+                        stage: $confirmationRequired
+                            ? 'confirmation_required'
+                            : ($result->success ? 'executed' : 'error'),
+                        success: $result->success,
+                        resultSummary: $result->content,
+                    );
+                }
+
                 foreach ($results as $result) {
                     $toolsUsed[] = $result->name;
                     $decoded = json_decode($result->content, true);
