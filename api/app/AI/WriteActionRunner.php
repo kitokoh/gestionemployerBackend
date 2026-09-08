@@ -5,12 +5,31 @@ declare(strict_types=1);
 namespace App\AI;
 
 use App\Core\Auth\Domain\Models\Employee;
+use App\Core\Tenant\Infrastructure\Services\TenantCacheService;
+use App\Modules\Planning\Application\Actions\ApproveAbsence;
+use App\Modules\Planning\Application\Actions\RejectAbsence;
+use App\Modules\Planning\Domain\Exceptions\AbsenceNotPendingException;
+use App\Modules\Planning\Domain\Exceptions\InsufficientLeaveBalanceException;
 use App\Modules\Planning\Domain\Models\Absence;
 use App\Modules\Planning\Domain\Models\AbsenceType;
+use App\Modules\Planning\Domain\Models\Schedule;
 use Illuminate\Support\Carbon;
 
 class WriteActionRunner
 {
+    public function __construct(
+        // B3a (#6856) — l'outil `absence_decision` exécute les Actions
+        // canoniques Planning (ApproveAbsence/RejectAbsence → AbsenceService),
+        // propriétaire du domaine absence/congé (PA2-ARCH-002) — même chemin
+        // que les endpoints REST du module façade Absence.
+        private readonly ApproveAbsence $approveAbsence,
+        private readonly RejectAbsence $rejectAbsence,
+        // B3b (#6857) — l'outil `shift_assign` invalide le cache employés du
+        // tenant après affectation (même service que
+        // ScheduleController::assignEmployees).
+        private readonly TenantCacheService $tenantCache,
+    ) {}
+
     /**
      * Issue #5625 : liste statique des write tools qui ont un handler PHP.
      *
@@ -21,6 +40,8 @@ class WriteActionRunner
         return [
             'create_absence',
             'approve_absence',
+            'absence_decision',
+            'shift_assign',
         ];
     }
 
@@ -50,6 +71,12 @@ class WriteActionRunner
         return [
             'create_absence' => fn (array $arguments): array => $this->createAbsence($companyId, $userId, $arguments),
             'approve_absence' => fn (array $arguments): array => $this->approveAbsence($companyId, $userId, $arguments),
+            // B3a (#6856) — décision (approbation/refus motivé) via les Actions
+            // canoniques Planning, parité REST AbsenceController approve/reject.
+            'absence_decision' => fn (array $arguments): array => $this->decideAbsence($companyId, $userId, $arguments),
+            // B3b (#6857) — affectation d'un shift (schedule) à un employé,
+            // parité ScheduleController::assignEmployees (BC-05 WORKFORCE).
+            'shift_assign' => fn (array $arguments): array => $this->assignShift($companyId, $userId, $arguments),
         ];
     }
 
@@ -61,6 +88,157 @@ class WriteActionRunner
     public function supportedWriteTools(): array
     {
         return array_keys($this->writeToolHandlers('', 0));
+    }
+
+    /**
+     * B3a (#6856) — décision sur une demande d'absence (approbation ou refus
+     * motivé), exécutée APRÈS confirmation humaine (flux A4) via les Actions
+     * canoniques Planning (ApproveAbsence/RejectAbsence → AbsenceService,
+     * PA2-ARCH-002) — mêmes transitions de statut, mêmes événements métier
+     * (AbsenceApproved/AbsenceRejected) et même journal d'audit que les
+     * endpoints REST `POST|PUT /api/v1/absences/{absence}/approve|reject`
+     * (module façade Absence).
+     *
+     * Parité REST AbsenceController : seul un manager du tenant peut décider
+     * (défense en profondeur par-dessus la matrice ai.tool_permissions, rôle
+     * manager + absences.approve) ; une absence hors tenant est introuvable
+     * (isolation fail-closed) ; un refus exige un motif (≤ 1000 caractères,
+     * même règle que RejectAbsenceRequest).
+     *
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function decideAbsence(string $companyId, int $userId, array $arguments): array
+    {
+        /** @var Employee|null $actor */
+        $actor = Employee::query()
+            ->where('company_id', $companyId)
+            ->where('id', $userId)
+            ->first();
+
+        if ($actor === null) {
+            return ['error' => 'Employee not found'];
+        }
+
+        if (! $actor->isManager()) {
+            return ['error' => 'AI_TOOL_PERMISSION_DENIED', 'message' => 'Manager role required to decide on absences'];
+        }
+
+        $absenceId = $this->intArgument($arguments, 'absence_id', 0);
+        $absence = Absence::query()
+            ->where('company_id', $companyId)
+            ->where('id', $absenceId)
+            ->first();
+
+        if ($absence === null) {
+            return ['error' => 'Absence not found'];
+        }
+
+        $decision = $this->stringArgument($arguments, 'decision', '');
+        if (! in_array($decision, ['approve', 'reject'], true)) {
+            return ['error' => 'INVALID_DECISION', 'message' => "decision must be 'approve' or 'reject'"];
+        }
+
+        try {
+            if ($decision === 'approve') {
+                $approved = $this->approveAbsence->execute($absence, $actor);
+
+                return [
+                    'absence_id' => $approved->id,
+                    'status' => $approved->status,
+                    'approved_by' => $approved->approved_by,
+                ];
+            }
+
+            $reason = trim($this->stringArgument($arguments, 'reason', ''));
+            if ($reason === '') {
+                return ['error' => 'ABSENCE_REJECT_REASON_REQUIRED', 'message' => 'A rejection reason is required (parité RejectAbsenceRequest)'];
+            }
+
+            if (mb_strlen($reason) > 1000) {
+                return ['error' => 'ABSENCE_REJECT_REASON_TOO_LONG', 'message' => 'Rejection reason must not exceed 1000 characters'];
+            }
+
+            $rejected = $this->rejectAbsence->execute($absence, $reason);
+
+            return [
+                'absence_id' => $rejected->id,
+                'status' => $rejected->status,
+                'rejected_reason' => $rejected->rejected_reason,
+            ];
+        } catch (AbsenceNotPendingException $exception) {
+            return ['error' => $exception->errorCode(), 'message' => $exception->getMessage()];
+        } catch (InsufficientLeaveBalanceException $exception) {
+            return ['error' => $exception->errorCode(), 'message' => $exception->getMessage()];
+        }
+    }
+
+    /**
+     * B3b (#6857) — affectation d'un shift (gabarit horaire `Schedule`) à un
+     * employé, exécutée APRÈS confirmation humaine (flux A4). Parité exacte
+     * avec l'endpoint REST canonique
+     * `POST /api/v1/schedules/{schedule}/assign-employees`
+     * (ScheduleController::assignEmployees, module Planning, BC-05 WORKFORCE) :
+     * manager du tenant uniquement (défense en profondeur par-dessus la
+     * matrice ai.tool_permissions) ; schedule et employé du tenant ; manager
+     * d'équipe (dept/superviseur) borné à son périmètre (`visibleToManager`,
+     * PA2-SEC-002/003) ; invalidation du cache employés après affectation.
+     *
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function assignShift(string $companyId, int $userId, array $arguments): array
+    {
+        /** @var Employee|null $actor */
+        $actor = Employee::query()
+            ->where('company_id', $companyId)
+            ->where('id', $userId)
+            ->first();
+
+        if ($actor === null) {
+            return ['error' => 'Employee not found'];
+        }
+
+        if (! $actor->isManager()) {
+            return ['error' => 'AI_TOOL_PERMISSION_DENIED', 'message' => 'Manager role required to assign shifts'];
+        }
+
+        $scheduleId = $this->intArgument($arguments, 'schedule_id', 0);
+        $schedule = Schedule::query()
+            ->where('company_id', $companyId)
+            ->where('id', $scheduleId)
+            ->first();
+
+        if ($schedule === null) {
+            return ['error' => 'Schedule not found'];
+        }
+
+        $employeeId = $this->intArgument($arguments, 'employee_id', 0);
+        $employee = Employee::query()
+            ->where('company_id', $companyId)
+            ->when($actor->isTeamScoped(), static fn ($query) => $query->visibleToManager($actor))
+            ->where('id', $employeeId)
+            ->first();
+
+        if ($employee === null) {
+            return [
+                'error' => 'Employee not found',
+                'message' => 'Only employees from the current company (and manager scope) can be assigned',
+            ];
+        }
+
+        $employee->update(['schedule_id' => $schedule->id]);
+
+        // Même invalidation de cache que le REST assignEmployees : les agrégats
+        // employés (par schedule) ne doivent pas servir une valeur périmée.
+        $this->tenantCache->invalidateEmployees((string) $companyId);
+
+        return [
+            'employee_id' => $employee->id,
+            'schedule_id' => $schedule->id,
+            'schedule_name' => $schedule->name,
+            'status' => 'assigned',
+        ];
     }
 
     /**

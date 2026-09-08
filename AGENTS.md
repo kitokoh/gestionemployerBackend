@@ -168,6 +168,19 @@ vert alors que le correctif n'existe pas (vague du 2026-08-17 : #4690/#4687/
 - Tout skip de deploiement doit emettre `::warning::` + `$GITHUB_STEP_SUMMARY`
   (raison, SHA, conclusions) — un skip silencieux ressemble a un success.
 
+## Lecon 2026-09-08 — Gate deploy dev aveugle (issues #6834/#6973)
+
+Le tier dev/continu (`gestionemployerbackend`) n'a PAS d'`APP_VERSION` :
+`/api/v1/health` y expose `version` = SHA Render tronqué (`RENDER_GIT_COMMIT`,
+config `app.version` « honnête » #6835). Un healthcheck de deploy qui compare
+`version` à un APP_VERSION (PILOTAGE/prod) est donc **aveugle sur le tier dev**
+— et s'il poll un healthcheck partagé via secret, il peut valider la PROD :
+`deploy-main` « success » pendant ~24 h avec dev figé sur un vieux SHA. Règle :
+le healthcheck d'un workflow de déploiement doit cibler l'instance QU'IL
+déploie (URL dev explicite, pas de secret partagé) et prouver qu'une NOUVELLE
+instance répond (baseline avant hook → version ≠ baseline), jamais comparer à
+un APP_VERSION sur un tier qui n'en porte pas. Rattrapage : `deploy-main-catchup.yml`.
+
 ## SLA bugs pilotes (issue #5155)
 
 - **Promesse** : un bug **bloquant** pilote (paie / pointage / login impossible
