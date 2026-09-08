@@ -23,6 +23,12 @@ use InvalidArgumentException;
 final readonly class AIToolDefinition
 {
     /**
+     * Longueur maximale de la description (prompt LLM) — utilisée par la
+     * garde AIToolDefinitionRegistry::violations() (A3 #6850).
+     */
+    public const MAX_DESCRIPTION_LENGTH = 600;
+
+    /**
      * @param  array<string, mixed>  $inputSchema  JSON Schema décrivant l'entrée de l'outil.
      * @param  array<string, mixed>  $outputSchema  JSON Schema décrivant la sortie de l'outil.
      */
