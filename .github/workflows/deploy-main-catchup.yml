@@ -1,0 +1,145 @@
+name: Deploy Main Catch-up
+
+# #6834 (action 4, constat 2026-09-05) : un run deploy-main skippé (timeout de
+# gate, chemin non couvert, rafale de merges) ne laisse AUCUN rattrapage : le
+# tier dev peut rester en retard sur main sans aucun signal rouge (il n'existe
+# simplement aucun run pour le SHA raté). Ce workflow compare chaque heure le
+# SHA servi par l'instance dev (/api/v1/health → version = SHA Render tronqué)
+# au HEAD de main et redéclenche deploy-main si nécessaire — mais uniquement
+# si les tests du HEAD sont verts (deploy-main en mode workflow_dispatch
+# contourne son gate interne, on se gate soi-même).
+
+on:
+  schedule:
+    # 1×/heure, décalé des crons de smoke (*/30) et du backup (02:15 UTC).
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: deploy-main-catchup
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  catch-up:
+    timeout-minutes: 20
+    name: Re-dispatch deploy-main si dev en retard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comparer SHA live (dev) vs HEAD de main
+        id: compare
+        shell: bash
+        env:
+          HEALTH_URL: ${{ vars.PROD_API_BASE_URL }}/health
+        run: |
+          set -euo pipefail
+          if [[ -z "${HEALTH_URL}" ]]; then
+            echo "::error::vars.PROD_API_BASE_URL non défini — rattrapage impossible (#6834)."
+            exit 1
+          fi
+          # Tier dev : health `version` = SHA Render tronqué (7 car., pas d'APP_VERSION).
+          live="$(curl --silent --show-error --max-time 20 "${HEALTH_URL}" \
+            | sed -n 's/.*"version":"\([^"]*\)".*/\1/p' || true)"
+          head_sha="$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | awk '{print $1}')"
+          main_sha7="${head_sha:0:7}"
+          echo "live=${live:-unknown}"
+          echo "main=${main_sha7} (${head_sha})"
+
+          if [[ "${live:-unknown}" == "${main_sha7}" ]]; then
+            echo "dev à jour — aucun rattrapage nécessaire."
+            echo "dispatch_needed=false" >> "$GITHUB_OUTPUT"
+            echo "head_sha=${head_sha}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ -z "${head_sha}" || ! "${head_sha}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::HEAD de main illisible — rattrapage impossible."
+            echo "dispatch_needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Dev en retard (ou health indisponible → inconnu) : dispatch nécessaire.
+          echo "dispatch_needed=true" >> "$GITHUB_OUTPUT"
+          echo "head_sha=${head_sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Vérifier qu'aucun deploy-main n'est déjà en cours
+        id: inflight
+        if: steps.compare.outputs.dispatch_needed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Le workflow_dispatch de deploy-main est groupé par SHA ; s'il en
+          # existe déjà un in_progress/queued pour le HEAD, on s'arrête (pas de
+          # pile de runs).
+          runs="$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/deploy-main.yml/runs?per_page=5")"
+          running="$(echo "${runs}" | jq -r '.workflow_runs[] | select(.status == "queued" or .status == "in_progress") | .head_sha' 2>/dev/null | head -n 1)"
+          echo "deploy-main en cours pour: ${running:-aucun}"
+          if [[ -n "${running}" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Gate interne — Tests verts sur le HEAD de main
+        id: testsgate
+        if: steps.compare.outputs.dispatch_needed == 'true' && steps.inflight.outputs.skip != 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ steps.compare.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          # Poll borné (≤ 6 min) : conclusion du run push « Tests - Leopardo RH »
+          # pour le HEAD. Vert → on dispatche ; sinon on renonce (prochaine heure).
+          ok=""
+          for attempt in {1..12}; do
+            runs="$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&event=push&per_page=50")"
+            conclusion="$(echo "${runs}" | jq -r --arg sha "${HEAD_SHA}" '
+              .workflow_runs[]
+              | select(.head_sha == $sha and .name == "Tests - Leopardo RH")
+              | (.conclusion // .status)' 2>/dev/null | head -n 1)"
+            echo "  [${attempt}/12] Tests sur ${HEAD_SHA:0:7} : ${conclusion:-introuvable}"
+            if [[ "${conclusion}" == "success" || "${conclusion}" == "skipped" ]]; then
+              ok=true
+              break
+            fi
+            if [[ "${conclusion}" == "failure" || "${conclusion}" == "cancelled" || "${conclusion}" == "timed_out" ]]; then
+              break
+            fi
+            sleep 30
+          done
+          if [[ "${ok}" != "true" ]]; then
+            echo "::warning::Rattrapage annulé — Tests non verts sur le HEAD ${HEAD_SHA:0:7} (${conclusion:-aucun run})."
+            echo "dispatch=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "dispatch=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Redéclencher deploy-main (workflow_dispatch)
+        if: steps.testsgate.outputs.dispatch == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          code="$(curl -sS -o /tmp/dispatch.json -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/deploy-main.yml/dispatches" \
+            -d '{"ref":"main","inputs":{"force_deploy":true}}')"
+          echo "dispatch deploy-main → HTTP ${code}"
+          [[ "${code}" == "204" ]] || { echo "::error::dispatch échoué (${code}) : $(cat /tmp/dispatch.json)"; exit 1; }
+          {
+            echo "## Rattrapage deploy-main déclenché"
+            echo "- Dev en retard : SHA live ≠ HEAD de main."
+            echo "- deploy-main redéclenché sur \`main\` (tests HEAD verts) avec \`force_deploy: true\` (bypass api_changed — #6973)."
+          } >> "$GITHUB_STEP_SUMMARY"
