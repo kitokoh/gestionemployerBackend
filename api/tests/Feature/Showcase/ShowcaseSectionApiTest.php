@@ -63,7 +63,7 @@ class ShowcaseSectionApiTest extends TestCase
         return $employee;
     }
 
-    private function showcase(Company $company, string $status = CompanyShowcaseStatus::Draft): CompanyShowcase
+    private function showcase(Company $company, CompanyShowcaseStatus $status = CompanyShowcaseStatus::Draft): CompanyShowcase
     {
         return app(TenantManager::class)->withinTenant($company, function () use ($company, $status): CompanyShowcase {
             /** @var CompanyShowcase $showcase */

@@ -123,7 +123,7 @@ final class ShowcaseSectionController extends Controller
         $showcase = $this->currentShowcaseOrFail($request);
         $this->authorizeUpdate($request, $showcase);
 
-        $this->reorderSections->execute($showcase, array_map('intval', (array) $request->validated('ids')));
+        $this->reorderSections->execute($showcase, array_values(array_map('intval', (array) $request->validated('ids'))));
 
         return ShowcaseSectionResource::collection($this->listSections->execute($showcase))->response();
     }

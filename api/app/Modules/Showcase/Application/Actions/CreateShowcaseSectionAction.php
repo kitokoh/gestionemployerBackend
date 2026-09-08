@@ -29,6 +29,9 @@ final class CreateShowcaseSectionAction
         private readonly ShowcasePublicCache $publicCache,
     ) {}
 
+    /**
+     * @param  array<string, mixed>  $content
+     */
     public function execute(CompanyShowcase $showcase, string $type, array $content): CompanyShowcaseSection
     {
         if (! ShowcaseSectionSchemaRegistry::isKnownType($type)) {

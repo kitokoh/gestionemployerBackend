@@ -14,11 +14,12 @@ use App\Modules\Showcase\Domain\Models\CompanyShowcaseSection;
  * ou suppression). L'isolation tenant est portée par le scope
  * BelongsToCompany (company_id) ; le paramètre vitrine est vérifié par le
  * contrôleur (Policy).
- *
- * @return list<CompanyShowcaseSection>
  */
 final class ListShowcaseSectionsAction
 {
+    /**
+     * @return list<CompanyShowcaseSection>
+     */
     public function execute(CompanyShowcase $showcase): array
     {
         return CompanyShowcaseSection::query()

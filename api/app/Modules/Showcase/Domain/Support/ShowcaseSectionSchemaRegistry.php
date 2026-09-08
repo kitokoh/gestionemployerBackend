@@ -179,6 +179,7 @@ final class ShowcaseSectionSchemaRegistry
 
     /**
      * @param  string  $type  Valeur de {@see ShowcaseSectionType}.
+     * @return array<string, mixed>|null
      */
     public static function schemaFor(string $type): ?array
     {

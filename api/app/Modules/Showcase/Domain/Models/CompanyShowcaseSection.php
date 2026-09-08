@@ -8,6 +8,7 @@ use App\Modules\Showcase\Domain\Enums\ShowcaseSectionType;
 use App\Shared\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
@@ -62,7 +63,10 @@ class CompanyShowcaseSection extends Model
         ];
     }
 
-    public function showcase(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    /**
+     * @return BelongsTo<CompanyShowcase, $this>
+     */
+    public function showcase(): BelongsTo
     {
         return $this->belongsTo(CompanyShowcase::class, 'showcase_id');
     }
@@ -71,6 +75,7 @@ class CompanyShowcaseSection extends Model
      * Ordre canonique d'une vitrine : sort_order puis id (stable).
      *
      * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeOrdered(Builder $query): Builder
     {

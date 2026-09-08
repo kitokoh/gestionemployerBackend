@@ -29,6 +29,9 @@ final class UpdateShowcaseSectionAction
         private readonly ShowcasePublicCache $publicCache,
     ) {}
 
+    /**
+     * @param  array<string, mixed>|null  $content
+     */
     public function execute(CompanyShowcase $showcase, CompanyShowcaseSection $section, ?string $type, ?array $content = null): CompanyShowcaseSection
     {
         $nextType = $type ?? $section->type->value;

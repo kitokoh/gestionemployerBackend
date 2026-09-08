@@ -31,10 +31,10 @@ final class ShowcasePublicCache
     /**
      * @template T
      *
-     * @param  callable(): T  $resolver
+     * @param  \Closure(): T  $resolver
      * @return T
      */
-    public function remember(string $slug, callable $resolver): mixed
+    public function remember(string $slug, \Closure $resolver): mixed
     {
         return Cache::remember(self::key($slug), now()->addSeconds(self::TTL_SECONDS), $resolver);
     }
