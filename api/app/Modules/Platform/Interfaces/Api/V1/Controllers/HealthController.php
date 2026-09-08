@@ -40,6 +40,7 @@ class HealthController extends Controller
         $queue = $this->checkQueue();
         $memory = $this->checkMemory();
         $web = $this->checkWeb();
+        $delivery = $this->checkDeliveryConfiguration();
 
         $globalOk = $database['ok'];
 
@@ -54,6 +55,7 @@ class HealthController extends Controller
                 'queue' => $queue,
                 'memory' => $memory,
                 'web' => $web,
+                'delivery' => $delivery,
             ],
             'uptime_seconds' => defined('LARAVEL_START')
                 ? (int) round(microtime(true) - LARAVEL_START)
@@ -255,6 +257,41 @@ class HealthController extends Controller
             'ok' => true,
             'driver' => $driver,
             'app_key_set' => true,
+        ];
+    }
+
+    /**
+     * #7014 (part of #6919) : garde de configuration « livraison » pour la
+     * production — un mailer `log`/`array`, un hôte SMTP ou un domaine
+     * Mailgun sandbox, ou un provider WhatsApp configuré sans secrets Meta
+     * (fallback audit silencieux, PA2-COMM-008) rendent les envois
+     * transactionnels factices tout en les rapportant comme envoyés.
+     * Check non bloquant et sans effet de bord : hors production il est
+     * `skipped` ; en production il est `ok` quand la configuration est
+     * saine, `degraded` + `issues[]` (slugs machine) sinon. Le 503 du
+     * health reste piloté par le check base de données uniquement, donc
+     * les deploy gates existants ne sont pas affectés.
+     *
+     * @return array{ok: bool, status: string, issues?: list<string>}
+     */
+    private function checkDeliveryConfiguration(): array
+    {
+        $guard = new ProductionDeliveryGuard;
+
+        if (! $guard->isApplicable()) {
+            return ['ok' => true, 'status' => 'skipped'];
+        }
+
+        $issues = $guard->issues();
+
+        if ($issues === []) {
+            return ['ok' => true, 'status' => 'ok'];
+        }
+
+        return [
+            'ok' => false,
+            'status' => 'degraded',
+            'issues' => $issues,
         ];
     }
 
