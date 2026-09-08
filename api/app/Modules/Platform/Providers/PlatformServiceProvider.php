@@ -16,6 +16,7 @@ use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
 class PlatformServiceProvider extends ServiceProvider
@@ -49,17 +50,30 @@ class PlatformServiceProvider extends ServiceProvider
         Event::listen(CompanyCreated::class, function (CompanyCreated $event): void {
             $company = $event->company;
 
-            $this->app->make(PlatformOutboxPublisher::class)->publish(
-                companyId: $company->id,
-                eventType: PlatformCompanyCreatedAuditConsumer::EVENT_TYPE,
-                payload: [
-                    'event_id' => 'company.created.'.$company->id,
+            try {
+                $this->app->make(PlatformOutboxPublisher::class)->publish(
+                    companyId: $company->id,
+                    eventType: PlatformCompanyCreatedAuditConsumer::EVENT_TYPE,
+                    payload: [
+                        'event_id' => 'company.created.'.$company->id,
+                        'company_id' => $company->id,
+                        'company_name' => $company->name,
+                    ],
+                    aggregateType: Company::class,
+                    aggregateId: $company->id,
+                );
+            } catch (\Throwable $exception) {
+                // #6958 : la publication outbox est un effet de bord auxiliaire
+                // (audit/consommation asynchrone). Un échec ici — ex. table
+                // `platform_outbox_events` absente sur un env partiel — ne doit
+                // JAMAIS faire échouer la création du tenant (le provisioning
+                // CompanyCreated tourne dans une transaction, cf.
+                // ProvisionGuidedTrial). Log structuré, événement absorbé.
+                Log::channel('structured')->warning('platform.outbox.publish_failed.company_created', [
                     'company_id' => $company->id,
-                    'company_name' => $company->name,
-                ],
-                aggregateType: Company::class,
-                aggregateId: $company->id,
-            );
+                    'error' => $exception->getMessage(),
+                ]);
+            }
         });
 
         Event::listen(SubscriptionPaid::class, function (SubscriptionPaid $event): void {

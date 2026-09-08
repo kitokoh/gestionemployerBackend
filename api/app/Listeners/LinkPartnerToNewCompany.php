@@ -11,6 +11,22 @@ class LinkPartnerToNewCompany
 {
     public function handle(CompanyCreated $event): void
     {
+        // #6958 : listener auxiliaire — un échec ici (table/schéma absent sur
+        // un env partiel, ex. DEV) ne doit JAMAIS faire échouer la création du
+        // tenant (le provisioning tourne dans une transaction) : on loggue et
+        // on laisse la création d'entreprise aboutir.
+        try {
+            $this->link($event);
+        } catch (\Throwable $exception) {
+            Log::warning('CompanyCreated → LinkPartnerToNewCompany failed (non bloquant)', [
+                'company_id' => $event->company->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function link(CompanyCreated $event): void
+    {
         // Manual referral code takes precedence (already assigned in Controller)
         if ($event->company->referrer_partner_id) {
             return;

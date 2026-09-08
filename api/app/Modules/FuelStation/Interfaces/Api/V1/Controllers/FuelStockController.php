@@ -7,6 +7,9 @@ namespace App\Modules\FuelStation\Interfaces\Api\V1\Controllers;
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Feature\Infrastructure\Services\FeatureFlag;
 use App\Http\Controllers\Controller;
+use App\Modules\FuelStation\Application\Actions\RecordFuelStockEntryAction;
+use App\Modules\FuelStation\Application\Actions\RecordFuelTankDeliveryAction;
+use App\Modules\FuelStation\Application\Actions\RunFuelReconciliationAction;
 use App\Modules\FuelStation\Domain\Exceptions\FuelSolutionInactiveException;
 use App\Modules\FuelStation\Domain\Models\FuelReconciliationRun;
 use App\Modules\FuelStation\Domain\Models\FuelStation;
@@ -71,7 +74,7 @@ class FuelStockController extends Controller
         $actor = $request->user();
         $this->authorize('create', FuelStockEntry::class);
 
-        $entry = $this->stocks->recordEntry($actor, $request->validated());
+        $entry = app(RecordFuelStockEntryAction::class)->execute($actor, $request->validated());
 
         return response()->json(['data' => $this->entryPayload($entry)], 201);
     }
@@ -115,7 +118,7 @@ class FuelStockController extends Controller
             ? Carbon::parse((string) $request->string('date'))
             : now()->subDay();
 
-        $result = $this->stocks->reconcile((string) $actor->company_id, $stationId, $date, $actor->id);
+        $result = app(RunFuelReconciliationAction::class)->execute($actor, $stationId, $date);
 
         return response()->json([
             'data' => [
@@ -204,7 +207,7 @@ class FuelStockController extends Controller
         $this->assertTenantOwned($tank, $actor);
         $this->authorize('createDelivery', FuelTankDelivery::class);
 
-        $delivery = $this->stocks->recordDelivery($tank, $actor, $request->validated());
+        $delivery = app(RecordFuelTankDeliveryAction::class)->execute($tank, $actor, $request->validated());
 
         return response()->json(['data' => $this->deliveryPayload($delivery)], 201);
     }
@@ -248,7 +251,7 @@ class FuelStockController extends Controller
         $runDateRaw = $request->validated()['run_date'] ?? now()->toDateString();
         $date = Carbon::parse(is_string($runDateRaw) ? $runDateRaw : now()->toDateString());
 
-        $result = $this->stocks->reconcile((string) $actor->company_id, (int) $station->getAttribute('id'), $date, $actor->id);
+        $result = app(RunFuelReconciliationAction::class)->execute($actor, (int) $station->getAttribute('id'), $date);
 
         return response()->json([
             'data' => [
