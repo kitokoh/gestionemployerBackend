@@ -19,6 +19,7 @@ use App\Modules\Showcase\Interfaces\Api\V1\Requests\UpdateShowcaseSectionRequest
 use App\Modules\Showcase\Interfaces\Api\V1\Resources\ShowcaseSectionResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 /**
  * BC-27 SHOWCASE (#6866) — API privée CRUD des sections de la vitrine du
@@ -99,7 +100,7 @@ final class ShowcaseSectionController extends Controller
         return (new ShowcaseSectionResource($updated))->response();
     }
 
-    public function destroy(Request $request, CompanyShowcaseSection $section): JsonResponse
+    public function destroy(Request $request, CompanyShowcaseSection $section): Response
     {
         $showcase = $this->currentShowcaseOrFail($request);
 

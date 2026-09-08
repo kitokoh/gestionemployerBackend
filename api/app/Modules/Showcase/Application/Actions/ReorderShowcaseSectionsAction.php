@@ -47,7 +47,7 @@ final class ReorderShowcaseSectionsAction
             ]);
         }
 
-        foreach (array_values($orderedIds) as $index => $id) {
+        foreach ($orderedIds as $index => $id) {
             CompanyShowcaseSection::query()
                 ->whereKey((int) $id)
                 ->where('showcase_id', $showcase->id)

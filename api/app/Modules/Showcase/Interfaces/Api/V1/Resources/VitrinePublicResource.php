@@ -69,11 +69,8 @@ final class VitrinePublicResource extends JsonResource
      */
     private function publicSettings(CompanyShowcase $showcase): array
     {
+        // `settings` est un cast JSON `array` sur le modèle (nullable → ?? []).
         $settings = $showcase->settings ?? [];
-
-        if (! is_array($settings)) {
-            return [];
-        }
 
         $public = [];
 

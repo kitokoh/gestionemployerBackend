@@ -62,7 +62,7 @@ final class ShowcaseSectionSchemaValidator
 
     /**
      * @param  array<string, mixed>  $schema
-     * @param  list<string>  $path  Segments du chemin (ex. content, items, 2, title)
+     * @param  string  $pointer  Chemin JSON pointer concaténé (ex. content.items.2.title)
      * @param  array<string, list<string>>  $errors
      */
     private function checkNode(array $schema, mixed $value, string $pointer, array &$errors): void
