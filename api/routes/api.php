@@ -330,6 +330,9 @@ Route::prefix('v1')->group(function (): void {
     // BC-26 DELIVERY — module de livraison générique (DELIVERY-101/#6282)
     require __DIR__.'/modules/delivery.php';
 
+    // BC-27 SHOWCASE — vitrine publique du tenant (V-SECTIONS-API #6866)
+    require __DIR__.'/modules/showcase.php';
+
     // IA Module — fichier requis DANS le groupe v1 (prefix /api/v1) :
     // chemins réels /api/v1/ai/* (drift doc #4936)
     require __DIR__.'/ai.php';

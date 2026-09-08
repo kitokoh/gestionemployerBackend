@@ -179,6 +179,8 @@ return Application::configure(basePath: dirname(__DIR__))
             // TRAVEL-1001 (#6114) — boutique publique (jeton tenant signé).
             'travel.public.shop' => \App\Http\Middleware\EnsurePublicShopAccess::class,
             'module.delivery' => EnsureDeliveryModuleMiddleware::class,
+            // BC-27 SHOWCASE — gate feature flag company_showcase (#6866).
+            'module.showcase' => \App\Http\Middleware\Showcase\EnsureShowcaseModuleMiddleware::class,
             'delivery.permission' => \App\Http\Middleware\Delivery\EnsureDeliveryPermissionMiddleware::class,
             'admin' => AdminMiddleware::class,
             'api.manager' => EnsureApiManagerMiddleware::class,

@@ -3312,6 +3312,30 @@ class LeopardoClient:
         """Affecter un horaire/regle entreprise a des employes"""
         return self.request("POST", "/schedules/{schedule}/assign-employees", **kwargs)
 
+    def get_showcase_sections(self, **kwargs):
+        """Lister les sections de la vitrine du tenant (membres du tenant)"""
+        return self.request("GET", "/showcase/sections", **kwargs)
+
+    def post_showcase_sections(self, **kwargs):
+        """Creer une section (gestion principal/rh) — contenu valide contre le JSON Schema versionne du type"""
+        return self.request("POST", "/showcase/sections", **kwargs)
+
+    def delete_showcase_sections_by_section(self, **kwargs):
+        """Supprimer une section (gestion principal/rh)"""
+        return self.request("DELETE", "/showcase/sections/{section}", **kwargs)
+
+    def get_showcase_sections_by_section(self, **kwargs):
+        """Detail d'une section de la vitrine (membres du tenant)"""
+        return self.request("GET", "/showcase/sections/{section}", **kwargs)
+
+    def put_showcase_sections_by_section(self, **kwargs):
+        """Mettre a jour une section (contenu/position, gestion principal/rh)"""
+        return self.request("PUT", "/showcase/sections/{section}", **kwargs)
+
+    def put_showcase_sections_order(self, **kwargs):
+        """Reordonner les sections de la vitrine (gestion principal/rh)"""
+        return self.request("PUT", "/showcase/sections/order", **kwargs)
+
     def get_sites(self, **kwargs):
         """Lister les sites"""
         return self.request("GET", "/sites", **kwargs)

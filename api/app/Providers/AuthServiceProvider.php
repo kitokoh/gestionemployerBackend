@@ -174,7 +174,9 @@ use App\Modules\RestaurantManager\Policies\RestaurantTaxRatePolicy;
 use App\Modules\RestaurantManager\Policies\RestaurantUnitPolicy;
 use App\Modules\RestaurantManager\Policies\RestaurantZonePolicy;
 use App\Modules\Showcase\Domain\Models\CompanyShowcase;
+use App\Modules\Showcase\Domain\Models\ShowcaseSection;
 use App\Modules\Showcase\Domain\Policies\CompanyShowcasePolicy;
+use App\Modules\Showcase\Domain\Policies\ShowcaseSectionPolicy;
 use App\Modules\TravelAgency\Domain\Models\TravelBooking;
 use App\Modules\TravelAgency\Domain\Models\TravelCancellationPolicy;
 use App\Modules\TravelAgency\Domain\Models\TravelCarrier;
@@ -342,6 +344,8 @@ class AuthServiceProvider extends ServiceProvider
         Gate::policy(CatalogProduct::class, CatalogProductPolicy::class);
         // — Showcase (BC-27 #6865 : socle domaine — vitrine entreprise)
         Gate::policy(CompanyShowcase::class, CompanyShowcasePolicy::class);
+        // — Showcase (BC-27 #6866 : sections typées de la vitrine)
+        Gate::policy(ShowcaseSection::class, ShowcaseSectionPolicy::class);
         Gate::policy(Department::class, DepartmentPolicy::class);
         Gate::policy(Position::class, PositionPolicy::class);
         Gate::policy(Schedule::class, SchedulePolicy::class);

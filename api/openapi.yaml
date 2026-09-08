@@ -99,6 +99,8 @@ tags:
   description: Connexion du compte social (agregateur Ayrshare) et gestion des publications reseaux sociaux d'un tenant.
 - name: Platform Admin
   description: 'Administration super-admin : gestion tenants, plans, metriques globales.'
+- name: Showcase
+  description: 'BC-27 SHOWCASE — vitrine publique du tenant (sections typees, contrat JSON Schema #6866).'
 paths:
   /attendance/config:
     get:
@@ -26792,6 +26794,175 @@ paths:
           $ref: '#/components/responses/Error401'
         '404':
           description: Fichier introuvable
+  /showcase/sections:
+    get:
+      tags:
+      - Showcase
+      summary: Lister les sections de la vitrine du tenant (membres du tenant)
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Liste ordonnee des sections
+        '401':
+          $ref: '#/components/responses/Error401'
+    post:
+      tags:
+      - Showcase
+      summary: Creer une section (gestion principal/rh) — contenu valide contre le JSON Schema versionne du type
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - type
+              - content
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - hero
+                  - features
+                  - products
+                  - gallery
+                  - testimonials
+                  - contact
+                  - footer
+                content:
+                  type: object
+                  additionalProperties: true
+                  description: Contenu valide contre le JSON Schema v1 du type (contrat #6866)
+                schema_version:
+                  type: integer
+                  default: 1
+                position:
+                  type: integer
+      responses:
+        '201':
+          description: Section creee
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '422':
+          $ref: '#/components/responses/Validation422'
+  /showcase/sections/order:
+    put:
+      tags:
+      - Showcase
+      summary: Reordonner les sections de la vitrine (gestion principal/rh)
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - sections
+              properties:
+                sections:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - id
+                    - position
+                    properties:
+                      id:
+                        type: integer
+                      position:
+                        type: integer
+      responses:
+        '200':
+          description: Sections reordonnees
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+  /showcase/sections/{section}:
+    get:
+      tags:
+      - Showcase
+      summary: Detail d'une section de la vitrine (membres du tenant)
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: section
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Section
+        '401':
+          $ref: '#/components/responses/Error401'
+        '404':
+          $ref: '#/components/responses/Error404'
+    put:
+      tags:
+      - Showcase
+      summary: Mettre a jour une section (contenu/position, gestion principal/rh)
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: section
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: object
+                  additionalProperties: true
+                schema_version:
+                  type: integer
+                position:
+                  type: integer
+      responses:
+        '200':
+          description: Section mise a jour
+        '401':
+          $ref: '#/components/responses/Error401'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Validation422'
+    delete:
+      tags:
+      - Showcase
+      summary: Supprimer une section (gestion principal/rh)
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: section
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Section supprimee
+        '401':
+          $ref: '#/components/responses/Error401'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+
 components:
   securitySchemes:
     BearerAuth:

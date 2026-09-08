@@ -4115,6 +4115,36 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("POST", "/schedules/{schedule}/assign-employees", options);
     },
 
+    /** Lister les sections de la vitrine du tenant (membres du tenant) */
+    getShowcaseSections(options = {}) {
+      return request("GET", "/showcase/sections", options);
+    },
+
+    /** Creer une section (gestion principal/rh) — contenu valide contre le JSON Schema versionne du type */
+    postShowcaseSections(options = {}) {
+      return request("POST", "/showcase/sections", options);
+    },
+
+    /** Supprimer une section (gestion principal/rh) */
+    deleteShowcaseSectionsBySection(options = {}) {
+      return request("DELETE", "/showcase/sections/{section}", options);
+    },
+
+    /** Detail d'une section de la vitrine (membres du tenant) */
+    getShowcaseSectionsBySection(options = {}) {
+      return request("GET", "/showcase/sections/{section}", options);
+    },
+
+    /** Mettre a jour une section (contenu/position, gestion principal/rh) */
+    putShowcaseSectionsBySection(options = {}) {
+      return request("PUT", "/showcase/sections/{section}", options);
+    },
+
+    /** Reordonner les sections de la vitrine (gestion principal/rh) */
+    putShowcaseSectionsOrder(options = {}) {
+      return request("PUT", "/showcase/sections/order", options);
+    },
+
     /** Lister les sites */
     getSites(options = {}) {
       return request("GET", "/sites", options);
