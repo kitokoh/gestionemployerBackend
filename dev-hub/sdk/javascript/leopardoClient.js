@@ -1495,6 +1495,26 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("PUT", "/catalog/categories/{category}", options);
     },
 
+    /** Lister les demandes de devis B2B du tenant (back-office) */
+    getCatalogInquiries(options = {}) {
+      return request("GET", "/catalog/inquiries", options);
+    },
+
+    /** Effacer une demande de devis (droit RGPD, canal tenant) */
+    deleteCatalogInquiriesByInquiry(options = {}) {
+      return request("DELETE", "/catalog/inquiries/{inquiry}", options);
+    },
+
+    /** Transition de statut d'une demande de devis (back-office) */
+    patchCatalogInquiriesByInquiryStatus(options = {}) {
+      return request("PATCH", "/catalog/inquiries/{inquiry}/status", options);
+    },
+
+    /** Exporter les demandes de devis B2B en CSV (back-office) */
+    getCatalogInquiriesExport(options = {}) {
+      return request("GET", "/catalog/inquiries/export", options);
+    },
+
     /** Lister les produits du catalogue (membres du tenant) */
     getCatalogProducts(options = {}) {
       return request("GET", "/catalog/products", options);
@@ -3873,6 +3893,21 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
     /** Postuler à une offre publique (anti-doublon par email, #3860) */
     postPublicCareersByCompanySlugJobsByJobPostingApply(options = {}) {
       return request("POST", "/public/careers/{companySlug}/jobs/{jobPosting}/apply", options);
+    },
+
+    /** Catalogue public d'un tenant (categories + produits publies, sans auth) */
+    getPublicCatalogByCompanySlug(options = {}) {
+      return request("GET", "/public/catalog/{companySlug}", options);
+    },
+
+    /** Demander un devis B2B (formulaire public, sans auth) */
+    postPublicCatalogByCompanySlugInquiries(options = {}) {
+      return request("POST", "/public/catalog/{companySlug}/inquiries", options);
+    },
+
+    /** Fiche publique d'un produit publie (sans auth) */
+    getPublicCatalogByCompanySlugProductsByProductSlug(options = {}) {
+      return request("GET", "/public/catalog/{companySlug}/products/{productSlug}", options);
     },
 
     /** Envoyer une notification push de test a un employe */

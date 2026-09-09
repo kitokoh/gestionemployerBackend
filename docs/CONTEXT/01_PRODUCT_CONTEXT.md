@@ -1,5 +1,8 @@
 # Product context
 
+> Surfaces produit mises à jour le **2026-09-09** (alignées sur `front/mobile_apps/README.md`
+> et `AGENTS.md` — 7 apps Flutter + `leopardo_core`, kiosk non-Flutter).
+
 ## Vision
 
 Leopardo HR est un **Mobile-First Company OS** pour PME terrain. Le produit relie employes, managers/RH et administrateurs plateforme autour des operations quotidiennes:
@@ -14,15 +17,22 @@ Leopardo HR est un **Mobile-First Company OS** pour PME terrain. Le produit reli
 
 ## Surfaces produit
 
-- `front/mobile_apps/leopardo_employee`: app employe.
-- `front/mobile_apps/leopardo_manager`: app manager/RH.
-- `front/mobile_apps/leopardo_hr`: app RH dediee (manager/RH, cf. `front/mobile_apps/leopardo_hr/pubspec.yaml`).
-- `front/mobile_apps/leopardo_platform_admin`: app super-admin plateforme.
-- `front/mobile_apps/leopardo_core`: code partage mobile (package Flutter, pas une app autonome), consomme par les 4 apps ci-dessus.
-- `front/web`: vitrine/portail client web.
-- `front/admin-dashboard`: dashboard plateforme web.
-- `api`: backend Laravel.
-- `front/zkteco-kiosk`: kiosque terrain.
+### Applications mobiles Flutter (7 apps + package partagé, `front/mobile_apps/`)
+- `leopardo_employee` : app employé (self-service — pointage GPS, absences, soldes, notifications).
+- `leopardo_manager` : app manager (gestion du tenant — vue globale, rôles, évolution).
+- `leopardo_hr` : app RH dédiée (suivi employés, présences/absences, tâches, recrutement ATS).
+- `leopardo_marketing` : app marketeurs (planification et publication 1-clic sur les réseaux sociaux).
+- `leopardo_platform_admin` : app super-admin plateforme (abonnements, infrastructure).
+- `leopardo_accounting` : app comptabilité (facturation, suivi des impayés).
+- `leopardo_travel_agent` : app verticale TravelAgency (vente guichet, encaissement, check-in QR, manifeste, PDV).
+- `leopardo_core` : package Flutter partagé (design system, API client, modèles, l10n) — consommé par les 7 apps (pas une app autonome).
+
+### Surfaces web & autres
+- `front/web` : vitrine/portail client web.
+- `front/admin-dashboard` : dashboard plateforme web (super-admin).
+- `api` : backend Laravel.
+- `front/zkteco-kiosk` : kiosque terrain — **web app offline-first, PAS une app Flutter** (pointage local + bridge ZKTeco, cf. `front/zkteco-kiosk/README.md`).
+- `edge/` : brique edge-sync (synchronisation offline).
 
 ## Personas
 

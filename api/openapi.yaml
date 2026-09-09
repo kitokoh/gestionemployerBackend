@@ -27183,6 +27183,237 @@ paths:
         '404':
           $ref: '#/components/responses/Error404'
 
+  /public/catalog/{companySlug}:
+    get:
+      tags:
+      - Catalog
+      summary: Catalogue public d'un tenant (categories + produits publies, sans auth)
+      description: >-
+        BC-28 CATALOG C-PUBLIC (#6882) - routes isolees sans authentification
+        (throttle:shop-public). Le tenant est resolu par slug public. DTO strict :
+        jamais de champs internes (id, company_id, status, meta, stocks). Seuls les
+        produits publies sont visibles. Cache Redis TTL invalide a la publication.
+        Filtre optionnel ?category={categorySlug}.
+      security: []
+      parameters:
+      - name: companySlug
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: category
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Liste publique (company, categories, produits publies)
+        '404':
+          $ref: '#/components/responses/Error404'
+  /public/catalog/{companySlug}/inquiries:
+    post:
+      tags:
+      - Catalog
+      summary: Demander un devis B2B (formulaire public, sans auth)
+      description: >-
+        BC-28 CATALOG C-LEAD (#6884) - soumission du formulaire public
+        'Demander un devis'. Honeypot anti-spam (champ cache), consentement
+        RGPD explicite requis, produit publie exigé, rate limit shop-public.
+        A la reception : demande persistee (consentement horodate, retention
+        bornee) + lead CRM BC-11 (source b2b_catalog) + notification in-app
+        des managers. Aucune donnee acheteur exposee publiquement.
+      security: []
+      parameters:
+      - name: companySlug
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_slug, company_name, email, consent]
+              properties:
+                product_slug:
+                  type: string
+                  description: Slug d'un produit PUBLIE du catalogue
+                quantity:
+                  type: integer
+                  minimum: 1
+                company_name:
+                  type: string
+                  maxLength: 150
+                email:
+                  type: string
+                  format: email
+                message:
+                  type: string
+                  maxLength: 5000
+                consent:
+                  type: boolean
+                  description: Consentement RGPD explicite (requis)
+                company_website:
+                  type: string
+                  description: Honeypot - champ cache, a laisser vide
+      responses:
+        '201':
+          description: Accuse de reception (status received + reference)
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+  /public/catalog/{companySlug}/products/{productSlug}:
+    get:
+      tags:
+      - Catalog
+      summary: Fiche publique d'un produit publie (sans auth)
+      security: []
+      parameters:
+      - name: companySlug
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productSlug
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Fiche publique (DTO strict)
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /catalog/inquiries:
+    get:
+      tags:
+      - Catalog
+      summary: Lister les demandes de devis B2B du tenant (back-office)
+      description: >-
+        BC-28 CATALOG C-BACKOFFICE (#6885) - liste des demandes de devis
+        (produit, societe, statut, notes internes, consentement, retention).
+        Reserve principal/rh/manager. Filtres status + q (societe/email/produit).
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [new, contacted, quote_sent, closed, lost]
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Liste paginee des demandes
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+  /catalog/inquiries/export:
+    get:
+      tags:
+      - Catalog
+      summary: Exporter les demandes de devis B2B en CSV (back-office)
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [new, contacted, quote_sent, closed, lost]
+      responses:
+        '200':
+          description: Fichier CSV (BOM UTF-8, limite 5000 lignes)
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+  /catalog/inquiries/{inquiry}:
+    delete:
+      tags:
+      - Catalog
+      summary: Effacer une demande de devis (droit RGPD, canal tenant)
+      description: >-
+        BC-28 CATALOG C-RGPD (#6889) - suppression definitive d'une demande
+        de devis et propagation de l'effacement aux leads CRM BC-11 du meme
+        acheteur (evenement catalog.inquiry_erased). Reserve principal/rh/manager ;
+        404 cross-tenant.
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: inquiry
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Demande effacee
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+  /catalog/inquiries/{inquiry}/status:
+    patch:
+      tags:
+      - Catalog
+      summary: Transition de statut d'une demande de devis (back-office)
+      description: >-
+        BC-28 CATALOG C-BACKOFFICE (#6885) - matrice spec §7 :
+        new > contacted > quote_sent > closed|lost ; closed/lost terminaux.
+        Note interne optionnelle ajoutee avec horodatage. 404 cross-tenant.
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: inquiry
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [new, contacted, quote_sent, closed, lost]
+                note:
+                  type: string
+                  maxLength: 2000
+      responses:
+        '200':
+          description: Demande mise a jour
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+
 components:
   securitySchemes:
     BearerAuth:
