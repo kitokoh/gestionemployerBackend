@@ -112,3 +112,14 @@ concerné). Stratégie PII détaillée : `docs/security/CRM_PII_HMAC.md`.
 | Comptes et contacts | CRM relationnel : fiches compte, contacts, roles | Identite, fonction, coordonnees, historique | Contacts des clients Leopardo | Contrat, interet legitime | Duree relation + 3 ans | Isolation tenant, HMAC lookup, chiffrement, policies de partage, audit |
 | Opportunites et pipelines | Suivi commercial : etapes, montants, echeances | Nom affaire, montant, devise, date attendue, proprietaire | Clients / prospects | Contrat, interet legitime | Duree relation + 3 ans | Isolation tenant, RBAC owner, audit |
 | Consentement et preferences (V1 #5722) | Gestion des canaux de communication autorises | Preferences, canaux, dates consentement | Contacts CRM | Consentement explicite | Jusqu'au retrait + preuve | Registre de consentement, retrait self-service, audit |
+
+## 10. Catalogue B2B — demandes de devis (BC-28, issues #6884/#6889)
+
+Traitement des données acheteur collectées via le formulaire public de
+demande de devis du catalogue B2B (tenant producteur) — ajouté par
+C-LEAD #6884, volet conformité C-RGPD #6889.
+
+| Traitement | Finalites | Donnees traitees | Personnes concernees | Base legale type | Conservation indicative | Mesures de protection |
+|---|---|---|---|---|---|---|
+| Demandes de devis B2B (`catalog_inquiries`) | Repondre a une demande de devis / contact B2B | Societe acheteur, email, message, produit + quantite, horodatage consentement, IP hashee (jamais en clair) | Acheteurs professionnels (visiteurs du catalogue public) | Consentement explicite (checkbox, horodate `consent_at`) + interet legitime commercial | 90 jours (`retention_until`, purge `catalog:purge-expired-inquiries`) | Minimisation (aucun champ optionnel superflu), consentement horodate, IP hash SHA-256, isolation tenant (company_id), acces back-office reserve principal/rh/manager, droit d'effacement (DELETE `catalog/inquiries/{id}`), propagation effacement aux leads CRM BC-11 (`catalog.inquiry_erased`), aucune donnee acheteur exposee publiquement (accuse seul) |
+| Leads BC-11 issus du catalogue (source `b2b_catalog`) | Pipeline commercial du tenant (qualification, devis) | Societe, email, notes (produit concerne + message), source | Prospects du tenant | Contrat / interet legitime ; consentement du formulaire source | Alignee sur la demande source (effacee avec elle) | Créés uniquement par contrat evenementiel depuis Catalog ; effaces en cascade a la demande (`EraseCrmLeadsOnCatalogInquiryErased`) |

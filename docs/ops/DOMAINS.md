@@ -8,6 +8,7 @@
 | API versionnée | `https://gestionemployerbackend.onrender.com/api/v1` | Base URL des consommateurs API |
 | Portail web Vercel | `https://gestionemployer-backend.vercel.app` | Vitrine et parcours web actuellement déployés |
 | Admin plateforme (super-admin) | `https://leo-admin.pages.dev` | Back-office super-admin (Cloudflare Pages, #3766) |
+| Site marketing / product site | `https://kitokoh.github.io/leopardo-hr/` | GitHub Pages (depuis main, #6827) — HTTP 200 vérifié 2026-09-09 |
 | API prod (topologie tag) | `https://leopardo-prod.onrender.com` | API prod — déployée uniquement sur tag validé (`deploy-prod.yml`) |
 | Portail web prod (topologie tag) | `https://leopardo-prod.vercel.app` | Vitrine/portail web prod — projet Vercel `leopardo-prod` |
 | Admin prod (topologie tag) | `https://leo-admin-prod.pages.dev` | Back-office admin prod — projet Cloudflare Pages `leo-admin-prod` (compte prod) |
@@ -92,9 +93,13 @@ le sous-domaine (suivi #6918/#6920).
 1. **Valeur de build** : les defaults (workflows, `backend-url.ts`, `next.config.ts`,
    kiosk `apiBaseUrl`, Postman, scripts smoke) pointent un domaine `live` — ne pas
    basculer sur un `target` tant que #3452 n'est pas résolu.
-2. **Config API** : `api/.env.example` documente les domaines joignables en
+2. **Desktop** : aucun canal public (aucun installateur distribué — #3257). Les apps
+   Flutter ont des scaffolds `windows/`/`macos/` mais rien n'est publié ; interdiction
+   d'annoncer un domaine/canal desktop dans ce registre tant que le protocole P06 n'a pas
+   produit de livrable.
+3. **Config API** : `api/.env.example` documente les domaines joignables en
    commentaire ; chaque environnement de déploiement définit ses valeurs réelles.
-3. **Nouveau domaine** : ajouter une ligne au registre (doc + garde) AVANT de
+4. **Nouveau domaine** : ajouter une ligne au registre (doc + garde) AVANT de
    référencer le domaine dans le code.
 4. **Mise à jour** : après modification du DNS, re-vérifier avec
    `getent hosts <domaine>` + `curl -sS -o /dev/null -w "%{http_code}" https://<domaine>`

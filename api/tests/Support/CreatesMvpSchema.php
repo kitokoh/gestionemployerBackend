@@ -1522,6 +1522,30 @@ trait CreatesMvpSchema
             });
         }
 
+        // A5 (#6852) — journal d'exécution des outils IA (chaîne
+        // conversation → action → effet rejouable, marqueur « via assistant »).
+        if (! Schema::hasTable($this->moduleTable('ai_tool_executions'))) {
+            Schema::create($this->moduleTable('ai_tool_executions'), function (Blueprint $table): void {
+                $table->bigIncrements('id');
+                $table->uuid('company_id')->index();
+                $table->unsignedInteger('user_id');
+                $table->unsignedBigInteger('conversation_id')->nullable();
+                $table->string('pending_action_id', 64)->nullable();
+                $table->string('tool_name', 100);
+                $table->json('tool_input')->nullable();
+                $table->string('stage', 30)->default('executed');
+                $table->boolean('success')->default(true);
+                $table->text('result_summary')->nullable();
+                $table->text('error')->nullable();
+                $table->string('source', 20)->default('assistant');
+                $table->timestampTz('created_at')->useCurrent();
+
+                $table->index(['company_id', 'created_at']);
+                $table->index(['conversation_id']);
+                $table->index(['pending_action_id']);
+            });
+        }
+
         if (! Schema::hasTable($this->moduleTable('client_events'))) {
             Schema::create($this->moduleTable('client_events'), function (Blueprint $table): void {
                 $table->bigIncrements('id');
@@ -3969,6 +3993,7 @@ trait CreatesMvpSchema
         DB::statement('DROP TABLE IF EXISTS "client_events"'.$cascade);
         DB::statement('DROP TABLE IF EXISTS "ai_dead_letter_queue"'.$cascade);
         DB::statement('DROP TABLE IF EXISTS "ai_exports"'.$cascade);
+        DB::statement('DROP TABLE IF EXISTS "ai_tool_executions"'.$cascade);
         DB::statement('DROP TABLE IF EXISTS "ai_audit_logs"'.$cascade);
         DB::statement('DROP TABLE IF EXISTS "ai_conversations"'.$cascade);
         DB::statement('DROP TABLE IF EXISTS "ai_tool_registry"'.$cascade);

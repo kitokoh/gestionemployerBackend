@@ -2,6 +2,12 @@
 > La structure de code décrite ici a été mise à jour.
 > `App\Http\Controllers\Api\V1\*` et `App\Services\*` n'existent plus.
 > Voir `api/ARCHITECTURE.md` pour l'état actuel.
+>
+> **État courant de l'infra (2026-09-09)** : registre canonique des domaines =
+> `docs/ops/DOMAINS.md`, URLs actives = `docs/ops/DEPLOYMENT_URLS.md`, topologie
+> dev/prod = `docs/ops/RENDER_DEV_PROD_TOPOLOGY.md` + corpus `docs/PROTOCOLES/P07_ARCHITECTURE_DEV_PROD.md`
+> (vérifiée live le 2026-09-09), audit = `docs/architecture/AUDIT_ARCHITECTURE_2026-09-05.md`.
+> Ne pas traiter ce fichier comme l'état actuel.
 
 # Architecture actuelle - Render / Neon
 
