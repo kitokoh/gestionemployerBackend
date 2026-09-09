@@ -163,6 +163,16 @@ jobs:
         working-directory: ${{ matrix.app.project_path }}
         run: flutter pub get
 
+      - name: Regenerate core generated files (l10n + codegen)
+        # #6590 : fichiers générés non commités — régénérés avant le build
+        # release (le package core est compilé par chaque app).
+        if: env.MOBILE_DISTRIBUTE_READY == 'true' && env.SHOULD_BUILD == 'true'
+        working-directory: front/mobile_apps/leopardo_core
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          dart run build_runner build
+
       - name: Build release APK for staging
         if: env.MOBILE_DISTRIBUTE_READY == 'true' && env.SHOULD_BUILD == 'true'
         working-directory: ${{ matrix.app.project_path }}

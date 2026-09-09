@@ -43,7 +43,7 @@ class RestaurantDeliveryWebhookTest extends TestCase
         ]);
         $this->companyA = $companyA;
 
-        app(TenantManager::class)->withinTenant($companyA, function (): void {
+        app(TenantManager::class)->withinTenant($companyA, function () use ($companyA): void {
             RestaurantDeliveryAppConfig::query()->create([
                 'company_id' => $companyA->id,
                 'provider' => RestaurantDeliveryAppConfig::PROVIDER_UBER_EATS,

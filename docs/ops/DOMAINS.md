@@ -8,6 +8,7 @@
 | API versionnée | `https://gestionemployerbackend.onrender.com/api/v1` | Base URL des consommateurs API |
 | Portail web Vercel | `https://gestionemployer-backend.vercel.app` | Vitrine et parcours web actuellement déployés |
 | Admin plateforme (super-admin) | `https://leo-admin.pages.dev` | Back-office super-admin (Cloudflare Pages, #3766) |
+| Site marketing / product site | `https://kitokoh.github.io/leopardo-hr/` | GitHub Pages (depuis main, #6827) — HTTP 200 vérifié 2026-09-09 |
 | API prod (topologie tag) | `https://leopardo-prod.onrender.com` | API prod — déployée uniquement sur tag validé (`deploy-prod.yml`) |
 | Portail web prod (topologie tag) | `https://leopardo-prod.vercel.app` | Vitrine/portail web prod — projet Vercel `leopardo-prod` |
 | Admin prod (topologie tag) | `https://leo-admin-prod.pages.dev` | Back-office admin prod — projet Cloudflare Pages `leo-admin-prod` (compte prod) |
@@ -70,16 +71,16 @@ propre sous-domaine Vercel (décision fondateur 2026-09-06, #6918). Pattern :
 
 | Domaine | Statut | Note |
 |---|---|---|
-| `leopardo-resto.vercel.app` | `live` | Verticale Restaurant — dev, projet `prj_i8rEi8fCwkkC4TEfAjIXue0fTNKP` ; page de validation, vraie app #6920. |
-| `leopardo-travel.vercel.app` | `live` | Verticale Travel — dev, projet `prj_9zeAXtwVQXgLoVcEurVzJnuVFQZr` ; page de validation. |
-| `leopardo-fuel.vercel.app` | `live` | Verticale Fuel — dev, projet `prj_Tbnb0Grlsdqw3Ce3vkxIrmiKfl4u` ; page de validation. |
-| `leopardo-edu.vercel.app` | `live` | Verticale Edu — dev, projet `prj_fKKFiaiSAMhymCo5BvHW0wD75mb3` ; page de validation. |
-| `leopardo-delivery.vercel.app` | `live` | Verticale Delivery — dev, projet `prj_SUTHkL4joPdi5REZc5chw7ugX86i` ; page de validation. |
-| `leopardo-resto-prod.vercel.app` | `live` | Verticale Restaurant — prod, projet `prj_YMFmR1mJlS1ZjzBQ7Dx8GAzRdgx3` ; page de validation. |
-| `leopardo-travel-prod.vercel.app` | `live` | Verticale Travel — prod, projet `prj_1Y1rr2syuPjMFZWh9EWEK5UOnZOJ` ; page de validation. |
-| `leopardo-fuel-prod.vercel.app` | `live` | Verticale Fuel — prod, projet `prj_qB0D9JbcoFXeGCx1PuA1gydCfPk9` ; page de validation. |
-| `leopardo-edu-prod.vercel.app` | `live` | Verticale Edu — prod, projet `prj_unI8uJqhyGoHXVL8zkXvu4DiY1cS` ; page de validation. |
-| `leopardo-delivery-prod.vercel.app` | `live` | Verticale Delivery — prod, projet `prj_nkmn7sTTn0wtoZ2FS7uY1LaszLyw` ; page de validation. |
+| `leopardo-resto.vercel.app` | `live` | Verticale Restaurant — dev, projet `prj_i8rEi8fCwkkC4TEfAjIXue0fTNKP` ; page de validation, vraie app #6920.  vérifié 2026-09-09. |
+| `leopardo-travel.vercel.app` | `live` | Verticale Travel — dev, projet `prj_9zeAXtwVQXgLoVcEurVzJnuVFQZr` ; page de validation.  vérifié 2026-09-09. |
+| `leopardo-fuel.vercel.app` | `live` | Verticale Fuel — dev, projet `prj_Tbnb0Grlsdqw3Ce3vkxIrmiKfl4u` ; page de validation.  vérifié 2026-09-09. |
+| `leopardo-edu.vercel.app` | `live` | Verticale Edu — dev, projet `prj_fKKFiaiSAMhymCo5BvHW0wD75mb3` ; page de validation.  vérifié 2026-09-09. |
+| `leopardo-delivery.vercel.app` | `live` | Verticale Delivery — dev, projet `prj_SUTHkL4joPdi5REZc5chw7ugX86i` ; page de validation.  vérifié 2026-09-09. |
+| `leopardo-resto-prod.vercel.app` | `live` | Verticale Restaurant — prod, projet `prj_YMFmR1mJlS1ZjzBQ7Dx8GAzRdgx3` ; page de validation.  vérifié 2026-09-09. |
+| `leopardo-travel-prod.vercel.app` | `live` | Verticale Travel — prod, projet `prj_1Y1rr2syuPjMFZWh9EWEK5UOnZOJ` ; page de validation.  vérifié 2026-09-09. |
+| `leopardo-fuel-prod.vercel.app` | `live` | Verticale Fuel — prod, projet `prj_qB0D9JbcoFXeGCx1PuA1gydCfPk9` ; page de validation.  vérifié 2026-09-09. |
+| `leopardo-edu-prod.vercel.app` | `live` | Verticale Edu — prod, projet `prj_unI8uJqhyGoHXVL8zkXvu4DiY1cS` ; page de validation.  vérifié 2026-09-09. |
+| `leopardo-delivery-prod.vercel.app` | `live` | Verticale Delivery — prod, projet `prj_nkmn7sTTn0wtoZ2FS7uY1LaszLyw` ; page de validation.  vérifié 2026-09-09. |
 
 CORS/SANCTUM_STATEFUL_DOMAINS côté API et liens du hub central : à raccorder
 via ce registre (pas de hardcode) quand une vraie application verticale utilise
@@ -90,9 +91,13 @@ le sous-domaine (suivi #6918/#6920).
 1. **Valeur de build** : les defaults (workflows, `backend-url.ts`, `next.config.ts`,
    kiosk `apiBaseUrl`, Postman, scripts smoke) pointent un domaine `live` — ne pas
    basculer sur un `target` tant que #3452 n'est pas résolu.
-2. **Config API** : `api/.env.example` documente les domaines joignables en
+2. **Desktop** : aucun canal public (aucun installateur distribué — #3257). Les apps
+   Flutter ont des scaffolds `windows/`/`macos/` mais rien n'est publié ; interdiction
+   d'annoncer un domaine/canal desktop dans ce registre tant que le protocole P06 n'a pas
+   produit de livrable.
+3. **Config API** : `api/.env.example` documente les domaines joignables en
    commentaire ; chaque environnement de déploiement définit ses valeurs réelles.
-3. **Nouveau domaine** : ajouter une ligne au registre (doc + garde) AVANT de
+4. **Nouveau domaine** : ajouter une ligne au registre (doc + garde) AVANT de
    référencer le domaine dans le code.
 4. **Mise à jour** : après modification du DNS, re-vérifier avec
    `getent hosts <domaine>` + `curl -sS -o /dev/null -w "%{http_code}" https://<domaine>`

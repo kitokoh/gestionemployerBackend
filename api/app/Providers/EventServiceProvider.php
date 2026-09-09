@@ -9,6 +9,8 @@ use App\Events\AbsenceRejected;
 use App\Events\AbsenceRequested;
 use App\Events\AttendanceCheckedIn;
 use App\Events\AttendanceCheckedOut;
+use App\Events\CatalogInquiryErased;
+use App\Events\CatalogInquiryReceived;
 use App\Events\CompanyCreated;
 use App\Events\EmployeeArchived;
 use App\Events\EmployeeCreated;
@@ -22,6 +24,8 @@ use App\Events\TaxRateRejected;
 use App\Events\TaxRateSubmitted;
 use App\Listeners\AuditLogger;
 use App\Listeners\ConvertMarketingLeadToContact;
+use App\Listeners\CreateCrmLeadFromCatalogInquiry;
+use App\Listeners\EraseCrmLeadsOnCatalogInquiryErased;
 use App\Listeners\FuelStationAlertListener;
 use App\Listeners\LinkPartnerToNewCompany;
 use App\Listeners\NotifyTaxRateValidation;
@@ -56,5 +60,13 @@ class EventServiceProvider extends ServiceProvider
         TaxRateApproved::class => [NotifyTaxRateValidation::class.'@handleTaxRateApproved'],
         TaxRateRejected::class => [NotifyTaxRateValidation::class.'@handleTaxRateRejected'],
         MarketingLeadQualified::class => [ConvertMarketingLeadToContact::class.'@handleMarketingLeadQualified'],
+
+        // BC-28 CATALOG (C-LEAD #6884) — demande de devis B2B publique →
+        // lead CRM BC-11 + notification tenant BC-13 (contrat cross-BC).
+        CatalogInquiryReceived::class => [CreateCrmLeadFromCatalogInquiry::class],
+
+        // BC-28 CATALOG (C-RGPD #6889) — effacement RGPD d'une demande →
+        // propagation aux leads CRM BC-11 du même acheteur.
+        CatalogInquiryErased::class => [EraseCrmLeadsOnCatalogInquiryErased::class],
     ];
 }

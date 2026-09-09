@@ -141,19 +141,21 @@ jobs:
         shell: bash
         run: 'bash ./dev-hub/tools/check-mobile-number-locale.sh'
 
-      - name: Validate ARB keys exist in generated localizations
-        # #4762 (récurrence) : toute clé ARB absente des générés casse la
-        # compile des apps qui la référencent. Garde = `flutter gen-l10n`
-        # doit être exécuté dans leopardo_core à chaque ajout de clé.
-        shell: bash
-        run: 'bash ./dev-hub/tools/check-mobile-l10n-sync.sh'
+      # Note #6590 : le check l10n (check-mobile-l10n-sync.sh) a été déplacé
+      # dans le job flutter-analyze, APRÈS `flutter gen-l10n` : les fichiers
+      # générés (lib/l10n/generated/*) ne sont plus commités, ils n'existent
+      # donc pas dans le checkout brut où tourne ce job guard.
 
-      - name: Validate ARB keys exist in generated localizations
-        # #4762 (récurrence) : toute clé ARB absente des générés casse la
-        # compile des apps qui la référencent. Garde = `flutter gen-l10n`
-        # doit être exécuté dans leopardo_core à chaque ajout de clé.
+      - name: Validate no mojibake drift on duplicated mobile files (#7091)
+        # RETEX L-09/L-07 : correctifs d'encodage répétés sur des fichiers
+        # byte-identiques dupliqués entre employee/manager/hr (chantier #2661)
+        # — un fix appliqué à une seule copie laisse le mojibake chez les
+        # sœurs. Détecte les copies divergentes sur le diff de la PR.
         shell: bash
-        run: 'bash ./dev-hub/tools/check-mobile-l10n-sync.sh'
+        env:
+          DIFF_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          DIFF_HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: 'bash ./dev-hub/tools/check-mobile-duplicated-drift.sh "${DIFF_BASE_SHA}" "${DIFF_HEAD_SHA}"'
 
   flutter-analyze:
     timeout-minutes: 90
@@ -209,6 +211,26 @@ jobs:
         working-directory: front/mobile_apps/leopardo_core
         run: flutter gen-l10n
 
+      - name: Regenerate codegen (build_runner — drift / json_serializable)
+        # #6590 : les *.g.dart (drift `edge_database`, json_serializable
+        # `*_schema.g.dart`, `feature*.g.dart`) ne sont PLUS commités (cf.
+        # .gitignore) — ils sont régénérés ici avant analyze/test. Le pub get
+        # local du package core est requis pour résoudre ses dev_dependencies
+        # (build_runner, drift_dev, json_serializable) dans ce job.
+        working-directory: front/mobile_apps/leopardo_core
+        run: |
+          flutter pub get
+          dart run build_runner build
+
+      - name: Validate ARB keys exist in generated localizations
+        # #4762 (récurrence) : toute clé ARB absente des générés casse la
+        # compile des apps qui la référencent. #6590 : exécuté APRÈS
+        # `flutter gen-l10n` (les générés ne sont plus commités) — une seule
+        # exécution suffit (package core), d'où la condition sur le projet.
+        if: matrix.project.name == 'leopardo_core'
+        shell: bash
+        run: 'bash ./dev-hub/tools/check-mobile-l10n-sync.sh'
+
       - name: Fetch diff base for incremental Dart gate
         shell: bash
         env:
@@ -227,9 +249,9 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -n "${BASE_SHA}" && "${BASE_SHA}" != "0000000000000000000000000000000000000000" ]]; then
-            git diff -z --name-only "${BASE_SHA}" HEAD -- '*.dart' > /tmp/changed-dart-files
+            git diff -z --diff-filter=ACMR --name-only "${BASE_SHA}" HEAD -- '*.dart' > /tmp/changed-dart-files
           else
-            git diff -z --name-only HEAD^ HEAD -- '*.dart' > /tmp/changed-dart-files
+            git diff -z --diff-filter=ACMR --name-only HEAD^ HEAD -- '*.dart' > /tmp/changed-dart-files
           fi
           project_prefix="${{ matrix.project.path }}/"
           : > /tmp/changed-dart-files-relative
@@ -316,6 +338,15 @@ jobs:
       - name: Install dependencies
         working-directory: ${{ matrix.project.path }}
         run: flutter pub get
+
+      - name: Regenerate core generated files (l10n + codegen)
+        # #6590 : fichiers générés non commités — régénérés avant le build
+        # debug (compile le package core : AppLocalizations + *.g.dart).
+        working-directory: front/mobile_apps/leopardo_core
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          dart run build_runner build
 
       - name: Restore Firebase config from secret (issue #1467)
         # google-services.json n'est PLUS committé (clé API réelle exposée) :
