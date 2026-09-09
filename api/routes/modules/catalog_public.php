@@ -23,6 +23,7 @@
  */
 
 use App\Modules\Catalog\Interfaces\Api\V1\Controllers\CatalogPublicController;
+use App\Modules\Catalog\Interfaces\Api\V1\Controllers\CatalogPublicInquiryController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['throttle:shop-public', 'catalog.public'])
@@ -32,4 +33,6 @@ Route::middleware(['throttle:shop-public', 'catalog.public'])
             ->name('catalog.public.index');
         Route::get('/{companySlug}/products/{productSlug}', [CatalogPublicController::class, 'show'])
             ->name('catalog.public.product');
+        Route::post('/{companySlug}/inquiries', [CatalogPublicInquiryController::class, 'store'])
+            ->name('catalog.public.inquiries.store');
     });
