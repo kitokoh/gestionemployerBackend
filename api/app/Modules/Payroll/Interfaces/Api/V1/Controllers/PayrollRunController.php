@@ -570,7 +570,7 @@ class PayrollRunController extends Controller
 
         if ($payrollRun->country_code !== 'DZ') {
             return response()->json([
-                'message' => __('errors.PAYROLL_RUN_NOT_FOR_COUNTRY', ['country' => 'l'Algerie (DZ)']),
+                'message' => __('errors.PAYROLL_RUN_NOT_FOR_COUNTRY', ['country' => 'l’Algérie (DZ)']),
             ], 422);
         }
 
