@@ -48,9 +48,6 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'token.refresh', 'tenant', 't
     // (FuelManagerView) : stations, incidents (équipements non actifs),
     // rapprochements de caisse. RBAC manager.
     Route::middleware('api.manager')->group(function (): void {
-        Route::get('/fuel-station/stations', [FuelStationReferentialController::class, 'stations']);
-        Route::get('/fuel-station/incidents', [FuelStationReferentialController::class, 'incidents']);
-        Route::get('/fuel-station/reconciliations', [FuelStationReferentialController::class, 'reconciliations']);
     });
 
     // FUEL-004 — relevés de compteur par pompe (spec §13.4).
