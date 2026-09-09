@@ -1,25 +1,5 @@
 # DEPLOYMENT_URLS.md — URLs de déploiement actives (source : registre DOMAINS.md)
 
-> 📌 **Registre P07 — état constaté le 2026-09-09** (protocole
-> `docs/PROTOCOLES/P07_ARCHITECTURE_DEV_PROD.md`, issue #7073). Complète le tableau
-> ci-dessous avec les faits vérifiés en session QA/ops :
-
-| Volet | Tier dev (continu) | Tier prod (tags validés) |
-|---|---|---|
-| API Laravel | `gestionemployerbackend.onrender.com` — service `gestionemployerBackend` (compte africanovatech) | `leopardo-prod.onrender.com` |
-| Web (Next.js) | `gestionemployer-backend.vercel.app` — ⚠️ **build en retard sur main** (#6923, à redéployer) | `leopardo-prod.vercel.app` |
-| Admin (Vue) | `leo-admin.pages.dev` — build récent (#6927 inclus) | `leo-admin-prod.pages.dev` |
-| Site produit | `kitokoh.github.io/leopardo-hr` (gh-pages, depuis main) | — (même artefact) |
-
-**Faits ops (09-09) :**
-- Dev API alignée sur main (`015f16c0`, deploy live 09-09 01:04Z) ; `/api/v1/health` expose le SHA git réel (honnêteté #6905).
-- Pipeline dev : `deploy-main.yml` (gate Tests + filtre api/**) + **catchup horaire** `deploy-main-catchup.yml` (cron `:23`) + dispatch manuel.
-- Variables critiques portées par les **env groups Render** liés au service (« ok » : REDIS_URL/SESSION_DRIVER/CACHE_STORE/QUEUE_CONNECTION… ; « mail » : DB_URL/RUN_MIGRATIONS/SUPER_ADMIN_PASSWORD/MAILGUN…) — ne pas les recréer en vars « service ».
-- `healthCheckPath` du service Render dev = **`/api/v1/health`** (fixé 09-08 — un healthcheck vide faisait échouer tous les deploys, sonde `/` → 500).
-- Worker queue : mono-conteneur (driver database) ; respawn après `--max-time` en cours (#7041). Drain GitHub Actions toutes les 5 min (fallback).
-- Web dev Vercel en retard → les parcours login UI (#6923) restent bloqués côté navigateur tant que le projet Vercel dev n'est pas redéployé sur main.
-
-
 > Livrable de l'épic #3765 (stabilisation production). Documente les URLs
 > **réellement actives** (services gratuits Render/Vercel/Cloudflare Pages),
 > les endpoints de santé et la procédure de déploiement.

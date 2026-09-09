@@ -109,5 +109,3 @@ gestionemployer/
 | 12 | Merger toutes les branches |
 | 13 | Garde anti-régression |
 | 14 | Onboarding nouvel agent |
-
-> 📚 Pièges historiques consolidés : `docs/GOUVERNANCE/LEÇONS.md` — lis-le avant de rejouer une erreur connue.
