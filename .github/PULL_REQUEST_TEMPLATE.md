@@ -58,6 +58,20 @@ Listez les risques connus, limitations, ou dette technique deliberement laissee 
 
 ---
 
+## 🎨 Revue design (obligatoire si une case UI est cochee ci-dessus)
+
+Checklist de revue design (protocole P05, `docs/PROTOCOLES/P05_DESIGN_HARMONISE.md`) :
+
+-   [ ] Couleurs issues de la palette (`docs/REFERENTIEL_PRODUIT/COULEURS.md`) — aucun hex hardcodé
+-   [ ] Typographie, espacements, radius, ombres conformes au design system / tokens core
+-   [ ] États couverts : vide, chargement, erreur, succès
+-   [ ] Contraste AA minimum ; dark mode vérifié (expérience principale)
+-   [ ] Responsive / fenêtres (mobile → desktop) et i18n/RTL vérifiés
+-   [ ] Assets/branding tenant conformes ; captures avant/après jointes ci-dessous
+-   [ ] Gardiens design consultés si doute : vitrine = BC-27 SHOWCASE, admin = `front/admin-dashboard`, mobile/desktop = `leopardo_core`
+
+---
+
 ## 📸 Screenshots / Demos
 
 **Obligatoire si une case UI est cochee ci-dessus** (Web, Admin dashboard, Mobile, ou Kiosk). Ajouter des captures/GIFs avant/apres.
