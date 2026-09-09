@@ -8,7 +8,7 @@ use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Tenant\Domain\Models\Company;
 use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationService;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\ConnectionInterface;
 
 /**
  * Cas d'usage : déclaration trimestrielle CNSS (MA) — une ligne par employé
@@ -28,6 +28,7 @@ class GenerateCnssMaDeclaration
 {
     public function __construct(
         private readonly SocialDeclarationService $declarations,
+        private readonly ConnectionInterface $db,
     ) {}
 
     /**
@@ -47,13 +48,13 @@ class GenerateCnssMaDeclaration
         );
 
         /** @var \Illuminate\Support\Collection<int, object{days_worked?: int|string|null}> $attendanceData */
-        $attendanceData = DB::table('attendance_logs')
+        $attendanceData = $this->db->table('attendance_logs')
             ->where('company_id', $actor->company_id)
             ->whereYear('check_in', $year)
-            ->whereIn(DB::raw('EXTRACT(MONTH FROM check_in)'), $quarterMonths)
+            ->whereIn($this->db->raw('EXTRACT(MONTH FROM check_in)'), $quarterMonths)
             ->select([
                 'employee_id',
-                DB::raw('COUNT(DISTINCT DATE(check_in)) as days_worked'),
+                $this->db->raw('COUNT(DISTINCT DATE(check_in)) as days_worked'),
             ])
             ->groupBy('employee_id')
             ->get()
