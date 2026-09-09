@@ -1,0 +1,89 @@
+name: Desktop CI — verify builds (Windows / macOS)
+
+# Chaîne desktop Leopardo — issue #7072 / protocole P06.
+# Portée : build de VÉRIFICATION (non signé, aucune distribution) des apps Flutter
+# disposant du scaffolding desktop, quand les dossiers windows/macos changent.
+# L'activation réelle d'une tranche (signature, canaux, melos scripts) suit la
+# décision PM consignée dans docs/desktop/README.md — ce workflow n'est alors
+# qu'une brique de la chaîne complète.
+# Déclenchement : uniquement quand du code desktop change (dossiers windows/macos
+# d'une app, ou le package partagé). Le fichier workflow lui-même n'est PAS un
+# déclencheur (sinon toute édition déclencherait la matrice lourde ; la syntaxe
+# est validée par actionlint). Activation réelle d'une tranche : décision PM
+# (docs/desktop/README.md).
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'front/mobile_apps/**/windows/**'
+      - 'front/mobile_apps/**/macos/**'
+      - 'front/mobile_apps/leopardo_core/**'
+  push:
+    branches: [main]
+    paths:
+      - 'front/mobile_apps/**/windows/**'
+      - 'front/mobile_apps/**/macos/**'
+      - 'front/mobile_apps/leopardo_core/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  desktop-verify:
+    timeout-minutes: 60
+    name: Desktop verify ${{ matrix.app }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { app: leopardo_employee, os: windows-latest }
+          - { app: leopardo_employee, os: macos-latest }
+          - { app: leopardo_manager, os: windows-latest }
+          - { app: leopardo_manager, os: macos-latest }
+          - { app: leopardo_hr, os: windows-latest }
+          - { app: leopardo_hr, os: macos-latest }
+          - { app: leopardo_marketing, os: windows-latest }
+          - { app: leopardo_marketing, os: macos-latest }
+          - { app: leopardo_platform_admin, os: windows-latest }
+          - { app: leopardo_platform_admin, os: macos-latest }
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          lfs: false
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        working-directory: front/mobile_apps/${{ matrix.app }}
+        run: flutter pub get
+
+      - name: Regenerate shared localizations
+        working-directory: front/mobile_apps/leopardo_core
+        run: flutter gen-l10n
+
+      - name: Analyze
+        working-directory: front/mobile_apps/${{ matrix.app }}
+        run: flutter analyze
+
+      - name: Build (verify, non signé)
+        working-directory: front/mobile_apps/${{ matrix.app }}
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            flutter build windows --debug
+          else
+            flutter build macos --debug
+          fi
