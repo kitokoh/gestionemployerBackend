@@ -191,3 +191,6 @@ Quand un domaine gagne une feature significative, ajouter:
 
 - v4.25.0 (BC-28 CATALOG #6881) : API privée de gestion du catalogue B2B — CRUD catégories (`/catalog/categories`) et produits (`/catalog/products`, publication/dépublication), gate feature flag `b2b_catalog`, RBAC gestion principal/rh, isolation tenant. Scenarios couverts par `tests/Feature/Catalog/CatalogApiTest.php` (RBAC deny-by-default, gate flag, isolation cross-tenant 404, CRUD + publication).
 | Catalog B2B API | docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md | Tests - Leopardo RH | tests/Feature/Catalog/CatalogApiTest.php | backend-tests |
+
+- v4.26.0 (BC-28 C-PUBLIC #6882) : catalogue public isolé — `GET /public/catalog/{companySlug}` (catégories + produits publiés, filtre `?category=`) et fiche `GET /public/catalog/{companySlug}/products/{productSlug}`, SANS auth (`throttle:shop-public` + `catalog.public`), tenant par slug, DTO strict (0 champ interne), cache Redis TTL invalidé à la publication, 404 fail-closed (slug inconnu / flag absent / suspendu). Scénarios couverts par `tests/Feature/Catalog/CatalogPublicApiTest.php`.
+| Catalog public B2B | docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md | Tests - Leopardo RH | tests/Feature/Catalog/CatalogPublicApiTest.php | backend-tests |
