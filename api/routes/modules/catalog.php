@@ -46,4 +46,5 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'token.refresh', 'tenant', 't
         Route::get('/inquiries', [CatalogInquiryController::class, 'index']);
         Route::get('/inquiries/export', [CatalogInquiryController::class, 'export']);
         Route::patch('/inquiries/{inquiry}/status', [CatalogInquiryController::class, 'updateStatus'])->whereNumber('inquiry');
+        Route::delete('/inquiries/{inquiry}', [CatalogInquiryController::class, 'destroy'])->whereNumber('inquiry');
     });
