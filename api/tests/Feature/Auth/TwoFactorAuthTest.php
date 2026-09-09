@@ -430,13 +430,22 @@ class TwoFactorAuthTest extends TestCase
 
         $challengeToken = (string) $this->login('2fa-lock@example.com')->json('mfa_challenge_token');
 
-        // 5 codes invalides → 422 TWO_FACTOR_INVALID à chaque tentative.
-        for ($i = 0; $i < 5; $i++) {
+        // #6538 — anti brute-force TOTP : les tentatives 1-4 renvoient
+        // 422 TWO_FACTOR_INVALID ; la 5e tentative INVALIDE le challenge et
+        // renvoie 429 TWO_FACTOR_TOO_MANY_ATTEMPTS (comportement durci,
+        // ticket #7023 : le test attendait encore 422 à la 5e tentative).
+        for ($i = 0; $i < 4; $i++) {
             $this->postJson('/api/v1/auth/2fa/verify', [
                 'challenge_token' => $challengeToken,
                 'code' => '000000',
             ])->assertStatus(422)->assertJsonPath('error', 'TWO_FACTOR_INVALID');
         }
+
+        // 5e code invalide → challenge invalidé (429).
+        $this->postJson('/api/v1/auth/2fa/verify', [
+            'challenge_token' => $challengeToken,
+            'code' => '000000',
+        ])->assertStatus(429)->assertJsonPath('error', 'TWO_FACTOR_TOO_MANY_ATTEMPTS');
 
         // 6e tentative avec le BON code → challenge déjà invalidé.
         $this->postJson('/api/v1/auth/2fa/verify', [
