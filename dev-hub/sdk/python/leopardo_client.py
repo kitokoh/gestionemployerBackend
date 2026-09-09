@@ -1220,6 +1220,10 @@ class LeopardoClient:
         """Lister les demandes de devis B2B du tenant (back-office)"""
         return self.request("GET", "/catalog/inquiries", **kwargs)
 
+    def delete_catalog_inquiries_by_inquiry(self, **kwargs):
+        """Effacer une demande de devis (droit RGPD, canal tenant)"""
+        return self.request("DELETE", "/catalog/inquiries/{inquiry}", **kwargs)
+
     def patch_catalog_inquiries_by_inquiry_status(self, **kwargs):
         """Transition de statut d'une demande de devis (back-office)"""
         return self.request("PATCH", "/catalog/inquiries/{inquiry}/status", **kwargs)
