@@ -1,35 +1,30 @@
-# METRIQUES_VITRINE — Registre des métriques datées
+# Registre des métriques vitrine (datées)
 
-> Règle (protocole P03) : **aucun chiffre public sans une ligne datée dans ce
-> registre** (README.md l'interdit déjà pour le marketing ; ce registre rend la
-> règle exécutable). Toute métrique affichée sur une surface publique doit être
-> régénérée à la date indiquée, jamais recopiée d'un mois sur l'autre.
-> Établi le 2026-09-09.
+> **Règle** : aucun chiffre public (site, README, gh-pages, stores, contenus GTM) sans une
+> ligne **datée** dans ce registre. Toute métrique publiée doit être mesurable/reproductible
+> avec la méthode indiquée. Les valeurs sont vérifiées sur `main` à la date de mesure.
 
-## Registre (mesures du 2026-09-09)
+## Mesures au 2026-09-09 (commit `015f16c0e`)
 
-| Métrique | Valeur mesurée | Date | Source / méthode de mesure |
+| Métrique | Valeur | Mesuré le | Source / méthode de mesure |
 |---|---|---|---|
-| Modules métier (dossiers `api/app/Modules/`) | 27 | 2026-09-09 | `ls api/app/Modules \| wc -l` |
-| Bounded contexts (registre) | BC-01…BC-28 | 2026-09-09 | `dev-hub/governance/bounded-context-registry.json` |
-| Chemins API (OpenAPI) | 738 | 2026-09-09 | `grep -c "^  /" api/openapi.yaml` |
-| Apps Flutter (packages Melos) | 7 apps + `leopardo_core` | 2026-09-09 | `front/mobile_apps/` (employee, hr, manager, platform_admin, marketing, accounting, travel_agent) |
-| Fichiers de tests Flutter (`*_test.dart`) | 58 | 2026-09-09 | `find front/mobile_apps -name "*_test.dart" \| wc -l` |
-| Tests backend (Pest/PHPUnit) | ~4 010 (17 165 assertions) | 2026-09-09 | `api/tests/Feature` + `api/tests/Unit` (session CI ~60 min) |
-| Specs E2E Playwright | 59 | 2026-09-09 | `front/web/e2e` + `front/admin-dashboard/e2e` |
-| Pays couverts (vitrine) | voir `front/web/src/modules/vitrine/data/supported-countries.ts` | 2026-09-09 | comptage du fichier `supported-countries.ts` |
-| Langues (i18n) | fr, en, ar, tr | 2026-09-09 | `shared/i18n/` (dossiers de locales) |
-| URLs live (vérifiées HTTP 200) | 9/9 | 2026-09-09 | curl santé/200 : API dev+prod, web dev+prod, admin dev+prod, verticales resto/travel-prod, gh-pages |
+| Modules DDD (`api/app/Modules/*`) | 27 | 2026-09-09 | `ls -d api/app/Modules/*/ \| wc -l` |
+| Bounded contexts au registre | 28 (BC-01..BC-28) | 2026-09-09 | `dev-hub/governance/bounded-context-registry.json` |
+| Chemins dans `api/openapi.yaml` | 738 | 2026-09-09 | `grep -c '^  /' api/openapi.yaml` |
+| Apps mobiles Flutter | 7 apps + `leopardo_core` | 2026-09-09 | `ls -d front/mobile_apps/leopardo_*/` (canonique : `front/mobile_apps/README.md`) |
+| Fichiers de tests backend | 990 (`*Test.php`) | 2026-09-09 | `find api/tests -name '*Test.php' \| wc -l` (≈4 000 cas, cf. `docs/testing/`) |
+| Fichiers de tests Dart | 58 (`*_test.dart`) | 2026-09-09 | `find front/mobile_apps -name '*_test.dart' \| wc -l` |
+| Pays supportés (API) | 21 | 2026-09-09 | `GET /api/v1/supported-countries` (instance de référence) |
 
-## Mesures affichées sur les surfaces et leur vérité au 2026-09-09
+## Métriques à ne PAS publier sans mesure
 
-| Surface | Chiffre affiché | Constat | Action |
-|---|---|---|---|
-| `site/gh-pages/index.html` | « 18 modules, 700+ endpoints, 1 900+ tests, 5 apps Flutter, 21 pays » | ❌ non daté ; modules 27 (ou BC 28), apps 7, tests >4 000 backend | Régénérer depuis ce registre avec date de mesure |
-| README « Project status » | métriques diverses | ⚠️ déjà soumis à la règle « date obligatoire » | Régénérer à chaque release |
+- « 18 modules » (périmé : 27 mesurés au 2026-09-09) — **interdit sans re-mesure**.
+- « 700+ endpoints » — remplacer par la valeur mesurée (738 au 2026-09-09) ou « 700+ » avec la date.
+- « 1 900+ tests » — périmé (990 fichiers / ≈4 000 tests mesurés au 2026-08-27) — re-mesurer avant publication.
+- « 5 apps Flutter » — périmé (7 apps + core).
+- Toute métrique sans date de mesure → ne pas publier (cf. `docs/REFERENTIEL_PRODUIT/STATUTS.md` pour les statuts « live »).
 
-## Rituel
+## Liens
 
-- Régénération : au **rituel mensuel** (P03 §7) et avant toute mise à jour d'une
-  surface publique (PR concernée → régénérer + dater la ligne).
-- Toute surface affichant un chiffre absent de ce registre = bug vitrine (issue).
+- Surfaces publiques à auditer : `README.md` (badges), `site/gh-pages/index.html`, vitrines Next.js (`front/web/src/`), `docs/REFERENTIEL_PRODUIT/APV.md` (wording).
+- Issu de la moisson 2026-09-09 (issue #7081).

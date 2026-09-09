@@ -9,8 +9,7 @@ Ce dossier regroupe les documents courts qui font foi pour la vision produit act
 3. `STATUTS.md` - catalogue des statuts fonctionnels
 4. `COULEURS.md` - tokens partages Flutter <-> Tailwind
 5. `AUDIT_v2_v3_COMPLIANCE.md` - ecarts entre le code actuel et la vision cible
-6. `MESSAGE.md` + `TERMES.md` - message canonique et lexique public (a dire / a ne pas dire)
-7. `METRIQUES_VITRINE.md` - registre des metriques datees (aucun chiffre public sans date)
+6. `METRIQUES_VITRINE.md` - registre des metriques publiees (datées, #7081)
 
 ## Regle
 
