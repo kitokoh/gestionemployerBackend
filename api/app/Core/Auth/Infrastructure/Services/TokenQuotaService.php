@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Auth\Infrastructure\Services;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\Contracts\HasApiTokens;
 
@@ -45,7 +46,9 @@ final class TokenQuotaService
             $staleQuery->delete();
 
             Log::channel('structured')->info('auth.tokens_pruned', [
-                'tokenable_id' => $user->getAuthIdentifier(),
+                // Le contrat HasApiTokens n'expose pas d'identifiant — on
+                // loggue la clé primaire quand le tokenable est un Eloquent.
+                'tokenable_id' => $user instanceof Model ? $user->getKey() : null,
                 'purged' => $count,
                 'quota' => $quota,
             ]);
