@@ -66,6 +66,7 @@ Listez les risques connus, limitations, ou dette technique deliberement laissee 
 ## 🛡 Quality Checklist (Enterprise Standards)
 
 -   [ ] **Code Quality:** My code follows the project's coding conventions (PSR-12, ESLint).
+-   [ ] **i18n (L-10):** toute chaîne visible ajoutée l'est dans les **4 langues** (fr/en/ar/tr) — backend `api/lang`, `shared/i18n/locales`, ARB `leopardo_core` (garde `check-i18n-catalog-parity.sh`, #7089).
 -   [ ] **Testing:** I have added or updated tests for my changes.
 -   [ ] **Verification:** I have verified the changes locally (API, Web, or Mobile).
 -   [ ] **Documentation:** I have updated the relevant documentation hub files.
