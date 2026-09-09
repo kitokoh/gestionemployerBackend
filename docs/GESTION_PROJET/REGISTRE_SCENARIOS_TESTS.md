@@ -200,3 +200,6 @@ Quand un domaine gagne une feature significative, ajouter:
 
 - v4.29.0 (BC-28 C-BACKOFFICE #6885) : back-office tenant des demandes de devis — `GET /catalog/inquiries` (liste + filtres), `PATCH /catalog/inquiries/{inquiry}/status` (matrice new→contacted→quote_sent→closed|lost, notes horodatées), `GET /catalog/inquiries/export` (CSV). RBAC principal/rh/manager, isolation 404. Scénarios couverts par `tests/Feature/Catalog/CatalogInquiryBackofficeTest.php`.
 | Catalog back-office devis | docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md | Tests - Leopardo RH | tests/Feature/Catalog/CatalogInquiryBackofficeTest.php | backend-tests |
+
+- v4.30.0 (BC-28 C-RGPD #6889) : protection données acheteur devis — `DELETE /catalog/inquiries/{inquiry}` (effacement + propagation leads CRM via `catalog.inquiry_erased`), purge rétention expirée (`catalog:purge-expired-inquiries`), revue non-fuite routes publiques, registre RGPD §10. Scénarios couverts par `tests/Feature/Catalog/CatalogRgpdTest.php`.
+| Catalog RGPD devis | docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md | Tests - Leopardo RH | tests/Feature/Catalog/CatalogRgpdTest.php | backend-tests |
