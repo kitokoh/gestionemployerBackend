@@ -8,6 +8,7 @@ use App\Core\Auth\Domain\Models\Employee;
 use App\Http\Controllers\Controller;
 use App\Modules\Catalog\Domain\Enums\CatalogProductStatus;
 use App\Modules\Catalog\Domain\Models\CatalogProduct;
+use App\Modules\Catalog\Domain\Support\CatalogPublicCache;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\StoreCatalogProductRequest;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\UpdateCatalogProductRequest;
 use Illuminate\Http\JsonResponse;
@@ -84,6 +85,8 @@ class CatalogProductController extends Controller
             'meta' => $request->input('meta'),
         ]);
 
+        CatalogPublicCache::forgetForCompany((string) $actor->company_id);
+
         return response()->json(['data' => $this->payload($product->refresh())], 201);
     }
 
@@ -128,6 +131,8 @@ class CatalogProductController extends Controller
             'meta' => $request->input('meta'),
         ]);
 
+        CatalogPublicCache::forgetForCompany((string) $actor->company_id);
+
         return response()->json(['data' => $this->payload($product->refresh())]);
     }
 
@@ -143,6 +148,8 @@ class CatalogProductController extends Controller
         $this->authorize('delete', $product);
 
         $product->delete();
+
+        CatalogPublicCache::forgetForCompany((string) $actor->company_id);
 
         return response()->json(['data' => null], 200);
     }
@@ -190,6 +197,8 @@ class CatalogProductController extends Controller
         $this->authorize('publish', $product);
 
         $product->update(['status' => $status->value]);
+
+        CatalogPublicCache::forgetForCompany((string) $actor->company_id);
 
         return response()->json(['data' => $this->payload($product->refresh())]);
     }

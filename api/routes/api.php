@@ -14,6 +14,7 @@ use App\Modules\Billing\Interfaces\Api\V1\Controllers\PaymentWebhookController;
 use App\Modules\Billing\Interfaces\Api\V1\Controllers\PlatformCompanySubscriptionController;
 use App\Modules\Billing\Interfaces\Api\V1\Controllers\PlatformPlanController;
 use App\Modules\Billing\Interfaces\Api\V1\Controllers\SelfServiceTrialController;
+use App\Modules\Catalog\Interfaces\Api\V1\Controllers\CatalogPublicController;
 use App\Modules\Billing\Interfaces\Api\V1\Controllers\StripeWebhookController;
 use App\Modules\EdgeSync\Interfaces\Api\V1\Controllers\EdgeNodeController;
 use App\Modules\HR\Interfaces\Api\V1\Controllers\CompanyBankingController;
@@ -209,6 +210,13 @@ Route::prefix('v1')->group(function (): void {
     // apps mobiles pré-login listent les pays supportés avant toute connexion.
     // Aucune donnée sensible (codes ISO, devises, fuseaux, confidenceLevel).
     Route::middleware(['throttle:public-registry'])->get('/supported-countries', [SupportedCountryController::class, 'index']);
+
+    // BC-28 CATALOG (#6882, C-PUBLIC) — catalogue public B2B d'un tenant :
+    // catégories + produits PUBLIÉS, SANS auth (tenant résolu par slug,
+    // pattern PublicCareerController). 0 donnée interne : DTO public dédié,
+    // cache Redis TTL court (CatalogPublicCache), invalidé à chaque mutation
+    // côté API privée. Throttling renforcé `shop-public` (pattern #6114).
+    Route::middleware(['throttle:shop-public'])->get('/public/catalog/{companySlug}', [CatalogPublicController::class, 'index']);
 
     // RESTO-805 (#6226) — boutique publique RestaurantManager (jeton signé par
     // tenant, sans auth utilisateur) — throttling renforcé `shop-public` +

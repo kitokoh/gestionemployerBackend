@@ -27183,6 +27183,34 @@ paths:
         '404':
           $ref: '#/components/responses/Error404'
 
+  /public/catalog/{companySlug}:
+    get:
+      tags:
+      - Catalog
+      summary: Catalogue public B2B d'un tenant (catégories + produits publiés)
+      description: >-
+        Aucune authentification requise — le tenant est résolu par slug
+        d'entreprise. Renvoie uniquement les catégories et les produits
+        PUBLIÉS via un DTO public strict (0 donnée interne : pas de stocks,
+        pas de données RH/fournisseur, pas de meta). BC-28 CATALOG #6882.
+      parameters:
+      - name: companySlug
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: >-
+            data.company (name, slug) + data.categories[] (slug,
+            name) + data.products[] (slug, name, description,
+            price_minor en minor units, currency ISO 4217, unit, category
+            {slug, name} | null)
+        '404':
+          description: Entreprise inconnue, suspendue ou sans module catalogue activé
+        '429':
+          $ref: '#/components/responses/Error429'
+
 components:
   securitySchemes:
     BearerAuth:

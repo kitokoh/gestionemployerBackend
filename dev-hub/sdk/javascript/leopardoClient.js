@@ -3875,6 +3875,11 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("POST", "/public/careers/{companySlug}/jobs/{jobPosting}/apply", options);
     },
 
+    /** Catalogue public B2B d'un tenant (catégories + produits publiés) */
+    getPublicCatalogByCompanySlug(options = {}) {
+      return request("GET", "/public/catalog/{companySlug}", options);
+    },
+
     /** Envoyer une notification push de test a un employe */
     postPushNotificationsSend(options = {}) {
       return request("POST", "/push-notifications/send", options);
