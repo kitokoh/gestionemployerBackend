@@ -231,3 +231,30 @@ Depuis la session du 2026-05-06, la meilleure strategie est d'utiliser GitHub Ac
 - Symptome : le code « fixe » reapparait sur main alors que le commit de la PR est bien dans l'historique (`git log` du fichier montre le fix puis son ecrasement).
 - Garde : avant de merger une PR dont la branche a ete creee il y a plus de quelques heures, verifier que ses fichiers n'ecrasent pas des fixes plus recents — `git diff origin/main...HEAD -- <fichiers>` et comparer avec `git log --oneline -3 origin/main -- <fichiers>`.
 - Correction type : restaurer la version validee du fix (ex. `git show <sha-du-fix>:<fichier> > <fichier>`) dans une nouvelle PR dediee (issue #2186).
+
+---
+
+## Rapport mensuel saturation CI (issue #7090, RETEX L-12)
+
+La saturation de la file Actions a été constatée à plusieurs reprises malgré
+les mesures déjà en place (BC batch, quotas merge, jobs gatés, annulation des
+runs obsolètes). Un **rapport mensuel** standardise la mesure pour décider des
+durcissements sur des données, pas au ressenti.
+
+- **Workflow** : `.github/workflows/ci-saturation-report.yml` — exécution
+  automatique le 1er du mois à 05:15 UTC + `workflow_dispatch` à la demande.
+- **Contenu** (30 jours glissants, API Actions) : volume par workflow, taux
+  d'annulation (`cancelled`), file d'attente moyenne, échecs. Publié en job
+  summary + artifact `ci-saturation-report` (non commité, non bloquant).
+- **Seuils indicatifs** :
+  - Annulation > ~30 % sur un workflow → vérifier les groupes de concurrence
+    et la rafale de merges (#3545).
+  - File moyenne > ~60 s récurrente → saturation des runners ; généraliser le
+    pattern « job lourd gaté par `dorny/paths-filter`, garde légère
+    inconditionnelle » (#6928) aux workflows restants (recenser les candidats
+    dans le rapport avant de modifier).
+  - Quota de merges dépassé → ajuster la variable repo `MERGE_DAILY_QUOTA`
+    (défaut 25), jamais de seuil en dur dans les workflows.
+- **Action** : si un seuil est dépassé, ouvrir une issue de durcissement
+  dédiée avec le rapport en preuve (rituel RETEX — tout durcissement se fait
+  par PR, jamais en contournant une garde).
