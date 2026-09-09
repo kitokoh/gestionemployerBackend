@@ -17,22 +17,22 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 /**
- * Issue #1814 — Simulation d'impact d'un barème fiscal (dry-run).
+ * Issue #1814 — Simulation d'impact d'un bareme fiscal (dry-run).
  *
  * POST /api/v1/payroll/simulate (manager principal/comptable) et
  * POST /api/v1/admin/payroll/simulate (platform_admin).
  *
- * Ne persiste RIEN : exécute le moteur de paie réel
- * (CountryRulesInterface via PayrollCalculator) avec un barème fourni en
- * paramètre (`slabs_override`), ou le barème actuel s'il est absent.
+ * Ne persiste RIEN : execute le moteur de paie reel
+ * (CountryRulesInterface via PayrollCalculator) avec un bareme fourni en
+ * parametre (`slabs_override`), ou le bareme actuel s'il est absent.
  * La réponse détaille le calcul ligne par ligne (cotisations, assiette,
  * impôt par tranche, net, coût employeur).
  *
  * Couche Application (ADR-0020, lot 6 — #6968) : le cas d'usage nommable
- * vit dans `SimulatePayrollDryRun` ; ce contrôleur ne garde que
+ * vit dans `SimulatePayrollDryRun` ; ce controleur ne garde que
  * l'interface HTTP — autorisation (manager principal/comptable ou
  * platform_admin), validation, corrélation, audit HTTP de l'acceptation
- * « placeholder » (#1872) et enveloppe de réponse.
+ *  placeholder  (#1872) et enveloppe de reponse.
  */
 class PayrollSimulationController extends Controller
 {
@@ -55,8 +55,8 @@ class PayrollSimulationController extends Controller
 
         $validated = $request->validate([
             'gross_salary' => ['required', 'numeric', 'min:0'],
-            // #1951 : contrat partagé — mêmes pays que le moteur de paie
-            // (plus de liste in: hardcodée, divergence #1951).
+            // #1951 : contrat partage - memes pays que le moteur de paie
+            // (plus de liste in: hardcodee, divergence #1951).
             'country_code' => ['required', 'string', Rule::in($this->payrollCalculator->rulesResolver()->supportedCountryCodes())],
             'slabs_override' => ['sometimes', 'array', 'min:1'],
             'slabs_override.*.min' => ['required_with:slabs_override', 'numeric', 'min:0'],
@@ -64,13 +64,13 @@ class PayrollSimulationController extends Controller
             'slabs_override.*.rate' => ['required_with:slabs_override', 'numeric', 'min:0', 'max:100'],
             'slabs_override.*.fixed_deduction' => ['sometimes', 'numeric', 'min:0'],
             'ignore_caps' => ['sometimes', 'boolean'],
-            // Issue #1872 — règle « placeholder » : confirmation explicite requise.
+            // Issue #1872 - regle  placeholder  : confirmation explicite requise.
             'acknowledge_placeholder' => ['sometimes', 'boolean'],
             // Issue #6686 : month/employee_id ne font pas partie du contrat de
-            // simulation (champ non utilisé, jamais documenté) — les rejeter
-            // explicitement plutôt que de les ignorer silencieusement (un
-            // client qui calcule avec un mois erroné doit recevoir un 422, pas
-            // un résultat chiffré faux). Le vrai calcul mensuel passe par
+            // simulation (champ non utilise, jamais documente) - les rejeter
+            // explicitement plutot que de les ignorer silencieusement (un
+            // client qui calcule avec un mois errone doit recevoir un 422, pas
+            // un resultat chiffre faux). Le vrai calcul mensuel passe par
             // /payroll-runs.
             'month' => ['prohibited'],
             'employee_id' => ['prohibited'],
@@ -80,17 +80,17 @@ class PayrollSimulationController extends Controller
         $gross = (float) $validated['gross_salary'];
         $countryCode = $validated['country_code'];
 
-        // Issue #1874 — identifiant de corrélation de la requête (logs ↔
-        // réponse ↔ audit) : X-Correlation-ID / X-Request-Id header (repli
-        // UUID frais), propagé aux logs et à la réponse (RequestIdMiddleware).
+        // Issue #1874 - identifiant de correlation de la requete (logs ↔
+        // reponse ↔ audit) : X-Correlation-ID / X-Request-Id header (repli
+        // UUID frais), propage aux logs et a la reponse (RequestIdMiddleware).
         $correlationId = correlation_id();
         Log::withContext(['correlation_id' => $correlationId]);
 
         $companyId = $user instanceof Employee ? (string) $user->company_id : null;
         $acknowledged = $request->boolean('acknowledge_placeholder');
 
-        // Cas d'usage nommable (ADR-0020, lot 6 #6968) — résolution des
-        // règles, garde placeholder (#1872/#5623 → 422), overrides dry-run,
+        // Cas d'usage nommable (ADR-0020, lot 6 #6968) - resolution des
+        // regles, garde placeholder (#1872/#5623 → 422), overrides dry-run,
         // calcul et audit dans SimulatePayrollDryRun.
         try {
             $result = $this->simulatePayrollDryRun->execute(
@@ -111,9 +111,9 @@ class PayrollSimulationController extends Controller
             ], 422);
         }
 
-        // Issue #1872 — l'acceptation d'une règle « placeholder » est
-        // AUDITÉE (tenant, pays, acteur, navigateur) — jamais de secrets ni
-        // de données biométriques.
+        // Issue #1872 - l'acceptation d'une regle  placeholder  est
+        // AUDITEE (tenant, pays, acteur, navigateur) - jamais de secrets ni
+        // de donnees biometriques.
         if ($result['rules_meta']['confidence'] === 'placeholder' && $companyId !== null && $acknowledged) {
             AuditLog::create([
                 'company_id' => $companyId,
@@ -134,14 +134,14 @@ class PayrollSimulationController extends Controller
 
         return response()->json([
             'data' => [
-                // Issue #1874 — corrélation requête ↔ logs ↔ audit.
+                // Issue #1874 - correlation requete ↔ logs ↔ audit.
                 'correlation_id' => $correlationId,
                 'gross' => $result['gross'],
                 'country_code' => $result['country_code'],
-                // Issue #1872 — conformité : niveau de confiance des règles
-                // pays + avertissement localisé + source légale + date de
-                // vérification experte (même structure que le contrat du
-                // PayrollCalculationPresenter, consommée par TaxSlabsView).
+                // Issue #1872 - conformite : niveau de confiance des regles
+                // pays + avertissement localise + source legale + date de
+                // verification experte (meme structure que le contrat du
+                // PayrollCalculationPresenter, consommee par TaxSlabsView).
                 'compliance' => $result['compliance'],
                 'social_employee' => $result['social_employee'],
                 'social_employer' => $result['social_employer'],

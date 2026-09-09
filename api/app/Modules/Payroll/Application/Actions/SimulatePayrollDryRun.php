@@ -14,21 +14,21 @@ use App\Modules\Payroll\Infrastructure\Services\PayrollCalculator;
 use ReflectionClass;
 
 /**
- * Cas d'usage : simulation d'impact d'un barème fiscal (dry-run, #1814) —
- * exécute le moteur de paie réel sur un brut et un pays donnés, avec un
- * barème fourni en paramètre (`slabs_override`) ou le barème actuel, et
- * option `ignore_caps` pour comparer « avec/sans plafond légal » (#1815).
+ * Cas d'usage : simulation d'impact d'un bareme fiscal (dry-run, #1814) -
+ * execute le moteur de paie reel sur un brut et un pays donnes, avec un
+ * bareme fourni en parametre (`slabs_override`) ou le bareme actuel, et
+ * option `ignore_caps` pour comparer  avec/sans plafond legal  (#1815).
  *
- * Orchestration pure et nommable (ADR-0020, lot 6 — #6968) : résolution des
- * règles pays (avec audit des échecs), garde « placeholder » (#1872/#5623 —
+ * Orchestration pure et nommable (ADR-0020, lot 6 - #6968) : resolution des
+ * regles pays (avec audit des echecs), garde  placeholder  (#1872/#5623 -
  * l'Action lève `PayrollPlaceholderAcknowledgementRequiredException`,
  * l'interface la rend en 422), overrides dry-run non persistants, calcul par
  * le pipeline unique des bulletins (`computeNetBreakdown`, #2220/#1869) et
- * audit de la simulation (résultats agrégés uniquement).
+ * audit de la simulation (resultats agreges uniquement).
  *
  * Ne persiste RIEN. L'interface (contrôleur) conserve l'autorisation
  * (manager principal/comptable ou platform_admin), la validation, l'audit
- * HTTP de l'acceptation placeholder et l'enveloppe de réponse.
+ * HTTP de l'acceptation placeholder et l'enveloppe de reponse.
  *
  * @param  array<int, array{min: float|string, max?: float|string|null, rate: float|string, fixed_deduction?: float|string}>|null  $slabsOverride
  * @return array{
@@ -63,18 +63,18 @@ class SimulatePayrollDryRun
     ): array {
         $hasSlabsOverride = $slabsOverride !== null;
 
-        // Issue #1874 — la résolution échoue → audit (rule_missing /
-        // provider_error) puis relance ; la réponse HTTP reste inchangée.
+        // Issue #1874 - la resolution echoue → audit (rule_missing /
+        // provider_error) puis relance ; la reponse HTTP reste inchangee.
         $rules = $this->resolveRules($correlationId, $companyId, $countryCode, $gross, $hasSlabsOverride);
 
-        // Issue #1872/#5623 — règle « placeholder » (aucune valeur légale
-        // implémentée) : simulation indicative interdite sans confirmation
+        // Issue #1872/#5623 - regle  placeholder  (aucune valeur legale
+        // implementee) : simulation indicative interdite sans confirmation
         // explicite ; l'acceptation est AUDITÉE côté interface.
         if ($rules->confidenceLevel() === 'placeholder' && ! $acknowledgePlaceholder) {
             throw new PayrollPlaceholderAcknowledgementRequiredException($countryCode);
         }
 
-        // Override dry-run du barème (non persistant).
+        // Override dry-run du bareme (non persistant).
         if ($hasSlabsOverride) {
             $slabs = array_map(static fn (array $slab): array => [
                 'min' => (float) $slab['min'],
@@ -86,13 +86,13 @@ class SimulatePayrollDryRun
             $rules->withTaxSlabs($slabs);
         }
 
-        // Issue #1815 — comparaison « avec/sans plafond légal » : la méthode
-        // vit sur AbstractCountryRules (pas sur le contrat) — garde instanceof.
+        // Issue #1815 - comparaison  avec/sans plafond legal  : la methode
+        // vit sur AbstractCountryRules (pas sur le contrat) - garde instanceof.
         if ($rules instanceof AbstractCountryRules) {
             $rules->withCapsEnabled(! $ignoreCaps);
         }
 
-        // Issue #2220 — parité simulation/bulletin : pipeline UNIQUE des
+        // Issue #2220 - parite simulation/bulletin : pipeline UNIQUE des
         // bulletins (computeNetBreakdown), TRIMF SN comprise (#1869).
         $breakdown = $this->payrollCalculator->computeNetBreakdown($gross, $rules);
         $social = $breakdown['social'];
@@ -101,8 +101,8 @@ class SimulatePayrollDryRun
         $netSalary = $breakdown['net_salary'];
         $totalCost = $breakdown['total_cost'];
 
-        // Impôt par tranche : convention mensuelle OU annualisée selon la
-        // règle pays — le total converge vers l'impôt du moteur (#2220).
+        // Impot par tranche : convention mensuelle OU annualisee selon la
+        // regle pays - le total converge vers l'impôt du moteur (#2220).
         $bySlab = $this->payrollCalculator->slabTaxBreakdown($rules, $gross, $taxBase, $incomeTax);
 
         // Issue #1874 — audit de la simulation (résultats agrégés uniquement).
@@ -128,14 +128,14 @@ class SimulatePayrollDryRun
         return [
             'gross' => $gross,
             'country_code' => $countryCode,
-            // Consommé par l'interface pour l'audit HTTP de l'acceptation
-            // placeholder (jamais exposé dans la réponse).
+            // Consomme par l'interface pour l'audit HTTP de l'acceptation
+            // placeholder (jamais expose dans la reponse).
             'rules_meta' => [
                 'short_name' => (new ReflectionClass($rules))->getShortName(),
                 'confidence' => $rules->confidenceLevel(),
             ],
-            // Issue #1872 — conformité : niveau de confiance + avertissement
-            // localisé + source légale + date de vérification experte (même
+            // Issue #1872 - conformite : niveau de confiance + avertissement
+            // localise + source legale + date de verification experte (meme
             // structure que le contrat du PayrollCalculationPresenter).
             'compliance' => [
                 'level' => $rules->confidenceLevel(),
@@ -155,8 +155,8 @@ class SimulatePayrollDryRun
     }
 
     /**
-     * Résout les règles pays pour la simulation ; toute erreur de résolution
-     * est tracée dans l'audit (rule_missing / provider_error) puis relancée —
+     * Resout les regles pays pour la simulation ; toute erreur de resolution
+     * est tracee dans l'audit (rule_missing / provider_error) puis relancée —
      * la réponse HTTP reste inchangée.
      */
     private function resolveRules(
@@ -169,7 +169,7 @@ class SimulatePayrollDryRun
         $input = ['gross_salary' => $gross, 'has_slabs_override' => $hasSlabsOverride];
 
         try {
-            // Appel direct au résolveur (comme le simulateur cotisations) :
+            // Appel direct au resolveur (comme le simulateur cotisations) :
             // `getRules()` masque l'exception de contexte pour PHPStan (dead
             // catch catch.neverThrown) alors que `resolve()` la déclare.
             return $this->payrollCalculator->rulesResolver()->resolve($countryCode);
