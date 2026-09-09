@@ -146,6 +146,17 @@ jobs:
       # générés (lib/l10n/generated/*) ne sont plus commités, ils n'existent
       # donc pas dans le checkout brut où tourne ce job guard.
 
+      - name: Validate no mojibake drift on duplicated mobile files (#7091)
+        # RETEX L-09/L-07 : correctifs d'encodage répétés sur des fichiers
+        # byte-identiques dupliqués entre employee/manager/hr (chantier #2661)
+        # — un fix appliqué à une seule copie laisse le mojibake chez les
+        # sœurs. Détecte les copies divergentes sur le diff de la PR.
+        shell: bash
+        env:
+          DIFF_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          DIFF_HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: 'bash ./dev-hub/tools/check-mobile-duplicated-drift.sh "${DIFF_BASE_SHA}" "${DIFF_HEAD_SHA}"'
+
   flutter-analyze:
     timeout-minutes: 90
     name: Analyze ${{ matrix.project.name }}
