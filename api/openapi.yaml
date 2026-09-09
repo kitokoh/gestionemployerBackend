@@ -27344,6 +27344,33 @@ paths:
           $ref: '#/components/responses/Error401'
         '403':
           $ref: '#/components/responses/Error403'
+  /catalog/inquiries/{inquiry}:
+    delete:
+      tags:
+      - Catalog
+      summary: Effacer une demande de devis (droit RGPD, canal tenant)
+      description: >-
+        BC-28 CATALOG C-RGPD (#6889) - suppression definitive d'une demande
+        de devis et propagation de l'effacement aux leads CRM BC-11 du meme
+        acheteur (evenement catalog.inquiry_erased). Reserve principal/rh/manager ;
+        404 cross-tenant.
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: inquiry
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Demande effacee
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
   /catalog/inquiries/{inquiry}/status:
     patch:
       tags:

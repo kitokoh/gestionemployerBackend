@@ -1500,6 +1500,11 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("GET", "/catalog/inquiries", options);
     },
 
+    /** Effacer une demande de devis (droit RGPD, canal tenant) */
+    deleteCatalogInquiriesByInquiry(options = {}) {
+      return request("DELETE", "/catalog/inquiries/{inquiry}", options);
+    },
+
     /** Transition de statut d'une demande de devis (back-office) */
     patchCatalogInquiriesByInquiryStatus(options = {}) {
       return request("PATCH", "/catalog/inquiries/{inquiry}/status", options);

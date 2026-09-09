@@ -447,6 +447,40 @@ events:
       data: { inquiry_id: 7, product_slug: "cnc-3-axes", email: "achat@boussaid.dz" }
     deprecation: null
 
+  - name: catalog.inquiry_erased
+    version: 1.0.0
+    bc: catalog
+    class: App\Events\CatalogInquiryErased
+    description: >-
+      BC-28 CATALOG (C-RGPD #6889) : une demande de devis B2B a été effacée
+      (droit d'effacement RGPD, canal support tenant, ou purge de rétention
+      expirée). Ne porte que company + email acheteur (jamais le corps).
+      Consommé par CRM (suppression des leads BC-11 source b2b_catalog du
+      même acheteur).
+    consumers:
+      - App\Listeners\EraseCrmLeadsOnCatalogInquiryErased
+    schema:
+      type: object
+      required: [event_name, version, occurred_at, company_id, data]
+      properties:
+        event_name: { type: string, enum: [catalog.inquiry_erased] }
+        version: { type: string }
+        occurred_at: { type: string, format: date-time }
+        company_id: { type: string, format: uuid }
+        data:
+          type: object
+          required: [inquiry_id, email]
+          properties:
+            inquiry_id: { type: integer, minimum: 1 }
+            email: { type: string, format: email }
+    sample:
+      event_name: catalog.inquiry_erased
+      version: "1.0.0"
+      occurred_at: "2026-09-09T10:30:00+00:00"
+      company_id: "11111111-1111-4111-8111-111111111111"
+      data: { inquiry_id: 7, email: "achat@boussaid.dz" }
+    deprecation: null
+
   - name: payroll.validated
     version: 1.0.0
     bc: payroll
