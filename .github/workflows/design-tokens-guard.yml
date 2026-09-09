@@ -1,0 +1,45 @@
+name: Design Tokens Sync Guard
+
+# T3 — issue #7118 (protocole P05 §5) : garde de synchronisation des tokens
+# entre les surfaces. NON BLOQUANT : les dérives historiques (ex. échelle cyan)
+# doivent être résorbées avant de passer la garde en bloquante.
+
+on:
+  pull_request:
+    paths:
+      - "front/web/tailwind.config.ts"
+      - "front/admin-dashboard/tailwind.config.js"
+      - "front/mobile_apps/leopardo_core/lib/core/theme/app_colors.dart"
+      - "docs/specifications/DESIGN_SYSTEM_TOKENS.md"
+      - "docs/REFERENTIEL_PRODUIT/COULEURS.md"
+      - "dev-hub/tools/check-design-token-sync.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: design-tokens-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  token-sync:
+    runs-on: ubuntu-latest
+    name: Check design token sync (web/admin/Flutter)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          lfs: false
+
+      - name: Run token sync guard (non bloquant — issue #7118)
+        shell: bash
+        run: |
+          set +e
+          python3 dev-hub/tools/check-design-token-sync.py
+          code=$?
+          set -e
+          if [ "$code" -ne 0 ] && [ "$code" -ne 2 ]; then
+            echo "::warning::Dérives de tokens design détectées (issue #7118) — sortie ci-dessus. Non bloquant : résorber les dérives avant passage en garde bloquante (protocole P05 §5, L.07)."
+          fi
+          exit 0

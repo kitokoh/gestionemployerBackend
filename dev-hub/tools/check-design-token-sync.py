@@ -1,181 +1,148 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-check-design-token-sync.py — Vérifie la synchronisation des tokens design.
+T3 — Garde de synchronisation des tokens design (issue #7118, protocole P05 §5).
 
-Source de vérité : docs/REFERENTIEL_PRODUIT/COULEURS.md (APV L.07 : « AppColors.dart +
-tailwind.config.js + COULEURS.md bougent ensemble dans la même PR »).
+Pourquoi : la synchro des tokens entre surfaces reposait sur une regle manuelle
+(L.07 : AppColors + tailwind.config.* + COULEURS.md bougent ensemble) — deja en
+derive (ex. echelle cyan : web '#ecf9ff/50' vs admin '#ecfeff/50'). Ce script
+compare les valeurs reelles des surfaces entre elles et avec la semantique
+canonique AppColors (docs/REFERENTIEL_PRODUIT/COULEURS.md).
 
-Vérifications :
-  1. Flutter : chaque hex de COULEURS.md existe dans app_colors.dart (0xFF…)
-     et chaque token `AppColors.<id>` documenté y est déclaré.
-  2. Web / Admin (tailwind) : quand le fichier de config définit une palette nommée
-     (ex. emerald), la valeur documentée de la nuance doit correspondre à l'hex de
-     COULEURS.md. Une palette absente du fichier = palette par défaut Tailwind -> INFO.
-  3. Usage (INFO) : occurrences des classes documentées dans le code source.
-
-Usage :
-  python3 dev-hub/tools/check-design-token-sync.py [--root DIR] [--no-flutter]
-        [--no-web] [--no-admin] [--warn-only]
-
-Code : issue #7070 / protocole P05. Sortie : 0 = OK, 1 = écart détecté
-(sauf --warn-only).
+Usage:
+    python3 dev-hub/tools/check-design-token-sync.py
+Exit: 0 = aucune derive ; 1 = derives detectees (stdout) ; 2 = fichier manquant.
 """
-
-import argparse
-import os
 import re
 import sys
+from pathlib import Path
 
-PREFIXES = {
-    "bg", "text", "border", "ring", "fill", "stroke", "from", "via", "to",
-    "divide", "placeholder", "accent", "caret", "outline", "decoration", "shadow",
+ROOT = Path(__file__).resolve().parents[2]
+
+FILES = {
+    "dart": ROOT / "front/mobile_apps/leopardo_core/lib/core/theme/app_colors.dart",
+    "web": ROOT / "front/web/tailwind.config.ts",
+    "admin": ROOT / "front/admin-dashboard/tailwind.config.js",
 }
-DEFAULT_PALETTES = {"slate", "gray", "zinc", "neutral", "stone", "red", "orange",
-                    "amber", "yellow", "lime", "green", "emerald", "teal", "cyan",
-                    "sky", "blue", "indigo", "violet", "purple", "fuchsia", "pink", "rose"}
+
+# Semantique canonique : token Flutter -> (echelle, step) attendu dans les configs
+# (source : docs/REFERENTIEL_PRODUIT/COULEURS.md). Echelles absentes d'une config
+# (ex. amber/red/violet) signalees en info, pas en derive.
+DART_EXPECT = {
+    "rh": ("emerald", "500"), "rhLight": ("emerald", "100"), "rhDark": ("emerald", "700"),
+    "success": ("emerald", "500"),
+    "warning": ("amber", "500"),
+    "danger": ("red", "500"),
+    "info": ("blue", "500"),
+    "security": ("blue", "500"), "securityLight": ("blue", "100"),
+    "ia": ("violet", "600"), "iaLight": ("violet", "100"),
+    "finance": ("amber", "500"), "financeLight": ("amber", "100"),
+    "bgDark": ("slate", "900"), "cardDark": ("slate", "800"), "borderDark": ("slate", "700"),
+    "cardLight": ("slate", "50"), "textDark": ("slate", "100"),
+    "textMutedDark": ("slate", "400"), "textMuted": ("slate", "500"),
+    "borderLight": ("slate", "200"), "border": ("slate", "200"),
+}
+# Derives actees (a resorber) : vide pour l'instant — toute divergence est une issue.
+ALLOWED_DRIFT = set()
+
+WRAPPERS = {"colors", "extend", "theme"}
 
 
-def parse_couleurs(path):
-    """Retourne une liste de dicts {hex, flutter, classes:[...]}."""
-    rows = []
-    with open(path, encoding="utf-8") as fh:
-        for raw in fh:
-            line = raw.strip()
-            if not line.startswith("|"):
-                continue
-            cells = [c.strip().strip("`") for c in line.strip("|").split("|")]
-            hexes = [c for c in cells if re.fullmatch(r"#[0-9A-Fa-f]{6}", c)]
-            flutters = [c for c in cells if c.startswith("AppColors.")]
-            classes = [c for c in cells
-                       if re.fullmatch(r"(?:bg|text|border|ring)-[a-z]+-[0-9]{2,3}", c)
-                       or re.fullmatch(r"[a-z]+-[0-9]{2,3}", c)]
-            if hexes:
-                rows.append({"hex": hexes[0].lstrip("#").upper(),
-                             "flutter": flutters[0] if flutters else None,
-                             "classes": classes})
-    return rows
+def norm(h):
+    h = re.sub(r"^#", "", str(h)).strip().lower()
+    return h if len(h) == 6 else h[-6:]
 
 
-def check_flutter(rows, app_colors_path):
-    problems, infos = [], []
-    if not os.path.exists(app_colors_path):
-        return ["Fichier introuvable : %s" % app_colors_path], []
-    raw = open(app_colors_path, encoding="utf-8").read()
-    src = raw.upper()
-    for row in rows:
-        if "0XFF" + row["hex"] not in src:
-            problems.append("Flutter : hex #%s (COULEURS.md) absent de %s"
-                            % (row["hex"], os.path.relpath(app_colors_path)))
-    declared = set(re.findall(r"static const Color\s+([A-Za-z0-9_]+)", raw))
-    for row in rows:
-        tok = row["flutter"]
-        if tok:
-            ident = tok.split(".")[-1]
-            if ident not in declared:
-                problems.append("Flutter : token %s documenté dans COULEURS.md mais "
-                                "non déclaré dans app_colors.dart" % tok)
-    infos.append("Flutter : %d tokens documentés, %d déclarés dans app_colors.dart"
-                 % (len([r for r in rows if r["flutter"]]), len(declared)))
-    return problems, infos
+def parse_config(text):
+    """Parse tolérant d'un tailwind.config (ts/js) -> {(palette, step): hex}.
+
+    Parser à indentation : suit les blocs 'cle: {' pour connaître la palette
+    courante (ignore les wrappers colors/theme/extend). Couvre les steps
+    numeriques, DEFAULT, et les cles plates type surface.
+    """
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    text = re.sub(r"//[^\n]*", "", text)
+    out = {}
+    stack = []
+    last_palette = None
+    for raw in text.splitlines():
+        line = raw.strip()
+        m = re.match(r"([A-Za-z_][\w-]*|'[^']*'|\d+|DEFAULT)\s*:", line)
+        if not m:
+            continue
+        key = m.group(1).strip("'")
+        rest = line[m.end():]
+        if "{" in rest:
+            stack.append(key)
+            if key not in WRAPPERS:
+                last_palette = key
+            continue
+        hm = re.search(r"'#([0-9a-fA-F]{6})'|\"#([0-9a-fA-F]{6})\"", rest)
+        if not hm:
+            continue
+        hx = hm.group(1) or hm.group(2)
+        if re.fullmatch(r"\d+|DEFAULT", key):
+            fam = last_palette if last_palette else (stack[-1] if stack else "?")
+            out[(fam, key.lower())] = norm(hx)
+        elif last_palette:
+            out[(last_palette, key.lower())] = norm(hx)
+        else:
+            out[(key, "DEFAULT")] = norm(hx)
+    return out
 
 
-def parse_tailwind_palettes(config_path):
-    """{palette: {shade: '#hex'}} pour les blocs `name: { shade: 'hex', ... }`."""
-    text = open(config_path, encoding="utf-8").read()
-    palettes = {}
-    # Bloc palette : nom: { ... } sans accolade imbriquée dans le corps
-    for m in re.finditer(r"([a-z][a-z0-9-]*):\s*\{(?P<body>[^{}]*)\}", text):
-        name, body = m.group(1), m.group("body")
-        shades = dict(re.findall(r"(\d{2,3}|[a-z]+)\s*:\s*['\"](#?[0-9A-Fa-f]{6})['\"]", body))
-        if shades:
-            palettes[name] = {k: v.lstrip("#").upper() for k, v in shades.items()}
-    return palettes
-
-
-def normalize_class(cls):
-    """('emerald', '500') pour bg-emerald-500 / emerald-500 / text-slate-900."""
-    parts = cls.split("-")
-    if parts[0] in PREFIXES:
-        parts = parts[1:]
-    if len(parts) == 2 and parts[1].isdigit():
-        return parts[0], parts[1]
-    return None
-
-
-def check_tailwind(rows, config_path, label):
-    problems, infos = [], []
-    if not os.path.exists(config_path):
-        return ["Fichier introuvable : %s" % config_path], []
-    palettes = parse_tailwind_palettes(config_path)
-    infos.append("%s : %d palettes explicites trouvées dans le config"
-                 % (label, len(palettes)))
-    seen = set()
-    for row in rows:
-        for cls in row["classes"]:
-            norm = normalize_class(cls)
-            if not norm:
-                continue
-            key = (norm[0], norm[1])
-            if key in seen:
-                continue
-            seen.add(key)
-            pal, shade = norm
-            if pal in palettes:
-                if shade in palettes[pal]:
-                    actual = palettes[pal][shade]
-                    if actual != row["hex"]:
-                        problems.append(
-                            "%s : %s-%s vaut %s dans le config mais %s dans COULEURS.md"
-                            % (label, pal, shade, "#" + actual, "#" + row["hex"]))
-                else:
-                    infos.append("%s : nuance %s-%s absente du config (INFO)"
-                                 % (label, pal, shade))
-            else:
-                infos.append("%s : palette %s absente du config (défaut Tailwind ? INFO)"
-                             % (label, pal))
-    return problems, infos
+def parse_dart(text):
+    out = {}
+    for m in re.finditer(r"static\s+const\s+Color\s+(\w+)\s*=\s*Color\(\s*0xFF([0-9a-fA-F]{6})", text):
+        out[m.group(1)] = norm(m.group(2))
+    return out
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--root", default=".")
-    ap.add_argument("--no-flutter", action="store_true")
-    ap.add_argument("--no-web", action="store_true")
-    ap.add_argument("--no-admin", action="store_true")
-    ap.add_argument("--warn-only", action="store_true")
-    args = ap.parse_args()
-    root = args.root
-
-    couleurs = os.path.join(root, "docs/REFERENTIEL_PRODUIT/COULEURS.md")
-    if not os.path.exists(couleurs):
-        print("::error::COULEURS.md introuvable (%s)" % couleurs)
-        return 2
-    rows = parse_couleurs(couleurs)
-    print("COULEURS.md : %d lignes de tokens lues" % len(rows))
-
     problems, infos = [], []
-    if not args.no_flutter:
-        p, i = check_flutter(rows, os.path.join(
-            root, "front/mobile_apps/leopardo_core/lib/core/theme/app_colors.dart"))
-        problems += p; infos += i
-    if not args.no_web:
-        p, i = check_tailwind(rows, os.path.join(root, "front/web/tailwind.config.ts"), "Web")
-        problems += p; infos += i
-    if not args.no_admin:
-        p, i = check_tailwind(rows, os.path.join(root, "front/admin-dashboard/tailwind.config.js"),
-                              "Admin")
-        problems += p; infos += i
-
-    for line in infos:
-        print("ℹ", line)
-    for line in problems:
-        print("❌", line)
+    for key, path in FILES.items():
+        if not path.exists():
+            problems.append(f"[{key}] fichier introuvable : {path}")
     if problems:
-        print("\nÉcarts détectés : %d. Règle APV L.07 / protocole P05 : COULEURS.md,"
-              " app_colors.dart et les configs Tailwind bougent ensemble." % len(problems))
-        return 0 if args.warn_only else 1
-    print("\n✅ Tokens synchronisés (COULEURS.md ↔ Flutter ↔ Tailwind).")
-    return 0
+        print("\n".join(problems))
+        return 2
+
+    dart = parse_dart(FILES["dart"].read_text(encoding="utf-8"))
+    cfg = {
+        "web": parse_config(FILES["web"].read_text(encoding="utf-8")),
+        "admin": parse_config(FILES["admin"].read_text(encoding="utf-8")),
+    }
+
+    # A. derive web <-> admin sur les cles partagees
+    for key in sorted(set(cfg["web"]) & set(cfg["admin"])):
+        if cfg["web"][key] != cfg["admin"][key]:
+            msg = f"derive web/admin — {key[0]}.{key[1]} : web={cfg['web'][key]} admin={cfg['admin'][key]}"
+            (infos if key in ALLOWED_DRIFT else problems).append(msg)
+
+    # B. semantique canonique : token Flutter attendu dans les configs
+    for token, (scale, step) in DART_EXPECT.items():
+        if token not in dart:
+            continue
+        expected = dart[token]
+        for surface, conf in cfg.items():
+            val = conf.get((scale, step))
+            if val is None:
+                infos.append(
+                    f"info — {scale}-{step} absent de {surface} (token {token}, semantique non couverte)"
+                )
+            elif val != expected:
+                problems.append(
+                    f"derive semantique — {token} (AppColors #{expected}) != "
+                    f"{scale}-{step} [{surface}] #{val}"
+                )
+
+    if problems:
+        print(f"::error::Check design token sync — {len(problems)} derive(s) (issue #7118)")
+        print("\n".join(f"  - {p}" for p in problems))
+    for i in infos:
+        print(f"  ~ {i}")
+    print(f"tokens compares : dart={len(dart)} web={len(cfg['web'])} admin={len(cfg['admin'])}")
+    return 1 if problems else 0
 
 
 if __name__ == "__main__":
