@@ -47,6 +47,21 @@ Listez les risques connus, limitations, ou dette technique deliberement laissee 
 
 ---
 
+## 🎨 Design Review — DSG-6 (PR touchant une UI)
+
+> Obligatoire si une surface UI est cochée ci-dessus (Web / Admin / Mobile / Kiosk / Vitrine).
+> Référence : `docs/PROTOCOLES/P05_DESIGN_HARMONISE.md` (DSG-6) + `docs/REFERENTIEL_PRODUIT/COULEURS.md` (tokens).
+
+-   [ ] Tokens : couleurs/typo/rayons issus du design system (pas de hex hors palette ni classes legacy).
+-   [ ] États UI couverts (vide, chargement, erreur, succès, disabled).
+-   [ ] Contraste AA vérifié (texte sur fond).
+-   [ ] Responsive : rendu contrôlé aux breakpoints principaux (mobile/tablette/desktop).
+-   [ ] i18n/RTL : chaînes externalisées (×4 langues) et rendu RTL (ar) vérifié.
+-   [ ] Assets : tailles/format conformes, pas de tracker tiers ajouté.
+-   [ ] Golden tests / captures : captures avant/après jointes pour toute évolution visuelle (P05 §3).
+-   [ ] Non applicable (PR sans impact visuel).
+
+---
 ## 🛡 Quality Checklist (Enterprise Standards)
 
 -   [ ] **Code Quality:** My code follows the project's coding conventions (PSR-12, ESLint).
