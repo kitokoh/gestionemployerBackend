@@ -152,7 +152,7 @@ Index de la documentation technique et stratégique du projet.
 | [`qa/`](qa/) | Sessions QA (constats, triage, audit 360°) — source de vérité de l'état courant |
 | [`ops/`](ops/) | Opérations & domaines (état précis de l'infrastructure déployée) |
 | [`client/`](client/) | Documentation espace client / portail |
-| [`design/`](design/) | Design system et assets de conception |
+| [`design/`](design/) | Point d'entrée design (sources canoniques) + assets de conception |
 | [`contributing/`](contributing/) | Guides de contribution complémentaires |
 | [`notes/`](notes/) | Notes techniques et archives ponctuelles |
 | [`notes/`](notes/) | Notes et archives de contexte (non-source-de-vérité) |

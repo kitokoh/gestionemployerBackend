@@ -1,0 +1,35 @@
+name: Web Design Tokens Guard
+
+# Garde tokens design web/admin (issue #7062, protocole P05 §3) :
+# hex hors palette COULEURS.md (bloquant, sauf allowlist documentée) +
+# classes legacy (avertissement V1). Script : dev-hub/tools/check-web-design-tokens.sh
+
+on:
+  pull_request:
+    paths:
+      - "front/web/**"
+      - "front/admin-dashboard/**"
+      - "docs/REFERENTIEL_PRODUIT/COULEURS.md"
+      - "dev-hub/tools/check-web-design-tokens.sh"
+      - "dev-hub/tools/web-design-hex-allowlist.txt"
+  push:
+    branches: [main]
+    paths:
+      - "front/web/**"
+      - "front/admin-dashboard/**"
+      - "docs/REFERENTIEL_PRODUIT/COULEURS.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-tokens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Run web design tokens guard
+        run: bash dev-hub/tools/check-web-design-tokens.sh
