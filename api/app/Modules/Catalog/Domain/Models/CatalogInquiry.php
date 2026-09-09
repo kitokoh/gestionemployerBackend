@@ -29,6 +29,7 @@ use Illuminate\Support\Carbon;
  * @property string $company_name
  * @property string $email
  * @property string|null $message
+ * @property string|null $notes
  * @property CatalogInquiryStatus $status
  * @property Carbon|null $consent_at
  * @property Carbon|null $retention_until
@@ -54,6 +55,7 @@ class CatalogInquiry extends Model
         'company_name',
         'email',
         'message',
+        'notes',
         'status',
         'consent_at',
         'retention_until',

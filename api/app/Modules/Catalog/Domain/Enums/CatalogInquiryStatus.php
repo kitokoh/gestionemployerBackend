@@ -22,4 +22,26 @@ enum CatalogInquiryStatus: string
     case Closed = 'closed';
 
     case Lost = 'lost';
+
+    /**
+     * Transitions autorisées du back-office tenant (C-BACKOFFICE #6885,
+     * spec §7 : « nouveau → contacté → devis envoyé → clos/perdu »).
+     * `closed` et `lost` sont terminaux ; toute autre transition → 422.
+     *
+     * @return list<self>
+     */
+    public function allowedTransitions(): array
+    {
+        return match ($this) {
+            self::New => [self::Contacted, self::Lost],
+            self::Contacted => [self::QuoteSent, self::Lost],
+            self::QuoteSent => [self::Closed, self::Lost],
+            self::Closed, self::Lost => [],
+        };
+    }
+
+    public function isTerminal(): bool
+    {
+        return $this === self::Closed || $this === self::Lost;
+    }
 }
