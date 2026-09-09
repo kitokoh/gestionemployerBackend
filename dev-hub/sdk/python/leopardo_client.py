@@ -1216,6 +1216,18 @@ class LeopardoClient:
         """Mettre a jour une categorie (gestion principal/rh)"""
         return self.request("PUT", "/catalog/categories/{category}", **kwargs)
 
+    def get_catalog_inquiries(self, **kwargs):
+        """Lister les demandes de devis B2B du tenant (back-office)"""
+        return self.request("GET", "/catalog/inquiries", **kwargs)
+
+    def patch_catalog_inquiries_by_inquiry_status(self, **kwargs):
+        """Transition de statut d'une demande de devis (back-office)"""
+        return self.request("PATCH", "/catalog/inquiries/{inquiry}/status", **kwargs)
+
+    def get_catalog_inquiries_export(self, **kwargs):
+        """Exporter les demandes de devis B2B en CSV (back-office)"""
+        return self.request("GET", "/catalog/inquiries/export", **kwargs)
+
     def get_catalog_products(self, **kwargs):
         """Lister les produits du catalogue (membres du tenant)"""
         return self.request("GET", "/catalog/products", **kwargs)

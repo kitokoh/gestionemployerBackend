@@ -27288,6 +27288,105 @@ paths:
         '404':
           $ref: '#/components/responses/Error404'
 
+  /catalog/inquiries:
+    get:
+      tags:
+      - Catalog
+      summary: Lister les demandes de devis B2B du tenant (back-office)
+      description: >-
+        BC-28 CATALOG C-BACKOFFICE (#6885) - liste des demandes de devis
+        (produit, societe, statut, notes internes, consentement, retention).
+        Reserve principal/rh/manager. Filtres status + q (societe/email/produit).
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [new, contacted, quote_sent, closed, lost]
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Liste paginee des demandes
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+  /catalog/inquiries/export:
+    get:
+      tags:
+      - Catalog
+      summary: Exporter les demandes de devis B2B en CSV (back-office)
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [new, contacted, quote_sent, closed, lost]
+      responses:
+        '200':
+          description: Fichier CSV (BOM UTF-8, limite 5000 lignes)
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+  /catalog/inquiries/{inquiry}/status:
+    patch:
+      tags:
+      - Catalog
+      summary: Transition de statut d'une demande de devis (back-office)
+      description: >-
+        BC-28 CATALOG C-BACKOFFICE (#6885) - matrice spec §7 :
+        new > contacted > quote_sent > closed|lost ; closed/lost terminaux.
+        Note interne optionnelle ajoutee avec horodatage. 404 cross-tenant.
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: inquiry
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [new, contacted, quote_sent, closed, lost]
+                note:
+                  type: string
+                  maxLength: 2000
+      responses:
+        '200':
+          description: Demande mise a jour
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+
 components:
   securitySchemes:
     BearerAuth:
