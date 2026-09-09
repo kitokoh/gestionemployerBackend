@@ -1,32 +1,18 @@
-# Checklist Session 0 — agent Leopardo RH (versionnée)
+# Checklist Session 0 — nouvel agent (protocole P02)
 
-> Protocole P02 (§7, issue #7060). Obligatoire au début de chaque session agent
-> (nouvel agent ou reprise). Cochez au fur et à mesure ; en cas d'échec d'une
-> étape, signalez-le dans le rapport de fin de session (prompt 16) avant de
-> travailler.
+Ordre de lecture obligatoire avant toute action sur le dépôt :
 
-## 1. Lecture obligatoire (gouvernance)
-- [ ] `AGENTS.md` (racine) — règles de travail, anti-doublon #2400, protocole branches/PR
-- [ ] `dev-hub/prompts/00_AGENT_QUICK_CARD.md` (carte rapide, 2 min)
-- [ ] `.specify/constitution.md` (loi fondamentale, Spec-Driven Development)
-- [ ] `docs/REFERENTIEL_PRODUIT/` (APV, ROADMAP, STATUTS) si le travail touche le produit
-- [ ] `docs/GOUVERNANCE/LEÇONS.md` (bibliothèque des erreurs centralisée, si applicable)
-- [ ] `docs/GOUVERNANCE/FREEZE_SCOPE_60J.md` (périmètre autorisé) si nouvelle feature
+1. [ ] Lire `dev-hub/prompts/00_AGENT_QUICK_CARD.md` (2 min)
+2. [ ] Lire `AGENTS.md` (règles complètes) puis `docs/PROTOCOLES/P02_ONBOARDING_AGENT.md`
+3. [ ] `git fetch origin main && git checkout main && git pull`
+4. [ ] Vérifier les stashes (`git stash list`) — ne jamais les perdre
+5. [ ] Lister les branches distantes + PRs ouvertes : **le nom de branche est le verrou anti-doublon** (chercher `fix/<issue>` avant de prendre une issue)
+6. [ ] Choisir une issue : non assignée, critères d'acceptation clairs (labels `Agent-Ready` / `good first issue`)
+7. [ ] S'assigner (`gh issue edit <N> --add-assignee @me`) puis pousser une branche `fix/<issue>-<slug>` avec un commit vide de claim
+8. [ ] Ne jamais créer de branche pour de la QA pure (livrable = issues + preuves)
+9. [ ] En fin de session : exécuter `dev-hub/prompts/16_FIN_DE_SESSION.md`
 
-## 2. Synchronisation & verrous (anti-doublon)
-- [ ] `git fetch origin main` — travailler depuis `origin/main` à jour
-- [ ] Vérifier qu'aucune branche n'existe déjà pour mon issue :
-      `gh api repos/kitokoh/leopardo-hr/branches | grep -i <issue>` (+ `gh pr list`)
-- [ ] S'assigner l'issue (ou annoncer la prise en charge)
-- [ ] Créer sa branche de travail (une par issue, ou une par lot de BC — protocole)
-
-## 3. Environnement local
-- [ ] Clone/dépendances OK (composer/npm/melos selon la surface)
-- [ ] Tests pertinents exécutables (cible : les 4 checks requis de la protection)
-- [ ] Gardes locales connues passées (migrations, lint, PHPStan sur le diff)
-
-## 4. Contrat de sortie (fin de session)
-- [ ] Rapport de fin de session rédigé avec le template `16_SESSION_REPORT.md`
-- [ ] Branche poussée + PR avec `Closes #N` dans le body (jamais de merge rouge)
-- [ ] Token de session révoqué (si un token temporaire a été fourni)
-- [ ] Journal de session (`memory/<date>.md`) à jour
+## Pièges connus (à relire)
+- Clone local du sandbox possiblement **filtré** → lire le code via raw.githubusercontent.com quand un fichier semble altéré.
+- PR sans `Closes #N` dans le **body** = issue jamais fermée au merge.
+- Vercel rouge = quota, pas un échec de build (check non requis).
