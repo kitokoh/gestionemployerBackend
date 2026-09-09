@@ -46,6 +46,7 @@ Les apps vivent dans `front/mobile_apps/` (packages Melos, `melos.yaml` à la
 racine). Depuis la racine du dépôt :
 
 ```bash
+melos bootstrap       # une fois, après clone (prépare les liens entre packages)
 melos run analyze     # dart analyze sur tous les packages
 melos run test        # unit + widget tests (tous les packages avec un dossier test/)
 melos run test:coverage
