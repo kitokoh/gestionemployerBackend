@@ -9,12 +9,14 @@ Leopardo RH maintains high reliability through a comprehensive multi-layered tes
 | **Unit** | Pest PHP | 80%+ | Logic & Calculations |
 | **Feature** | Pest PHP | 100% Endpoints | API Contracts & RBAC |
 | **E2E** | Playwright | Critical Flows | Browser Integration |
-| **Mobile** | Flutter Test | Core Screens | Mobile Experience |
+| **Mobile (7 apps Flutter)** | Flutter Test (`melos run test`) | Core Screens | `front/mobile_apps/*` |
+| **Kiosk ZKTeco** | Tests JS/i18n | Pointage local | `front/zkteco-kiosk` (web offline-first, PAS Flutter) |
+| **Edge sync** | Tests unitaires | Sync offline | `edge/` |
 
 ## 🚀 Running Tests
 
 ### 1. Backend (API)
-We use Pest for a modern testing experience.
+La suite backend mixe PHPUnit et Pest (PHPUnit majoritaire, cf. `api/phpunit.xml`).
 
 ```bash
 cd api
@@ -24,17 +26,23 @@ DB_CONNECTION=sqlite DB_DATABASE=:memory: ./vendor/bin/pest
 
 ### 2. Frontend (Web)
 ```bash
-cd web
+cd front/web
 npm run lint
 npm run test  # if applicable
 ```
 
-### 3. Mobile
+### 3. Mobile (apps Flutter — `front/mobile_apps/`)
+Depuis la racine du monorepo (workspace melos, cf. `melos.yaml`) :
+
 ```bash
-cd mobile
-flutter test
-flutter analyze
+melos run test        # flutter test sur toutes les apps
+melos run analyze     # flutter analyze
+# ou par app :
+cd front/mobile_apps/leopardo_employee && flutter test
 ```
+
+Le package partagé `leopardo_core` est testé avec les mêmes commandes melos.
+Le kiosk (`front/zkteco-kiosk`) n'est PAS une app Flutter : tests node (`node --check`) + i18n.`
 
 ## 🛡️ Critical Scenarios
 
