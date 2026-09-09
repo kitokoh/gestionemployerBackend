@@ -101,6 +101,13 @@ return [
     'write_tools' => [
         'create_absence',
         'approve_absence',
+        // B3a (#6856) — décision (approbation/refus motivé) sur une demande
+        // d'absence, exécutée via les Actions canoniques Planning après
+        // confirmation (flux A4, contrat A3 #6850).
+        'absence_decision',
+        // B3b (#6857) — affectation d'un shift (schedule) à un employé,
+        // parité ScheduleController::assignEmployees (BC-05 WORKFORCE).
+        'shift_assign',
         // B3c (#6858) — envoi d'un message à une équipe (annonce tenant,
         // BC-13 COMMS), parité AnnouncementController, exécution après
         // confirmation (flux A4, contrat A3 #6850).
@@ -137,6 +144,15 @@ return [
         'employee_leave_balance' => ['role' => 'employee', 'permissions' => ['leave.view']],
         'create_absence' => ['role' => 'employee', 'permissions' => ['absences.create']],
         'approve_absence' => ['role' => 'manager', 'permissions' => ['absences.approve']],
+        // B3a (#6856) — outil écriture BC-06 LEAVE (contrat A3, #6850) :
+        // décision sur demande d'absence, permission = policy décision REST
+        // existante (même portée que approve_absence, parité AbsenceController).
+        'absence_decision' => ['role' => 'manager', 'permissions' => ['absences.approve']],
+        // B3b (#6857) — outil écriture BC-05 WORKFORCE (contrat A3, #6850) :
+        // affectation d'un shift à un employé, parité REST
+        // ScheduleController::assignEmployees (api.manager + isManager +
+        // visibleToManager pour les managers d'équipe).
+        'shift_assign' => ['role' => 'manager', 'permissions' => ['schedules.assign']],
         // B3c (#6858) — outil envoi BC-13 COMMS (contrat A3, #6850) : message
         // à une équipe via le système d'annonces (parité AnnouncementController,
         // api.manager + authorizeAudience — principal/RH pour company).
@@ -145,6 +161,10 @@ return [
 
     // BC-23-D05 (issue #6237) — permissions accordées par rôle (résolution du
     // demandeur). Listes explicites et versionnées (pas d'héritage implicite).
+    'notify_team_rate' => [
+        'max_per_hour' => 10,
+    ],
+
     'role_permissions' => [
         'employee' => [
             'employees.view',
@@ -167,7 +187,7 @@ return [
             'attendance.view',
             'absences.approve',
             'payroll.view',
-            'announcements.create',
+            'schedules.assign',
         ],
         'admin' => [
             'employees.view',
@@ -181,7 +201,7 @@ return [
             'attendance.view',
             'absences.approve',
             'payroll.view',
-            'announcements.create',
+            'schedules.assign',
         ],
         'super_admin' => [
             'employees.view',
@@ -195,7 +215,7 @@ return [
             'attendance.view',
             'absences.approve',
             'payroll.view',
-            'announcements.create',
+            'schedules.assign',
         ],
     ],
 
@@ -237,14 +257,6 @@ return [
     // A2 (#6849) — texte scriptable de l'adaptateur FAKE (tests uniquement).
     'stt' => [
         'fake_text' => env('AI_STT_FAKE_TEXT'),
-    ],
-
-    // B3c (#6858) — anti-spam du canal « message d'équipe » de l'assistant :
-    // plafond d'envois par acteur et par heure (au-delà du throttling HTTP
-    // `throttle:ai-sensitive` déjà appliqué aux routes /ai/*). S'applique
-    // aux envois réellement confirmés (pas aux propositions).
-    'notify_team_rate' => [
-        'max_per_hour' => 10,
     ],
 
     // AI-002 (#6771) — OCR des compteurs FuelStation : seuil de confiance

@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Attendance;
 
-use App\Modules\Attendance\Domain\Models\AttendanceLog;
-use App\Core\Tenant\Domain\Models\Company;
 use App\Core\Auth\Domain\Models\Employee;
+use App\Core\Tenant\Domain\Models\Company;
+use App\Modules\Attendance\Domain\Models\AttendanceLog;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
@@ -60,6 +60,40 @@ class TodayAndHistoryTest extends TestCase
         $today->assertJsonPath('data.item.employee_id', $employee->id);
         $today->assertJsonPath('data.item.checked_in', true);
         $today->assertJsonPath('data.item.check_in_time', '08:00');
+    }
+
+    public function test_today_endpoint_reports_checked_in_false_after_check_out(): void
+    {
+        /** @var Company $company */
+        $company = Company::factory()->create(['timezone' => 'UTC']);
+
+        /** @var Employee $employee */
+        $employee = Employee::factory()->create([
+            'company_id' => $company->id,
+            'role' => 'employee',
+            'status' => 'active',
+        ]);
+
+        Sanctum::actingAs($employee);
+
+        $this->travelTo(Carbon::parse('2026-04-04 08:00:00', 'UTC'));
+        $this->postJson('/api/v1/attendance/check-in')->assertStatus(201);
+
+        // Session ouverte → checked_in: true.
+        $this->getJson('/api/v1/attendance/today')
+            ->assertOk()
+            ->assertJsonPath('data.item.checked_in', true)
+            ->assertJsonPath('data.item.check_out', null);
+
+        // Check-out → la session du jour est fermée.
+        $this->travelTo(Carbon::parse('2026-04-04 17:00:00', 'UTC'));
+        $this->postJson('/api/v1/attendance/check-out')->assertOk();
+
+        // L'employé ne doit plus être marqué « en service » (#6962).
+        $this->getJson('/api/v1/attendance/today')
+            ->assertOk()
+            ->assertJsonPath('data.item.checked_in', false)
+            ->assertJsonPath('data.item.check_out_time', '17:00');
     }
 
     public function test_employee_history_returns_only_self(): void
@@ -298,4 +332,3 @@ class TodayAndHistoryTest extends TestCase
         $response->assertJsonValidationErrors(['employee_id']);
     }
 }
-

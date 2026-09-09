@@ -519,6 +519,12 @@
       "note": "BC-04 → BC-01 — dépendance réelle constatée (rebaseline MAT-002 2026-09-05, audit PM)"
     },
     {
+      "from": "BC-06",
+      "to": "BC-23",
+      "baseline": true,
+      "note": "BC-06 → BC-23 — AbsenceDecisionToolCatalog + AbsenceServiceProvider importent le contrat AIToolDefinition/AIToolDefinitionRegistry (B3a #6856)"
+    },
+    {
       "from": "BC-13",
       "to": "BC-02",
       "baseline": true,
@@ -667,6 +673,12 @@
       "to": "BC-03",
       "baseline": true,
       "note": "BC-28 → BC-03 — policies Catalog importent App\\Core\\Auth\\Domain\\Models\\Employee (RBAC, #6880)"
+    },
+    {
+      "from": "BC-27",
+      "to": "BC-03",
+      "baseline": true,
+      "note": "BC-27 → BC-03 — policies Showcase importent App\\Core\\Auth\\Domain\\Models\\Employee (RBAC, #6865)"
     }
   ]
 }

@@ -1340,6 +1340,14 @@ class LeopardoClient:
         """Simuler les cotisations sociales employe/employeur et l'impot sur le revenu pour un salaire brut donne, sans persister (manager)"""
         return self.request("POST", "/cotisation-simulation", **kwargs)
 
+    def get_crm_accounts(self, **kwargs):
+        """Liste paginée des comptes du tenant (répertoire client web)"""
+        return self.request("GET", "/crm/accounts", **kwargs)
+
+    def get_crm_contacts(self, **kwargs):
+        """Liste paginée des contacts du tenant (répertoire client web)"""
+        return self.request("GET", "/crm/contacts", **kwargs)
+
     def get_crm_dedup_suggestions(self, **kwargs):
         """Suggestions de doublons (explicables, tenant-scoped)"""
         return self.request("GET", "/crm/dedup/suggestions", **kwargs)
@@ -1360,6 +1368,10 @@ class LeopardoClient:
         """Committer un import CSV prévisualisé (explicite, idempotent)"""
         return self.request("POST", "/crm/imports/{crmImport}/commit", **kwargs)
 
+    def get_crm_leads(self, **kwargs):
+        """Liste paginée des leads du tenant (répertoire client web)"""
+        return self.request("GET", "/crm/leads", **kwargs)
+
     def post_crm_leads_by_crmlead_convert(self, **kwargs):
         """Convertir un lead en account + contact + opportunity"""
         return self.request("POST", "/crm/leads/{crmLead}/convert", **kwargs)
@@ -1371,6 +1383,10 @@ class LeopardoClient:
     def get_crm_merge_preview(self, **kwargs):
         """Preview d'une fusion (aucune écriture)"""
         return self.request("GET", "/crm/merge/preview", **kwargs)
+
+    def get_crm_opportunities(self, **kwargs):
+        """Liste paginée des opportunités du tenant (pipeline client web)"""
+        return self.request("GET", "/crm/opportunities", **kwargs)
 
     def get_dashboard_admin(self, **kwargs):
         """Synthese dashboard admin (principal)"""
@@ -2115,6 +2131,10 @@ class LeopardoClient:
     def get_kiosks_by_devicecode_announcements(self, **kwargs):
         """Annonces du kiosk (device token)"""
         return self.request("GET", "/kiosks/{deviceCode}/announcements", **kwargs)
+
+    def get_kiosks_by_devicecode_config(self, **kwargs):
+        """Configuration du kiosk (device token) — BIO-006 (#6767)"""
+        return self.request("GET", "/kiosks/{deviceCode}/config", **kwargs)
 
     def post_kiosks_by_devicecode_employee_info(self, **kwargs):
         """Infos employe pour ecran kiosk (device token)"""
