@@ -4,6 +4,10 @@ Derniere mise a jour : 2026-09-05 (audit PM architecture — liste des apps mobi
 
 Ce fichier doit etre lu au debut de chaque nouvelle session agent. Il doit aussi etre mis a jour a chaque push ou merge vers `main`, comme le `CHANGELOG.md`, des qu'une lecon operationnelle peut eviter de perdre du temps plus tard.
 
+> Bibliothèque transversale des pièges connus (vue rapide) : `docs/GESTION_PROJET/BIBLIOTHEQUE_ERREURS.md`.
+> Toute nouvelle leçon opérationnelle = mise à jour AGENTS.md **et**, si c'est un piège
+> rejouable, une ligne dans la bibliothèque des erreurs (flux RETEX, protocole P04).
+
 > **NOUVEL AGENT ? Commence par lire `dev-hub/prompts/00_AGENT_QUICK_CARD.md` (2 min) pour une carte de reference rapide. Ce fichier AGENTS.md est le guide complet.**
 
 ## ⚡ Spec-Driven Development — Spec Kit (NOUVEAU 2026-08-14)
@@ -206,6 +210,18 @@ un APP_VERSION sur un tier qui n'en porte pas. Rattrapage : `deploy-main-catchup
   (« platform_admin app must not expose forbidden route /attendance ») → Mobile
   Apps CI rouge sur main. Garde : `Get-DartContent $root @('*mock*.dart')`.
   Tout nouveau fichier de mock doit suivre le pattern `*mock*.dart`.
+- **Lecon 2026-09-08 (#6590)** : les fichiers generes mobile NE SONT PLUS
+  COMMITES (`.gitignore` racine : `*.g.dart`, `*.freezed.dart`,
+  `**/lib/l10n/generated/`) — regeneres en CI. Tout job qui analyse, teste ou
+  build une app consommant `leopardo_core` doit d'abord regenerer dans
+  `front/mobile_apps/leopardo_core` : `flutter pub get && flutter gen-l10n &&
+  dart run build_runner build --delete-conflicting-outputs` (le codegen drift
+  + json_serializable exige les dev_dependencies du package core resolues —
+  un `pub get` dans le dossier core est requis, celui de l'app ne suffit
+  pas). La garde ARB l10n (#4762) tourne desormais APRES `flutter gen-l10n`
+  dans le job `flutter-analyze` (projet leopardo_core) — plus dans le job
+  guard (checkout brut sans generes). Tout ajout de cle ARB sans regenerer
+  reste capture a la compile (#4762) ; ne jamais re-commiter un genere.
 
 - **Lecon 2026-08-17 (audit #4868)** : le check externe « Vercel » echoue sur TOUTES les PRs web quand le quota gratuit de deploiements est epuise (`api-deployments-free-per-day`, ~100/jour, famille #3765/#3766). C'est un echec de QUOTA, pas de build — et le check n'est PAS requis (protection de branche : 5 checks requis ; aucun workflow du repo n'attend le status Vercel). Ne pas traiter le rouge Vercel comme bloquant : merger sur la base des checks requis (meme regle que « Workers Builds: gestionemploye », #4216).
 - **Lecon 2026-08-16 (swe-qa-360)** : sous rafale de pushes concurrents (300+
