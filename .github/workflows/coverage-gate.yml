@@ -81,6 +81,14 @@ jobs:
 
   backend-coverage:
     needs: detect-changes
+    # #6928 / saturation CI (2026-09-08) : le job 1-5 h ne tourne QUE si
+    # api/** a changé (fast-path déjà calculé par detect-changes, inutilisé).
+    # Une PR docs/front/mobile ne re-sature pas la file avec un pcov de 3 h+
+    # — les 4 checks requis au merge (PHPStan Strict, Module Validator,
+    # ESLint+TS, actionlint) récupèrent les runners. Sur push main et
+    # merge_group, base.sha est vide → api_changed=true → coverage tourne
+    # toujours (verdict main préservé).
+    if: needs.detect-changes.outputs.api_changed == 'true'
     name: Backend Coverage (PHP 8.4 + PostgreSQL 16)
     runs-on: ubuntu-latest
     # Issue #4111 : timeout déterministe — un job bloqué (infra, saturation CI,
