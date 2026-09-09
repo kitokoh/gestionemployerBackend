@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Interfaces\Api\V1\Controllers;
 
 use App\Core\Auth\Domain\Models\Employee;
+use App\Events\CatalogInquiryErased;
 use App\Http\Controllers\Controller;
 use App\Modules\Catalog\Domain\Enums\CatalogInquiryStatus;
 use App\Modules\Catalog\Domain\Models\CatalogInquiry;
@@ -98,6 +99,31 @@ class CatalogInquiryController extends Controller
         $inquiry->save();
 
         return response()->json(['data' => $this->payload($inquiry->refresh())]);
+    }
+
+    /**
+     * DELETE /catalog/inquiries/{inquiry} — droit d'effacement RGPD des
+     * données acheteur (C-RGPD #6889, canal : support tenant). Suppression
+     * définitive de la demande + propagation aux leads CRM BC-11 du même
+     * acheteur (événement catalog.inquiry_erased). Réservé
+     * principal/rh/manager ; 404 cross-tenant.
+     */
+    public function destroy(Request $request, CatalogInquiry $inquiry): JsonResponse
+    {
+        $actor = $this->managerOrAbort($request);
+
+        if ($inquiry->company_id !== (string) $actor->company_id) {
+            abort(404);
+        }
+
+        $buyerEmail = (string) $inquiry->email;
+        $inquiryId = (int) $inquiry->id;
+
+        $inquiry->delete();
+
+        event(new CatalogInquiryErased((string) $actor->company_id, $buyerEmail, $inquiryId));
+
+        return response()->json(['data' => null], 200);
     }
 
     public function export(Request $request): StreamedResponse
