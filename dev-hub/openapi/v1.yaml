@@ -27194,6 +27194,56 @@ paths:
         '404':
           $ref: '#/components/responses/Error404'
 
+  /public/catalog/{companySlug}:
+    get:
+      tags:
+      - Catalog
+      summary: Catalogue public d'un tenant (categories + produits publies, sans auth)
+      description: >-
+        BC-28 CATALOG C-PUBLIC (#6882) - routes isolees sans authentification
+        (throttle:shop-public). Le tenant est resolu par slug public. DTO strict :
+        jamais de champs internes (id, company_id, status, meta, stocks). Seuls les
+        produits publies sont visibles. Cache Redis TTL invalide a la publication.
+        Filtre optionnel ?category={categorySlug}.
+      security: []
+      parameters:
+      - name: companySlug
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: category
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Liste publique (company, categories, produits publies)
+        '404':
+          $ref: '#/components/responses/Error404'
+  /public/catalog/{companySlug}/products/{productSlug}:
+    get:
+      tags:
+      - Catalog
+      summary: Fiche publique d'un produit publie (sans auth)
+      security: []
+      parameters:
+      - name: companySlug
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: productSlug
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Fiche publique (DTO strict)
+        '404':
+          $ref: '#/components/responses/Error404'
+
 components:
   securitySchemes:
     BearerAuth:

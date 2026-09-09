@@ -3120,6 +3120,14 @@ class LeopardoClient:
         """Postuler à une offre publique (anti-doublon par email, #3860)"""
         return self.request("POST", "/public/careers/{companySlug}/jobs/{jobPosting}/apply", **kwargs)
 
+    def get_public_catalog_by_companyslug(self, **kwargs):
+        """Catalogue public d'un tenant (categories + produits publies, sans auth)"""
+        return self.request("GET", "/public/catalog/{companySlug}", **kwargs)
+
+    def get_public_catalog_by_companyslug_products_by_productslug(self, **kwargs):
+        """Fiche publique d'un produit publie (sans auth)"""
+        return self.request("GET", "/public/catalog/{companySlug}/products/{productSlug}", **kwargs)
+
     def post_push_notifications_send(self, **kwargs):
         """Envoyer une notification push de test a un employe"""
         return self.request("POST", "/push-notifications/send", **kwargs)
