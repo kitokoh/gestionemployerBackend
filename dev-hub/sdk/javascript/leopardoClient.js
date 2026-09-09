@@ -1495,6 +1495,21 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("PUT", "/catalog/categories/{category}", options);
     },
 
+    /** Lister les demandes de devis B2B du tenant (back-office) */
+    getCatalogInquiries(options = {}) {
+      return request("GET", "/catalog/inquiries", options);
+    },
+
+    /** Transition de statut d'une demande de devis (back-office) */
+    patchCatalogInquiriesByInquiryStatus(options = {}) {
+      return request("PATCH", "/catalog/inquiries/{inquiry}/status", options);
+    },
+
+    /** Exporter les demandes de devis B2B en CSV (back-office) */
+    getCatalogInquiriesExport(options = {}) {
+      return request("GET", "/catalog/inquiries/export", options);
+    },
+
     /** Lister les produits du catalogue (membres du tenant) */
     getCatalogProducts(options = {}) {
       return request("GET", "/catalog/products", options);
