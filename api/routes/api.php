@@ -323,6 +323,9 @@ Route::prefix('v1')->group(function (): void {
     require __DIR__.'/modules/fuel_station.php';
     require __DIR__.'/modules/edu_manager.php';
     require __DIR__.'/modules/catalog.php';
+
+    // C-PUBLIC #6882 — catalogue public (routes isolées, sans auth)
+    require __DIR__.'/modules/catalog_public.php';
     require __DIR__.'/modules/solutions.php';
 
     // Multi-App dedicated route modules
