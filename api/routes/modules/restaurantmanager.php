@@ -286,11 +286,6 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'token.refresh', 'tenant', 't
         Route::get('/reports/cogs', [RestaurantReportController::class, 'cogs']);
         Route::get('/reports/pos', [RestaurantReportController::class, 'pos']);
         Route::get('/reports/kpis', [RestaurantReportController::class, 'kpis']);
-        Route::get('/reports/exports/{export}/download', [RestaurantReportController::class, 'download']);
-        // NB: pas de ->name() ici — le nom `restaurant.reports.export.download`
-        // appartient à la route canonique signée (RestaurantReportExportController,
-        // fin de fichier) ; un doublon de nom cassait route:cache au boot (tous les
-        // deploys Render en update_failed depuis l'introduction du doublon).
         Route::put('/inventory-counts/{restaurantInventoryCount}/items/{restaurantInventoryCountItem}', [RestaurantInventoryCountController::class, 'updateItem']);
         // --- Routes ajoutées (union PM) ---
         Route::post('/stock-levels', [RestaurantStockLevelController::class, 'store']);
