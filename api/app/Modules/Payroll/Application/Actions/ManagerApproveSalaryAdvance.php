@@ -9,11 +9,11 @@ use App\Modules\Payroll\Domain\Models\SalaryAdvance;
 use App\Modules\Payroll\Infrastructure\Services\SalaryAdvanceService;
 
 /**
- * Cas d'usage : seconde approbation « manager » d'une avance (Plan 60,
+ * Cas d'usage : seconde approbation  manager  d'une avance (Plan 60,
  * route `PUT /salary-advances/{id}/manager-approve`) — passage en
  * `manager_approved` / `approved` après le flux d'approbation existant.
  *
- * Orchestration pure (ADR-0020, lot 2 avances — #6968). `status` n'est pas
+ * Orchestration pure (ADR-0020, lot 2 avances - #6968). `status` n'est pas
  * mass-assignable (#4677/#3597) : assignation explicite via `forceFill`,
  * pattern `SalaryAdvanceService::create`. Gardes (manager 403, statut
  * pending/approved 422) au niveau interface (contrôleur).

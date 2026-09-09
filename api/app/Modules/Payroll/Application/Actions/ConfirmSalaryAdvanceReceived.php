@@ -9,13 +9,13 @@ use App\Modules\Payroll\Domain\Models\SalaryAdvance;
 use App\Modules\Payroll\Infrastructure\Services\SalaryAdvanceService;
 
 /**
- * Cas d'usage : confirmation de réception d'une avance par l'employé
+ * Cas d'usage : confirmation de reception d'une avance par l'employe
  * (route `PUT /salary-advances/{id}/confirm-received`, Plan 60).
  *
- * Orchestration pure (ADR-0020, lot 2 avances — #6968) : passage en
- * `employee_confirmed` + notification du manager déclarant. La garde de
- * propriété (403) et de statut (`payment_declared` requis, 422) reste au
- * niveau interface (contrôleur).
+ * Orchestration pure (ADR-0020, lot 2 avances - #6968) : passage en
+ * `employee_confirmed` + notification du manager declarant. La garde de
+ * propriete (403) et de statut (`payment_declared` requis, 422) reste au
+ * niveau interface (controleur).
  */
 class ConfirmSalaryAdvanceReceived
 {

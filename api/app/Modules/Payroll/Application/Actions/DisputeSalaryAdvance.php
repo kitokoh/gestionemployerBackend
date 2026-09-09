@@ -9,13 +9,13 @@ use App\Modules\Payroll\Domain\Models\SalaryAdvance;
 use App\Modules\Payroll\Infrastructure\Services\SalaryAdvanceService;
 
 /**
- * Cas d'usage : ouverture d'un litige par l'employé sur une avance déclarée
- * payée (PA2-PAY-015, route `PUT /salary-advances/{id}/dispute`) — le
- * paiement déclaré ne correspond pas à la réalité (montant, remise, destinataire).
+ * Cas d'usage : ouverture d'un litige par l'employe sur une avance declaree
+ * payee (PA2-PAY-015, route `PUT /salary-advances/{id}/dispute`) - le
+ * paiement declare ne correspond pas a la realite (montant, remise, destinataire).
  *
- * Orchestration pure (ADR-0020, lot 2 avances — #6968) : passage en
- * `disputed` + notification du manager déclarant. Les gardes (propriété 403,
- * statut `payment_declared` 422) restent au niveau interface (contrôleur).
+ * Orchestration pure (ADR-0020, lot 2 avances - #6968) : passage en
+ * `disputed` + notification du manager declarant. Les gardes (propriete 403,
+ * statut `payment_declared` 422) restent au niveau interface (controleur).
  */
 class DisputeSalaryAdvance
 {

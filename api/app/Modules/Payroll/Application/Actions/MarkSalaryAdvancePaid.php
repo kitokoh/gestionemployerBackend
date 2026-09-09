@@ -14,7 +14,7 @@ use App\Modules\Payroll\Infrastructure\Services\LedgerService;
 use App\Modules\Payroll\Infrastructure\Services\SalaryAdvanceService;
 
 /**
- * Cas d'usage : déclaration de paiement d'une avance par un manager
+ * Cas d'usage : declaration de paiement d'une avance par un manager
  * (principal | comptable | rh) — étape du workflow de double validation
  * Plan 60 (route `PUT /salary-advances/{id}/mark-paid`).
  *
@@ -24,14 +24,14 @@ use App\Modules\Payroll\Infrastructure\Services\SalaryAdvanceService;
  * - audit explicite de la transition (le query builder bypasse les events
  *   modèle — PA2-PAY-001/#4677) ;
  * - création du document de paiement + écriture comptable (ledger) +
- *   notification de l'employé.
+ *   notification de l'employe.
  *
  * Les autorisations RBAC et le mapping HTTP (404 vs 422 sur 0 ligne) restent
- * au niveau interface (contrôleur) — l'Action lève
- * `SalaryAdvancePaymentStateException` quand l'update conditionnel échoue.
+ * au niveau interface (controleur) - l'Action lève
+ * `SalaryAdvancePaymentStateException` quand l'update conditionnel echoue.
  *
  * @throws SalaryAdvancePaymentStateException si l'avance n'est plus dans
- *                                            l'état `manager_approved`
+ *                                            l'etat `manager_approved`
  */
 class MarkSalaryAdvancePaid
 {
@@ -69,11 +69,11 @@ class MarkSalaryAdvancePaid
             ]);
 
         if ($updated === 0) {
-            // Soit le statut a changé (déjà déclaré → conflit), soit l'avance
-            // n'est plus dans la société de l'acteur (le contrôleur distingue
+            // Soit le statut a change (deja declare → conflit), soit l'avance
+            // n'est plus dans la societe de l'acteur (le contrôleur distingue
             // 404 vs 422 en re-vérifiant l'existence).
             throw new SalaryAdvancePaymentStateException(
-                'Avance non déclarable : update conditionnel 0 ligne (statut ≠ manager_approved ou ligne absente).'
+                'Avance non declarable : update conditionnel 0 ligne (statut ≠ manager_approved ou ligne absente).'
             );
         }
 

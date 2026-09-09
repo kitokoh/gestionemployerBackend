@@ -9,13 +9,13 @@ use App\Modules\Payroll\Domain\Models\SalaryAdvance;
 use App\Modules\Payroll\Infrastructure\Services\SalaryAdvanceService;
 
 /**
- * Cas d'usage : résolution d'un litige d'avance par un manager
+ * Cas d'usage : resolution d'un litige d'avance par un manager
  * (route `PUT /salary-advances/{id}/resolve-dispute`, PA2-PAY-015) :
  * - `confirmed` → l'avance passe en `employee_confirmed` (paiement exact) ;
  * - `reopened` → retour en `payment_declared` pour correction + re-confirmation.
  *
- * Orchestration pure (ADR-0020, lot 2 avances — #6968). Gardes (manager 403,
- * statut `disputed` 422) au niveau interface (contrôleur).
+ * Orchestration pure (ADR-0020, lot 2 avances - #6968). Gardes (manager 403,
+ * statut `disputed` 422) au niveau interface (controleur).
  */
 class ResolveSalaryAdvanceDispute
 {

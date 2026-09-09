@@ -51,7 +51,7 @@ class SalaryAdvanceController extends Controller
             $query->where('employee_id', $actor->id);
         } elseif ($actor->isTeamScoped()) {
             // Issue #6534 (audit) : un manager dept/superviseur ne voit que
-            // les avances de SON équipe (montants, échéanciers) — pattern
+            // les avances de SON equipe (montants, echeanciers) - pattern
             // visibleToManager (PA2-SEC-002/003).
             $query->whereIn('employee_id', Employee::query()->select('id')->visibleToManager($actor));
         } elseif ($request->filled('employee_id')) {
@@ -114,11 +114,11 @@ class SalaryAdvanceController extends Controller
             abort(404);
         }
         if ($actor->id === $salaryAdvance->employee_id) {
-            // self-service conservé.
+            // self-service conserve.
         } elseif (! $actor->isManager()) {
             abort(403);
         } elseif ($actor->isTeamScoped()) {
-            // Issue #6534 : manager team-scoped → uniquement son équipe.
+            // Issue #6534 : manager team-scoped → uniquement son equipe.
             $target = $salaryAdvance->employee;
             if ($target === null || ! $actor->managesTeamMemberOf($target)) {
                 abort(403);
@@ -177,13 +177,13 @@ class SalaryAdvanceController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Plan 60 — Double validation workflow
+    // Plan 60 - Double validation workflow
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
      * PUT /salary-advances/{id}/mark-paid
      * Manager (principal | comptable | rh) marks an advance as paid.
-     * Orchestration dans `MarkSalaryAdvancePaid` (ADR-0020, lot 2 — #6968) :
+     * Orchestration dans `MarkSalaryAdvancePaid` (ADR-0020, lot 2 - #6968) :
      * update conditionnel atomique anti-TOCTOU (#3429/#2997), audit explicite
      * (PA2-PAY-001/#4677), document de paiement, ledger, notification.
      */
@@ -216,7 +216,7 @@ class SalaryAdvanceController extends Controller
                 $request->userAgent(),
             );
         } catch (SalaryAdvancePaymentStateException) {
-            // Course perdue (déjà déclarée) ou ligne supprimée entre-temps :
+            // Course perdue (deja declaree) ou ligne supprimee entre-temps :
             // 404 sans fuite d'existence si absente, 422 sinon (même contrat).
             $stillExists = SalaryAdvance::query()
                 ->where('id', $salaryAdvance->id)
@@ -236,7 +236,7 @@ class SalaryAdvanceController extends Controller
     /**
      * PUT /salary-advances/{id}/confirm-received
      * Employee confirms they received the advance.
-     * Orchestration dans `ConfirmSalaryAdvanceReceived` (ADR-0020, lot 2 — #6968).
+     * Orchestration dans `ConfirmSalaryAdvanceReceived` (ADR-0020, lot 2 - #6968).
      */
     public function confirmReceived(Request $request, SalaryAdvance $salaryAdvance): JsonResponse
     {
@@ -261,7 +261,7 @@ class SalaryAdvanceController extends Controller
     /**
      * PUT /salary-advances/{id}/dispute
      * Employee opens a dispute instead of confirming reception (PA2-PAY-015).
-     * Orchestration dans `DisputeSalaryAdvance` (ADR-0020, lot 2 — #6968).
+     * Orchestration dans `DisputeSalaryAdvance` (ADR-0020, lot 2 - #6968).
      */
     public function dispute(DisputeSalaryAdvanceRequest $request, SalaryAdvance $salaryAdvance): JsonResponse
     {
@@ -287,7 +287,7 @@ class SalaryAdvanceController extends Controller
      * PUT /salary-advances/{id}/resolve-dispute
      * Manager (principal | comptable | rh) resolves a dispute: `confirmed`
      * (→ employee_confirmed) or `reopened` (→ payment_declared).
-     * Orchestration dans `ResolveSalaryAdvanceDispute` (ADR-0020, lot 2 — #6968).
+     * Orchestration dans `ResolveSalaryAdvanceDispute` (ADR-0020, lot 2 - #6968).
      */
     public function resolveDispute(ResolveSalaryAdvanceDisputeRequest $request, SalaryAdvance $salaryAdvance): JsonResponse
     {
@@ -318,7 +318,7 @@ class SalaryAdvanceController extends Controller
      * Alias kept for backward compatibility with Plan 60 naming.
      * PUT /salary-advances/{id}/manager-approve
      * Sets validation_status to manager_approved after existing approve flow.
-     * Orchestration dans `ManagerApproveSalaryAdvance` (ADR-0020, lot 2 — #6968).
+     * Orchestration dans `ManagerApproveSalaryAdvance` (ADR-0020, lot 2 - #6968).
      */
     public function managerApprove(Request $request, SalaryAdvance $salaryAdvance): JsonResponse
     {
