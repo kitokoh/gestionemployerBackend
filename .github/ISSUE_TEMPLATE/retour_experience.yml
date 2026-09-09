@@ -1,0 +1,78 @@
+name: "🔁 Retour d'expérience (REX)"
+description: Capitaliser une leçon terrain (temps perdu, optimisation tentée, dette découverte, erreur évitable) en issue exploitable — PROTOCOLE 04.
+title: "[REX]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **PROTOCOLE 04 — Capitalisation de l'expérience.** Toute leçon vécue (succès, échec,
+        temps perdu, optimisation tentée) peut devenir une issue. Si la correction est petite
+        (≤ 1 fichier, ≤ 1 h, BC confié, hors freeze), tu peux l'implémenter directement :
+        voir le tableau d'arbitrage §4 de `docs/PROTOCOLS/04_CAPITALISATION_EXPERIENCE.md`.
+        Sinon, cette issue est transmise telle quelle — elle doit être « agent-ready » (§5).
+  - type: textarea
+    id: constat
+    attributes:
+      label: Constat / leçon
+      description: Ce qui s'est passé, factuellement (session, date, contexte).
+      placeholder: "Lors de la session QA du 2026-09-XX, 2 h ont été perdues car..."
+    validations:
+      required: true
+  - type: textarea
+    id: cause
+    attributes:
+      label: Cause racine
+      description: Pourquoi c'est arrivé (outil, doc manquante, règle ambiguë, dette...).
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact si non corrigé
+      description: Qui va revivre le problème, à quelle fréquence, à quel coût.
+      placeholder: "Tout nouvel agent retombera sur ce piège (cf. PROTOCOLE 02)."
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: Correction proposée
+      description: Ce qu'il faudrait changer (code, doc, garde CI, processus) — même une piste incomplète est utile.
+    validations:
+      required: true
+  - type: input
+    id: surface
+    attributes:
+      label: Surface / BC
+      description: Partie du dépôt concernée (api, front/mobile_apps/leopardo_X, docs, .github/workflows...) et label BC si connu (registre dev-hub/governance/bounded-context-registry.json).
+      placeholder: "docs (BC-XX si applicable)"
+    validations:
+      required: true
+  - type: dropdown
+    id: decision
+    attributes:
+      label: Décision proposée
+      description: À qui revient la correction ?
+      options:
+        - "Implémentation directe par l'auteur (petite portée)"
+        - "À déléguer à un autre agent (issue agent-ready)"
+        - "À arbitrer par le PM (cas limite / freeze / BC non confié)"
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critères d'acceptation
+      description: Conditions vérifiables pour considérer la correction faite (obligatoire si déléguée — format agent-ready §5).
+      placeholder: |
+        1. ...
+        2. Tests verts sur le parcours concerné
+        3. Doc mise à jour si comportement modifié
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        **Après correction** : documenter la leçon consolidée dans `AGENTS.md` (si règle
+        opérationnelle), `CHANGELOG.md`, et clore avec `Closes #N` dans le body de la PR.

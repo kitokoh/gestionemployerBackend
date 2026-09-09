@@ -17,6 +17,21 @@ Index de la documentation technique et stratégique du projet.
 
 ---
 
+## 📋 Protocoles
+
+| Doc | Contenu |
+|---|---|
+| [`PROTOCOLS/00_INDEX.md`](PROTOCOLS/00_INDEX.md) | **Suite de protocoles** (point d'entrée + rituel mensuel de fin de mois) |
+| [`PROTOCOLS/01_VALIDATION_MARCHE.md`](PROTOCOLS/01_VALIDATION_MARCHE.md) | Porte « OK pour la mise sur le marché » : tests, recette, sign-off |
+| [`PROTOCOLS/02_ONBOARDING_AGENTS.md`](PROTOCOLS/02_ONBOARDING_AGENTS.md) | Intégration d'un nouvel agent / développeur |
+| [`PROTOCOLS/03_VITRINE_PRESENTATION.md`](PROTOCOLS/03_VITRINE_PRESENTATION.md) | Présentation & vitrine : termes, chiffres datés, MàJ mensuelle |
+| [`PROTOCOLS/04_CAPITALISATION_EXPERIENCE.md`](PROTOCOLS/04_CAPITALISATION_EXPERIENCE.md) | Expérience → issues/tâches, implémentation directe ou délégation |
+| [`PROTOCOLS/05_HARMONISATION_DESIGN.md`](PROTOCOLS/05_HARMONISATION_DESIGN.md) | Harmonisation du design (sources canoniques, gardes) |
+| [`PROTOCOLS/06_DISTRIBUTION_DESKTOP.md`](PROTOCOLS/06_DISTRIBUTION_DESKTOP.md) | Apps desktop (.exe/.app) par tranches verticales : build, tests, canaux |
+| [`PROTOCOLS/07_ARCHITECTURE_ENVIRONNEMENTS.md`](PROTOCOLS/07_ARCHITECTURE_ENVIRONNEMENTS.md) | Architecture 2 volets dev/prod : topologie, anti-dérive |
+
+---
+
 ## 🧭 Contexte & conception
 
 | Doc | Contenu |
