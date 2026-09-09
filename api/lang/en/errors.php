@@ -5,7 +5,7 @@ return [
     'UNKNOWN_ACCOUNT' => 'No Leopardo RH account is linked to this Google email. Ask your administrator for an invitation.',
     'INVALID_CREDENTIALS' => 'Invalid email or password.',
     'ACCOUNT_SUSPENDED' => 'Your account has been suspended. Contact your manager.',
-    'ACCOUNT_LOCKED_TEMPORARILY' => "Your account is temporarily locked after too many attempts. Try again in a few minutes.",
+    'ACCOUNT_LOCKED_TEMPORARILY' => 'Your account is temporarily locked after too many attempts. Try again in a few minutes.',
     'ACCOUNT_ARCHIVED' => 'This account is archived.',
     'TOKEN_EXPIRED' => 'Your session has expired. Please log in again.',
     'TOO_MANY_ATTEMPTS' => 'Too many attempts. Try again in :minutes minutes.',
@@ -118,7 +118,7 @@ return [
     'GOOGLE_AUTH_FAILED' => 'Google authentication is unavailable.',
     'GOOGLE_TOKEN_INVALID' => 'The Google token is invalid or has expired.',
     'GOOGLE_ACCOUNT_NOT_FOUND' => 'No account found for this Google account.',
-    'GOOGLE_IDENTITY_MISMATCH' => "This Google account does not match the identity linked to the Leopardo HR account. Contact your administrator.",
+    'GOOGLE_IDENTITY_MISMATCH' => 'This Google account does not match the identity linked to the Leopardo HR account. Contact your administrator.',
     'GOOGLE_INVITATION_REQUIRED' => 'No account exists for this Google email. Ask your administrator for an invitation.',
     'GOOGLE_OAUTH_NOT_CONFIGURED' => 'Google sign-in is not configured yet. Please try again later.',
     'NO_ACTIVE_SUBSCRIPTION' => 'No active subscription.',
@@ -291,4 +291,5 @@ return [
     'TWO_FACTOR_TOO_MANY_ATTEMPTS' => 'Too many attempts. The code was invalidated, please sign in again.',
     'PAYROLL_RUN_PERIOD_ALREADY_EXISTS' => 'A payroll run already exists for this period.',
     'STT_UNAVAILABLE' => 'Voice transcription is temporarily unavailable (service not configured).',
+    'AI_ACTION_REJECTED' => 'Action rejected by the user.',
 ];
