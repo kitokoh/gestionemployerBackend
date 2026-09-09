@@ -82,8 +82,8 @@ class PayrollRunController extends Controller
 
         $validated = $request->validated();
 
-        // #6552 (audit) : garde anti-doublon de période — un run (non
-        // annulé) existe déjà pour cette période → 409 propre. L'index
+        // #6552 (audit) : garde anti-doublon de periode - un run (non
+        // annule) existe deja pour cette periode → 409 propre. L'index
         // unique partiel en base est le verrou final en cas de course
         // (catch 23505 ci-dessous).
         $existing = PayrollRun::query()
@@ -111,7 +111,7 @@ class PayrollRunController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
         } catch (QueryException $e) {
-            // #6552 : course perdue sur l'index unique partiel → même réponse
+            // #6552 : course perdue sur l'index unique partiel → meme reponse
             // 409, jamais de 500.
             if ($e->getCode() === '23505') {
                 return new JsonResponse([
@@ -126,8 +126,8 @@ class PayrollRunController extends Controller
         $response = (new PayrollRunResource($run))->response();
         $response->setStatusCode(201);
 
-        // Issue #5623 — pays à barèmes 'placeholder' (non validés légalement,
-        // ex. BF/ML/TG) : alerter immédiatement le manager à la création.
+        // Issue #5623 - pays a baremes 'placeholder' (non valides legalement,
+        // ex. BF/ML/TG) : alerter immediatement le manager a la creation.
         $warning = $this->placeholderWarning($validated['country_code']);
         if ($warning !== null) {
             $response->setData((object) [
@@ -140,8 +140,8 @@ class PayrollRunController extends Controller
     }
 
     /**
-     * Issue #5623 — warning structuré si les règles de paie du pays sont au
-     * niveau 'placeholder' (barèmes indicatifs, non validés par un
+     * Issue #5623 - warning structure si les regles de paie du pays sont au
+     * niveau 'placeholder' (baremes indicatifs, non valides par un
      * expert-comptable local). Retourne null pour pilot/production/unknown.
      *
      * @return array{code: string, message: string, country: string}|null
@@ -192,16 +192,16 @@ class PayrollRunController extends Controller
             abort(403);
         }
 
-        // #6529 : un run laissé en `error` ou orphelin en `processing` (worker
+        // #6529 : un run laisse en `error` ou orphelin en `processing` (worker
         // mort entre le claim et le calcul) doit rester recalculable ;
         // `calculated` reste permis (recalcul correctif) ; les statuts de
-        // clôture (validated, paid…) restent exclus.
+        // cloture (validated, paid...) restent exclus.
         if (in_array($payrollRun->status, ['draft', 'calculated', 'error', 'processing'], true) === false) {
             return response()->json(['message' => __('payroll.run_cannot_recalculate')], 422);
         }
 
-        // Cas d'usage nommable (ADR-0020, lot 1b #6968) : règles pays,
-        // garde placeholder auditée (#2332/#5623), calcul, invariants #1767 —
+        // Cas d'usage nommable (ADR-0020, lot 1b #6968) : regles pays,
+        // garde placeholder auditee (#2332/#5623), calcul, invariants #1767 -
         // la politique reste dans PayrollCalculator ; l'interface mappe les
         // exceptions vers les réponses localisées et journalise le détail.
         try {
@@ -259,16 +259,16 @@ class PayrollRunController extends Controller
         if ($payrollRun->company_id !== $actor->company_id) {
             abort(404);
         }
-        // Issue #5246 — workflow de validation RBAC : la validation (vérification
-        // / vise) est réservée aux managers principal/comptable (contrat
-        // documenté RBAC_ROUTE_MATRIX.md F-11/#1541). Un `rh` peut PRÉPARER
-        // (calculer) mais pas auto-valider sa propre préparation.
+        // Issue #5246 - workflow de validation RBAC : la validation (verification
+        // / vise) est reservee aux managers principal/comptable (contrat
+        // documente RBAC_ROUTE_MATRIX.md F-11/#1541). Un `rh` peut PREPARER
+        // (calculer) mais pas auto-valider sa propre preparation.
         if ($actor->hasManagerRole('principal', 'comptable') === false) {
             abort(403, 'INSUFFICIENT_ROLE');
         }
 
-        // Issue #5623 — barèmes 'placeholder' : la validation RH exige une
-        // confirmation explicite (les chiffres peuvent être incorrects).
+        // Issue #5623 - baremes 'placeholder' : la validation RH exige une
+        // confirmation explicite (les chiffres peuvent etre incorrects).
         if ($this->placeholderWarning($payrollRun->country_code) !== null
             && $request->boolean('confirm_placeholder') === false) {
             return response()->json([
@@ -279,13 +279,13 @@ class PayrollRunController extends Controller
         }
 
         try {
-            // Étape 1 du workflow F-11 : validation RH — cas d'usage nommable
+            // Etape 1 du workflow F-11 : validation RH - cas d'usage nommable
             // (ADR-0020, lot 1 #6896). La politique métier (mise à jour
             // conditionnelle atomique + audit `payroll_run_validated`) reste
             // dans PayrollClosingService, encapsulé par l'Action.
             $this->validateRun->execute($payrollRun, $actor);
         } catch (PayrollAlreadyValidatedException|PayrollRunLockedException|PayrollRunNoSlipsException $e) {
-            // #3810 / #4310 : codes stables + message localisé via catalogue,
+            // #3810 / #4310 : codes stables + message localise via catalogue,
             // jamais le message d'exception brut (FR codé en dur, non traduit).
             return response()->json([
                 'error' => $e->errorCode(),
@@ -331,9 +331,9 @@ class PayrollRunController extends Controller
     }
 
     /**
-     * Étape 2 du workflow F-11 — clôture comptable : verrouille un run validé.
-     * Toute modification ultérieure (recalcul, annulation) est refusée tant que
-     * le run est verrouillé ; l'opération est tracée (audit `payroll_run_locked`).
+     * Etape 2 du workflow F-11 - cloture comptable : verrouille un run valide.
+     * Toute modification ulterieure (recalcul, annulation) est refusee tant que
+     * le run est verrouille ; l'opération est tracée (audit `payroll_run_locked`).
      */
     public function lock(Request $request, PayrollRun $payrollRun): JsonResponse
     {
@@ -342,25 +342,25 @@ class PayrollRunController extends Controller
         if ($payrollRun->company_id !== $actor->company_id) {
             abort(404);
         }
-        // Issue #5246 — l'approbation finale (clôture comptable / verrouillage)
-        // est réservée aux managers principal/comptable : un `rh` ne peut pas
-        // clôturer ce qu'il a préparé (séparation des tâches).
+        // Issue #5246 — l'approbation finale (cloture comptable / verrouillage)
+        // est reservee aux managers principal/comptable : un `rh` ne peut pas
+        // cloturer ce qu'il a préparé (séparation des tâches).
         if ($actor->hasManagerRole('principal', 'comptable') === false) {
             abort(403, 'INSUFFICIENT_ROLE');
         }
 
         try {
-            // Étape 2 du workflow F-11 — cas d'usage nommable (ADR-0020, #6896).
+            // Etape 2 du workflow F-11 - cas d'usage nommable (ADR-0020, #6896).
             $this->lockRun->execute($payrollRun, $actor);
         } catch (PayrollAlreadyValidatedException|PayrollRunLockedException|PayrollRunNoSlipsException $e) {
             // #3810 / #4310 : codes stables + message localisé via catalogue,
-            // jamais le message d'exception brut (FR codé en dur, non traduit).
+            // jamais le message d'exception brut (FR code en dur, non traduit).
             return response()->json([
                 'error' => $e->errorCode(),
                 'message' => $e->errorCode(),
                 'localized_message' => __('errors.'.$e->errorCode()),
             ], $e->statusCode());
-            // assertHasPaySlips() (lock) peut jeter une RuntimeException métier.
+            // assertHasPaySlips() (lock) peut jeter une RuntimeException metier.
         } catch (\RuntimeException $e) {
             Log::error('payroll.run.lock_failed', ['run_id' => $payrollRun->id, 'error' => $e->getMessage()]);
 
@@ -375,7 +375,7 @@ class PayrollRunController extends Controller
     }
 
     /**
-     * Déverrouillage motivé d'un run clôturé (retour à `validated`).
+     * Deverrouillage motive d'un run clôturé (retour à `validated`).
      * La raison est obligatoire et tracée (audit `payroll_run_unlocked`).
      */
     public function unlock(Request $request, PayrollRun $payrollRun): JsonResponse
@@ -385,8 +385,8 @@ class PayrollRunController extends Controller
         if ($payrollRun->company_id !== $actor->company_id) {
             abort(404);
         }
-        // Issue #5246 — la réversion d'une clôture est une décision sensible :
-        // réservée aux managers principal/comptable (même règle que lock).
+        // Issue #5246 — la réversion d'une cloture est une decision sensible :
+        // reservee aux managers principal/comptable (meme regle que lock).
         if ($actor->hasManagerRole('principal', 'comptable') === false) {
             abort(403, 'INSUFFICIENT_ROLE');
         }
@@ -399,13 +399,13 @@ class PayrollRunController extends Controller
             // Cas d'usage nommable (ADR-0020, lot 1 #6896).
             $this->unlockRun->execute($payrollRun, $actor, $validated['reason']);
         } catch (PayrollRunLockedException $e) {
-            // #3810 / #4310 : codes stables + message localisé via catalogue.
+            // #3810 / #4310 : codes stables + message localise via catalogue.
             return response()->json([
                 'error' => $e->errorCode(),
                 'message' => $e->errorCode(),
                 'localized_message' => __('errors.'.$e->errorCode()),
             ], $e->statusCode());
-            // unlock() jette des RuntimeException métier (run non verrouillé,
+            // unlock() jette des RuntimeException metier (run non verrouille,
             // raison manquante).
         } catch (\RuntimeException $e) {
             Log::error('payroll.run.unlock_failed', ['run_id' => $payrollRun->id, 'error' => $e->getMessage()]);
@@ -421,7 +421,7 @@ class PayrollRunController extends Controller
     }
 
     /**
-     * DZ-DEPTH (#1818) — crée un run de régularisation pour un run verrouillé.
+     * DZ-DEPTH (#1818) - cree un run de regularisation pour un run verrouille.
      * Le run original n'est jamais modifié ; le motif est obligatoire et tracé.
      */
     public function regularize(Request $request, PayrollRun $payrollRun): JsonResponse
@@ -440,7 +440,7 @@ class PayrollRunController extends Controller
         ]);
 
         try {
-            // Cas d'usage nommable (ADR-0020, lot 1 #6896) — DZ-DEPTH #1818.
+            // Cas d'usage nommable (ADR-0020, lot 1 #6896) - DZ-DEPTH #1818.
             /** @var PayrollRun $regularization */
             $regularization = $this->createRegularization->execute(
                 $payrollRun,
@@ -448,7 +448,7 @@ class PayrollRunController extends Controller
                 (string) $validated['reason'],
             );
         } catch (PayrollRunNotLockedException $e) {
-            // #3810 / #4310 : codes stables + message localisé via catalogue.
+            // #3810 / #4310 : codes stables + message localise via catalogue.
             return response()->json([
                 'error' => $e->errorCode(),
                 'message' => $e->errorCode(),
@@ -470,7 +470,7 @@ class PayrollRunController extends Controller
     }
 
     /**
-     * DZ-DEPTH (#1818) — liste les régularisations liées à un run.
+     * DZ-DEPTH (#1818) - liste les regularisations liees a un run.
      */
     public function regularizations(Request $request, PayrollRun $payrollRun): JsonResponse
     {
@@ -526,9 +526,9 @@ class PayrollRunController extends Controller
     }
 
     /**
-     * F-10 (#1540) : journal de paie mensuel (CSV) — une ligne par bulletin
-     * validé + ligne de totaux (contrôle comptable). Régime de preuve horodaté
-     * par le run. Réservé aux managers principal/comptable.
+     * F-10 (#1540) : journal de paie mensuel (CSV) - une ligne par bulletin
+     * valide + ligne de totaux (controle comptable). Regime de preuve horodate
+     * par le run. Reserve aux managers principal/comptable.
      */
     public function journal(Request $request, PayrollRun $payrollRun): StreamedResponse
     {
@@ -553,7 +553,7 @@ class PayrollRunController extends Controller
     }
 
     /**
-     * #5243 — Bordereau de paie d'un run (totaux par cotisation + récapitulatif) :
+     * #5243 - Bordereau de paie d'un run (totaux par cotisation + récapitulatif) :
      * CSV téléchargeable, réservé aux managers, garde pays DZ (422 sinon) et
      * isolation tenant (404), comme les autres documents par run.
      */
@@ -570,7 +570,7 @@ class PayrollRunController extends Controller
 
         if ($payrollRun->country_code !== 'DZ') {
             return response()->json([
-                'message' => __('errors.PAYROLL_RUN_NOT_FOR_COUNTRY', ['country' => 'l’Algérie (DZ)']),
+                'message' => __('errors.PAYROLL_RUN_NOT_FOR_COUNTRY', ['country' => 'l'Algerie (DZ)']),
             ], 422);
         }
 
@@ -586,8 +586,8 @@ class PayrollRunController extends Controller
     }
 
     /**
-     * F-20 (#1550) : rapport pré-clôture des anomalies (doublons, bulletins
-     * incohérents, variance de brut, écarts pointage → paie). Lecture seule —
+     * F-20 (#1550) : rapport pre-cloture des anomalies (doublons, bulletins
+     * incoherents, variance de brut, ecarts pointage → paie). Lecture seule -
      * l'action humaine décide des corrections avant validation/verrouillage.
      */
     public function anomalies(Request $request, PayrollRun $payrollRun): JsonResponse

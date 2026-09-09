@@ -16,8 +16,8 @@ use App\Modules\Payroll\Infrastructure\Services\PayrollCalculator;
 /**
  * Cas d'usage : calcul d'un run de paie (route `POST /payroll/runs/{id}/calculate`).
  *
- * Orchestration pure et nommable (ADR-0020, lot 1b cycle de paie — #6968),
- * politique métier inchangée par rapport à l'ancien corps de contrôleur :
+ * Orchestration pure et nommable (ADR-0020, lot 1b cycle de paie - #6968),
+ * politique metier inchangee par rapport a l'ancien corps de contrôleur :
  * - #6529 : run `error`/`processing` orphelin recalculable (jamais bloqué) ;
  *   statuts de clôture exclus (garde au niveau interface) ;
  * - #2555 : échec de résolution des règles pays → retour `draft` + exception ;
@@ -28,12 +28,12 @@ use App\Modules\Payroll\Infrastructure\Services\PayrollCalculator;
  *
  * La résolution de règles, le calcul et la persistance restent dans
  * `PayrollCalculator` (Infrastructure). L'interface mappe les exceptions vers
- * les réponses 422 localisées et journalise le détail (elle détient le run).
+ * les reponses 422 localisees et journalise le detail (elle detient le run).
  *
- * @throws PayrollRunCalculationRulesException résolution règles impossible (run → draft)
+ * @throws PayrollRunCalculationRulesException resolution regles impossible (run → draft)
  * @throws PayrollPlaceholderAcknowledgementRequiredException confirmation placeholder manquante (aucun changement)
- * @throws PayrollRunCalculationFailedException échec de calcul (run → draft)
- * @throws PayrollRunZeroSlipsException 0 bulletin généré (run → draft)
+ * @throws PayrollRunCalculationFailedException echec de calcul (run → draft)
+ * @throws PayrollRunZeroSlipsException 0 bulletin genere (run → draft)
  */
 class CalculatePayrollRun
 {
@@ -56,8 +56,8 @@ class CalculatePayrollRun
             throw new PayrollRunCalculationRulesException($e->getMessage(), 0, $e);
         }
 
-        // #2332/#5623 — confirmation explicite requise AVANT tout changement
-        // de statut (jamais de run bloqué en `calculating` sur un 422).
+        // #2332/#5623 - confirmation explicite requise AVANT tout changement
+        // de statut (jamais de run bloque en `calculating` sur un 422).
         if ($rules->confidenceLevel() === 'placeholder') {
             if (! $acknowledgePlaceholder) {
                 throw new PayrollPlaceholderAcknowledgementRequiredException($run->country_code);
@@ -87,17 +87,17 @@ class CalculatePayrollRun
         try {
             $calculated = $this->calculator->calculateRun($run);
         } catch (\Throwable $e) {
-            // #2221 : jamais de run laissé bloqué en `calculating`.
+            // #2221 : jamais de run laisse bloque en `calculating`.
             $run->update(['status' => PayrollRun::STATUS_DRAFT]);
 
             throw new PayrollRunCalculationFailedException($e->getMessage(), 0, $e);
         }
 
-        // #1767 : un calcul à 0 bulletin ne réussit pas en silence.
+        // #1767 : un calcul a 0 bulletin ne reussit pas en silence.
         if ((int) $calculated->employee_count === 0) {
             $calculated->update(['status' => PayrollRun::STATUS_DRAFT]);
 
-            throw new PayrollRunZeroSlipsException('Aucun bulletin généré pour ce run.');
+            throw new PayrollRunZeroSlipsException('Aucun bulletin genere pour ce run.');
         }
 
         return $calculated;
