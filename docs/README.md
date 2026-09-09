@@ -101,6 +101,7 @@ Index de la documentation technique et stratégique du projet.
 | [`REFERENTIEL_PRODUIT/`](REFERENTIEL_PRODUIT/) | Référentiel produit |
 | [`../PILOTAGE.md`](../PILOTAGE.md) | Pilotage projet (filières actives, source de vérité programme) |
 | [`GESTION_PROJET/`](GESTION_PROJET/) | Runbooks, audits d'écarts, supports d'exécution, réponse au cahier des charges |
+| [`PROTOCOLES/`](PROTOCOLES/) | Cadre de protocoles opérationnels P01-P07 (validation marché, onboarding, vitrine, issues/expérience, design, desktop, architecture dev/prod) — révisé chaque fin de mois |
 | [`api/README.md`](api/README.md) | Documentation API |
 
 ---
