@@ -14,21 +14,21 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Cas d'usage : création d'un lot de paiement (batch) à partir d'un cycle de
- * paie calculé/validé/payé (lot 4 paiements — #6968, ADR-0020).
+ * Cas d'usage : creation d'un lot de paiement (batch) à partir d'un cycle de
+ * paie calcule/valide/paye (lot 4 paiements - #6968, ADR-0020).
  *
- * Orchestration pure et nommable de la création :
- *  - résolution du PayrollRun, bornée au tenant du manager (404 si absent
- *    ou hors société — ModelNotFoundException) ;
+ * Orchestration pure et nommable de la creation :
+ *  - resolution du PayrollRun, bornee au tenant du manager (404 si absent
+ *    ou hors societe - ModelNotFoundException) ;
  *  - garde de statut : seuls les runs `calculated`/`validated`/`paid` sont
  *    batchables (422 PAYMENT_BATCH_RUN_INVALID) ;
- *  - collecte des bulletins payables du run (calculated/validated/sent) —
- *    lot vide refusé (422) ;
- *  - transaction : création du batch (draft) + un PaymentItem `pending` par
+ *  - collecte des bulletins payables du run (calculated/validated/sent) -
+ *    lot vide refuse (422) ;
+ *  - transaction : creation du batch (draft) + un PaymentItem `pending` par
  *    bulletin payable.
  *
  * L'autorisation (manager), la validation de la requête et l'enveloppe de
- * réponse (201) restent au niveau interface (contrôleur).
+ * reponse (201) restent au niveau interface (controleur).
  *
  * @param  array<mixed>|null  $metadata
  *
@@ -104,7 +104,7 @@ class CreatePaymentBatch
         });
 
         if (! $batch instanceof PaymentBatch) {
-            throw new \RuntimeException('Échec de la création du lot de paiement.');
+            throw new \RuntimeException('Echec de la creation du lot de paiement.');
         }
 
         return $batch;

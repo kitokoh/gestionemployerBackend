@@ -13,22 +13,22 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Cas d'usage : confirmation de réception d'un paiement par l'employé
- * destinataire (lot 4 paiements — #6968, ADR-0020).
+ * Cas d'usage : confirmation de reception d'un paiement par l'employe
+ * destinataire (lot 4 paiements - #6968, ADR-0020).
  *
- * Orchestration pure et nommable de la transaction métier :
+ * Orchestration pure et nommable de la transaction metier :
  *  - garde d'état : un PaymentItem encore `pending` n'est pas confirmable
- *    (le manager doit d'abord déclarer/marquer le paiement) → 422 ;
- *  - création IDEMPOTENTE de la PaymentConfirmation (un item ne peut être
- *    confirmé qu'une fois — un second appel renvoie la confirmation existante) ;
+ *    (le manager doit d'abord declarer/marquer le paiement) → 422 ;
+ *  - creation IDEMPOTENTE de la PaymentConfirmation (un item ne peut etre
+ *    confirme qu'une fois — un second appel renvoie la confirmation existante) ;
  *  - signature de consentement horodatée PA2-PAY-016 : le hash est calculé
  *    sur le `confirmed_at` RÉELLEMENT persisté (refresh) via
  *    PaymentConsentSignatureService, jamais sur la valeur non arrondie ;
  *  - transition du PaymentItem vers `confirmed` + rafraîchissement du statut
  *    agrégé du batch (confirmed / partially_confirmed).
  *
- * L'autorisation d'accès (404 company/employee — un employé ne confirme que
- * SES paiements), la validation de la requête et l'enveloppe de réponse
+ * L'autorisation d'acces (404 company/employee - un employe ne confirme que
+ * SES paiements), la validation de la requete et l'enveloppe de réponse
  * restent au niveau interface (contrôleur).
  *
  * @param  array{device_signature?: string|null, document_version?: string|null, metadata?: array<mixed>|null}  $validated
@@ -88,10 +88,10 @@ class ConfirmPaymentItemReception
             // to the payment item, amount, currency and instant, without a
             // premature PKI/certificate stack.
             //
-            // Le hash est calculé sur la valeur `confirmed_at` RÉELLEMENT
-            // persistée (la colonne est timestamp(0) : PostgreSQL arrondit à la
-            // seconde — hasher `now()` avec les millisecondes rendrait la
-            // signature invérifiable après lecture, car le payload différerait).
+            // Le hash est calcule sur la valeur `confirmed_at` REELLEMENT
+            // persistee (la colonne est timestamp(0) : PostgreSQL arrondit a la
+            // seconde - hasher `now()` avec les millisecondes rendrait la
+            // signature inverifiable apres lecture, car le payload differerait).
             // `refresh()` recharge la valeur arrondie par le serveur.
             $confirmation->refresh();
             $documentHash = $this->consentSignatureService->hash(
@@ -114,7 +114,7 @@ class ConfirmPaymentItemReception
         });
 
         if (! $confirmation instanceof PaymentConfirmation) {
-            throw new \RuntimeException('Échec de l\'enregistrement de la confirmation de paiement.');
+            throw new \RuntimeException('Echec de l\'enregistrement de la confirmation de paiement.');
         }
 
         return $confirmation;

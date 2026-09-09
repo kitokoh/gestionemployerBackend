@@ -14,20 +14,20 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Cas d'usage : marquage d'un lot de paiement (batch) comme payé par le
- * manager (lot 4 paiements — #6968, ADR-0020).
+ * Cas d'usage : marquage d'un lot de paiement (batch) comme paye par le
+ * manager (lot 4 paiements - #6968, ADR-0020).
  *
  * Orchestration pure et nommable de la transition batch → paid :
- *  - garde de statut : seuls les lots `draft`/`processing` peuvent être
- *    marqués payés (422 sinon — un lot déjà payé/confirmé est figé) ;
+ *  - garde de statut : seuls les lots `draft`/`processing` peuvent etre
+ *    marques payes (422 sinon - un lot deja paye/confirme est fige) ;
  *  - transaction : passage du batch en `paid` (`marked_paid_by`/`marked_paid_at`)
  *    + transition de tous ses PaymentItem vers `paid` (`paid_at`) ;
- *  - après commit, par item payé : génération asynchrone du document de
- *    paiement (`GeneratePaymentDocumentJob` via le bulletin lié, si présent)
- *    et écriture de l'entrée de ledger (`LedgerService`, `TYPE_PAYMENT`).
+ *  - apres commit, par item paye : generation asynchrone du document de
+ *    paiement (`GeneratePaymentDocumentJob` via le bulletin lie, si present)
+ *    et ecriture de l'entrée de ledger (`LedgerService`, `TYPE_PAYMENT`).
  *
- * L'autorisation (404 — le manager ne marque que les lots de SA société),
- * la validation de la requête et l'enveloppe de réponse (202) restent au
+ * L'autorisation (404 - le manager ne marque que les lots de SA societe),
+ * la validation de la requete et l'enveloppe de réponse (202) restent au
  * niveau interface (contrôleur).
  *
  * @throws ValidationException si le lot n'est pas `draft`/`processing`
@@ -66,7 +66,7 @@ class MarkPaymentBatchPaid
         });
 
         if (! $batch instanceof PaymentBatch) {
-            throw new \RuntimeException('Échec du marquage du lot comme payé.');
+            throw new \RuntimeException('Echec du marquage du lot comme paye.');
         }
 
         foreach ($batch->items as $item) {

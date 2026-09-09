@@ -55,7 +55,7 @@ class PaymentBatchController extends Controller
         ]);
 
         // Cas d'usage nommable (ADR-0020, lot 4 paiements #6968) : gardes
-        // métier + transaction dans CreatePaymentBatch.
+        // metier + transaction dans CreatePaymentBatch.
         $currency = isset($validated['currency']) ? (string) $validated['currency'] : null;
         $metadata = is_array($validated['metadata'] ?? null) ? $validated['metadata'] : null;
         $batch = $this->createBatch->execute(
@@ -87,7 +87,7 @@ class PaymentBatchController extends Controller
 
         // Cas d'usage nommable (ADR-0020, lot 4 paiements #6968) : garde de
         // statut + transaction (batch→paid, items→paid) + documents de
-        // paiement + écritures de ledger dans MarkPaymentBatchPaid.
+        // paiement + ecritures de ledger dans MarkPaymentBatchPaid.
         $batch = $this->markBatchPaid->execute($actor, $paymentBatch);
 
         return response()->json([
@@ -112,9 +112,9 @@ class PaymentBatchController extends Controller
         ]);
 
         // Cas d'usage nommable (ADR-0020, lot 4 paiements #6968) : garde
-        // d'état + transaction + consentement horodaté (PA2-PAY-016) dans
-        // ConfirmPaymentItemReception. Les métadonnées HTTP (ip, user_agent)
-        // sont passées en paramètres, l'enveloppe de réponse reste ici.
+        // d'etat + transaction + consentement horodate (PA2-PAY-016) dans
+        // ConfirmPaymentItemReception. Les metadonnees HTTP (ip, user_agent)
+        // sont passees en parametres, l'enveloppe de réponse reste ici.
         $confirmation = $this->confirmReception->execute(
             $paymentItem,
             $actor,
