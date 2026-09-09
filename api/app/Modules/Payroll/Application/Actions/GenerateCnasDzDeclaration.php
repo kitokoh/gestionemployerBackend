@@ -11,16 +11,16 @@ use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationService;
 use DateTimeInterface;
 
 /**
- * Cas d'usage : génération de la déclaration trimestrielle CNAS (DZ) —
- * une ligne par employé actif du trimestre (NIS, identité, brut, mois
- * travaillés), agrégée depuis les bulletins (route …/generate-cnas).
+ * Cas d'usage : generation de la declaration trimestrielle CNAS (DZ) -
+ * une ligne par employe actif du trimestre (NIS, identite, brut, mois
+ * travailles), agregee depuis les bulletins (route .../generate-cnas).
  *
- * Orchestration pure et nommable (ADR-0020, lot 3a déclarations — #6968) :
- * la collecte des données (employés actifs, mois du trimestre, données de
- * paie agrégées) reste dans `SocialDeclarationService`, le formatage du
+ * Orchestration pure et nommable (ADR-0020, lot 3a declarations - #6968) :
+ * la collecte des donnees (employes actifs, mois du trimestre, donnees de
+ * paie agregees) reste dans `SocialDeclarationService`, le formatage du
  * fichier dans `SocialDeclarationGenerator` (Infrastructure). L'Action
  * construit les lignes et retourne le contenu prêt à servir — l'interface
- * (contrôleur) conserve l'autorisation, la validation et l'enveloppe HTTP.
+ * (controleur) conserve l'autorisation, la validation et l'enveloppe HTTP.
  *
  * @return array{content: string, employee_count: int, filename: string}
  */

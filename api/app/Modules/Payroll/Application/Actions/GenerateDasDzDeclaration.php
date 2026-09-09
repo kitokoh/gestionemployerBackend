@@ -10,14 +10,14 @@ use App\Modules\Payroll\Domain\Models\PaySlip;
 use App\Modules\Payroll\Infrastructure\Services\DasDeclarationGenerator;
 
 /**
- * Cas d'usage : génération de la Déclaration Annuelle des Salaires (DAS, DZ) —
- * CSV annuel agrégé depuis les bulletins validés des runs DZ de l'année
+ * Cas d'usage : generation de la Declaration Annuelle des Salaires (DAS, DZ) -
+ * CSV annuel agrege depuis les bulletins valides des runs DZ de l'année
  * (une ligne par employé : NIS, nom, mois, brut, CNAS 9 %/26 %, IRG, net +
  * totaux), route …/generate-das (#5243).
  *
  * Orchestration pure et nommable (ADR-0020, lot 3a déclarations — #6968) :
  * la sélection des bulletins et le formatage restent dans les services /
- * générateur Infrastructure ; l'Action retourne le contenu prêt à servir —
+ * générateur Infrastructure ; l'Action retourne le contenu pret a servir -
  * l'interface (contrôleur) conserve l'autorisation (manager
  * principal/comptable), la validation et l'enveloppe HTTP.
  *

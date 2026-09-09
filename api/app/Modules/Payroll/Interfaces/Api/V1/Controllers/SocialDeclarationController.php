@@ -48,7 +48,7 @@ class SocialDeclarationController extends Controller
 
         $this->auditLogger->recordSensitive($request, $actor, 'payroll.cnas_declaration');
 
-        // Cas d'usage nommable (ADR-0020, lot 3a #6968) — collecte + formatage
+        // Cas d'usage nommable (ADR-0020, lot 3a #6968) - collecte + formatage
         // dans GenerateCnasDzDeclaration (services Infrastructure existants).
         $result = $this->generateCnasDz->execute($actor, (string) $validated['quarter'], (int) $validated['year']);
 
@@ -65,8 +65,8 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * #5243 — Déclaration Annuelle des Salaires (DAS) DZ : CSV annuel agrégé
-     * depuis les bulletins validés des runs DZ de l'année (une ligne par
+     * #5243 - Declaration Annuelle des Salaires (DAS) DZ : CSV annuel agrege
+     * depuis les bulletins valides des runs DZ de l'année (une ligne par
      * employé : NIS, nom, mois, brut, CNAS 9 %/26 %, IRG, net + TOTAUX).
      * Manager principal/comptable, audit `payroll.das_declaration`.
      */
@@ -254,7 +254,7 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEDEAO (#1830) — déclaration CNSS mensuelle Côte d'Ivoire (CSV).
+     * CEDEAO (#1830) - declaration CNSS mensuelle Cote d'Ivoire (CSV).
      * 422 si le run n'est pas un run CI.
      */
     public function generateCnssCiDeclaration(Request $request, PayrollRun $payrollRun): Response
@@ -264,7 +264,7 @@ class SocialDeclarationController extends Controller
             $payrollRun,
             'CI',
             'payroll.cnss_ci_declaration',
-            "la Côte d'Ivoire (CNSS CI)",
+            "la Cote d'Ivoire (CNSS CI)",
         );
 
         $generator = new CnssDeclarationGenerator;
@@ -281,7 +281,7 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEDEAO (#1830) — déclaration IPRES/CSS mensuelle Sénégal (CSV).
+     * CEDEAO (#1830) - declaration IPRES/CSS mensuelle Senegal (CSV).
      * 422 si le run n'est pas un run SN.
      */
     public function generateIpresSnDeclaration(Request $request, PayrollRun $payrollRun): Response
@@ -291,7 +291,7 @@ class SocialDeclarationController extends Controller
             $payrollRun,
             'SN',
             'payroll.ipres_sn_declaration',
-            'le Sénégal (IPRES/CSS)',
+            'le Senegal (IPRES/CSS)',
         );
 
         $generator = new IpresDeclarationGenerator;
@@ -308,8 +308,8 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEMAC/CM (#1823) — déclaration CNPS mensuelle Cameroun (format DAS) :
-     * CSV téléchargeable, une ligne par bulletin validé du run + totaux.
+     * CEMAC/CM (#1823) - declaration CNPS mensuelle Cameroun (format DAS) :
+     * CSV telechargeable, une ligne par bulletin valide du run + totaux.
      */
     public function generateCnpsCmDeclaration(Request $request, PayrollRun $payrollRun): Response
     {
@@ -335,9 +335,9 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEMAC (#2155) — déclaration CNSS mensuelle Gabon (GA, CSV) :
-     * mêmes règles CNSS CEMAC que CM (retraite 2,5 %/5 %, famille 8 %,
-     * AT 3 % — plafond 3 000 000 XAF), sans centimes additionnels.
+     * CEMAC (#2155) - declaration CNSS mensuelle Gabon (GA, CSV) :
+     * memes regles CNSS CEMAC que CM (retraite 2,5 %/5 %, famille 8 %,
+     * AT 3 % - plafond 3 000 000 XAF), sans centimes additionnels.
      */
     public function generateCnssGaDeclaration(Request $request, PayrollRun $payrollRun): Response
     {
@@ -363,8 +363,8 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEMAC (#2155) — déclaration CNSS mensuelle Congo (CG, CSV) :
-     * retraite 4 %/8 %, famille 10 %, AT 3 % — plafond 2 500 000 XAF.
+     * CEMAC (#2155) - declaration CNSS mensuelle Congo (CG, CSV) :
+     * retraite 4 %/8 %, famille 10 %, AT 3 % - plafond 2 500 000 XAF.
      */
     public function generateCnssCgDeclaration(Request $request, PayrollRun $payrollRun): Response
     {
@@ -390,7 +390,7 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEDEAO (#2158) — déclaration CNSS mensuelle Burkina Faso (CSV).
+     * CEDEAO (#2158) - declaration CNSS mensuelle Burkina Faso (CSV).
      * 422 si le run n'est pas un run BF.
      */
     public function generateCnssBfDeclaration(Request $request, PayrollRun $payrollRun): Response
@@ -417,7 +417,7 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEDEAO (#2158) — déclaration INPS mensuelle Mali (CSV).
+     * CEDEAO (#2158) - declaration INPS mensuelle Mali (CSV).
      * 422 si le run n'est pas un run ML.
      */
     public function generateInpsMlDeclaration(Request $request, PayrollRun $payrollRun): Response
@@ -444,9 +444,9 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * Gardes communes des déclarations par run : isolation tenant (404),
-     * RBAC (403 — isManager() ou rôles précis) et garde pays (422), puis
-     * journalisation d'audit. Retourne l'acteur authentifié (issue #3149).
+     * Gardes communes des declarations par run : isolation tenant (404),
+     * RBAC (403 - isManager() ou roles precis) et garde pays (422), puis
+     * journalisation d'audit. Retourne l'acteur authentifie (issue #3149).
      *
      * @param  list<string>|null  $requiredRoles
      */
