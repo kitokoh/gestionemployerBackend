@@ -23,6 +23,17 @@ class PayrollController extends Controller
     {
         /** @var Employee $actor */
         $actor = $request->user();
+        // Issue #7010 (RBAC) : l'index des campagnes de paie est un endpoint
+        // de gestion réservé aux managers (portée société ou équipe — cf.
+        // visibleToManager #6534). Un employé n'a pas vocation à énumérer la
+        // paie : il reçoit un 403 explicite au lieu d'un 200-liste-vide (qui
+        // deviendrait une fuite si un futur changement de scope l'élargissait).
+        // Son self-service passe par /me/pay-slips, /me/balance et
+        // /me/payment-documents (aucun consommateur mobile/web de /payrolls
+        // en rôle employé).
+        if (! $actor->isManager()) {
+            abort(403);
+        }
         $query = Payroll::query()
             ->where('company_id', $actor->company_id)
             ->select([
@@ -50,9 +61,7 @@ class PayrollController extends Controller
             ])
             ->with(['employee:id,company_id,first_name,last_name,email']);
 
-        if (! $actor->isManager()) {
-            $query->where('employee_id', $actor->id);
-        } elseif ($actor->isTeamScoped()) {
+        if ($actor->isTeamScoped()) {
             // Issue #6534 (audit) : un manager dept/superviseur ne voit que
             // les fiches de paie de SON équipe (pattern visibleToManager,
             // PA2-SEC-002/003) — l'énumération des salaires de toute la

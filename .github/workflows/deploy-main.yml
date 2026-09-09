@@ -11,6 +11,21 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    # #6973 (réouverte 2026-09-08) : sous rafale de merges, la gate interne
+    # trouve la conclusion du run Tests du SHA = « cancelled » → job deploy
+    # skippé ; et un HEAD de main sans diff api/ (ex. commit .github/docs)
+    # rend api_changed=false → le re-dispatch de rattrapage (#6984) est lui
+    # aussi skippé → boucle horaire sans fin, tier dev figé sur un vieux SHA.
+    # force_deploy permet à un déclenchement manuel ou au workflow de
+    # rattrapage de déployer le HEAD de main malgré ces deux faux négatifs
+    # (le code à déployer a déjà passé les checks requis de la PR AVANT le
+    # merge, et Render construit le HEAD de main : rien n'est déployé qui
+    # n'ait été testé). Chemin push : inchangé (aucun impact).
+    inputs:
+      force_deploy:
+        description: "Forcer le déploiement du HEAD de main (api_changed bypassé) — usage manuel/catchup uniquement"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -322,7 +337,11 @@ jobs:
     # des fichiers api/** (ou CI backend) ont changé. Un merge web/mobile/docs
     # ne doit plus déclencher un rebuild de l'API (et autoDeploy Render est à
     # passer à false — voir render.yaml).
-    if: needs.prepare.outputs.should_deploy == 'true' && needs.prepare.outputs.api_changed == 'true'
+    # #6973 : force_deploy (workflow_dispatch uniquement) bypass api_changed
+    # pour le rattrapage manuel/catchup quand le HEAD de main n'a pas de diff
+    # api/ mais que le tier dev est en retard (SHA live ≠ HEAD). En push,
+    # github.event.inputs.force_deploy est vide → comportement inchangé.
+    if: needs.prepare.outputs.should_deploy == 'true' && (needs.prepare.outputs.api_changed == 'true' || github.event.inputs.force_deploy == 'true')
     permissions:
       contents: read
 
@@ -347,48 +366,81 @@ jobs:
         run: |
           set -euo pipefail
           echo "Triggering Render deploy for APP_VERSION=${APP_VERSION} SHA=${DEPLOY_SHA}"
+
+          # #6973 (2026-09-07) : le hook « réussissait » sans que le code arrive
+          # jamais en dev (dernier sha live figé, health « version » = SHA git).
+          # On capture la version live AVANT le hook : la vérification
+          # post-déploiement doit prouver qu'une NOUVELLE instance a pris le
+          # relais — un hook sans effet devient un échec visible, plus jamais un
+          # « success » trompeur.
+          baseline="$(curl --silent --show-error --max-time 20 "${DEFAULT_API_HEALTHCHECK_URL}" \
+            | sed -n 's/.*"version":"\([^"]*\)".*/\1/p' || true)"
+          echo "LIVE_BASELINE_VERSION=${baseline:-unknown}" >> "$GITHUB_ENV"
+          echo "Instance live avant deploy : version=${baseline:-unknown}"
+
           curl --fail --silent --show-error --request POST "${RENDER_DEPLOY_HOOK_URL}"
 
-      - name: Wait for API/Web healthcheck
+      - name: Wait for new Render instance (tier dev — health version = SHA git)
         shell: bash
         env:
-          API_HEALTHCHECK_URL: ${{ secrets.API_HEALTHCHECK_URL }}
           APP_VERSION: ${{ needs.prepare.outputs.app_version }}
+          DEPLOY_SHA: ${{ needs.prepare.outputs.sha }}
         run: |
           set -euo pipefail
-          URL="${API_HEALTHCHECK_URL:-${DEFAULT_API_HEALTHCHECK_URL}}"
-          expected_version="$(echo "${APP_VERSION}" | tr -d '[:space:]')"
 
-          # Issue #1831 + QA 2026-08-15 : le healthcheck « ok » ne prouve pas
-          # que le NOUVEAU conteneur a remplacé l'ancien — un build Docker en
-          # échec laisse l'instance précédente répondre (faux succès, prod
-          # inchangée, observé : deploy « success » avec prod toujours en
-          # 4.23.5). L'ancien mécanisme (baseline uptime AVANT le hook) était
-          # inopérant quand l'instance Render était froide : baseline = 0 →
-          # fallback healthcheck simple → succès immédiat sur l'ANCIENNE
-          # instance. Désormais on exige TOUJOURS :
-          #   1. `version` du health == APP_VERSION déployé (champ exposé par
-          #      /api/v1/health depuis le config app.version) ;
-          #   2. uptime_seconds < 900 (instance fraîche, pas l'ancienne qui
-          #      vient de se réveiller d'un cold start).
+          # #6834/#6973 : ce workflow déploie UNIQUEMENT le service Render du tier
+          # dev/continu (gestionemployerbackend). Le healthcheck doit cibler CETTE
+          # instance — vars.PROD_API_BASE_URL désigne l'URL dev (dette de nommage
+          # #6839) — et jamais un healthcheck partagé via secret qui peut pointer
+          # ailleurs (ex. la prod) : cause du gate vert avec dev figé sur un vieux
+          # SHA (constat #6973 : deploy-main « success » pendant ~24 h, SHA live
+          # inchangé, web DEV en 500).
+          URL="${DEFAULT_API_HEALTHCHECK_URL}"
+          if [[ -z "${URL}" ]]; then
+            echo "::error::URL de santé dev absente (vars.PROD_API_BASE_URL non défini) — deploy non vérifiable (#6834)."
+            exit 1
+          fi
+
+          # Tier dev : pas d'APP_VERSION sur l'instance → /api/v1/health expose
+          # `version` = SHA Render tronqué (config/app.php : RENDER_GIT_COMMIT,
+          # résolution « version honnête » #6835/#6905). Succès = instance
+          # NOUVELLE (version ≠ baseline) servant le HEAD courant de main (Render
+          # buildant toujours le HEAD de la branche, la version live converge vers
+          # le sha7 d'origin/main — robuste sous rafale de merges : un run dépassé
+          # observe le déploiement du suivant) OU servant déjà exactement le SHA
+          # déclencheur (re-run d'un SHA déjà live).
+          baseline="${LIVE_BASELINE_VERSION:-unknown}"
+          expected_sha="${DEPLOY_SHA:0:7}"
+          expected_version="$(echo "${APP_VERSION}" | tr -d '[:space:]')"
+          echo "Baseline=${baseline} — deploy SHA=${DEPLOY_SHA} (${expected_sha}) — APP_VERSION=${expected_version:-n/a}"
+
           for attempt in {1..60}; do
-            echo "Healthcheck attempt ${attempt}/60 on ${URL} (attendu: ${expected_version})"
-            body="$(curl --fail --silent --show-error "${URL}" || true)"
+            main_sha7="$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main 2>/dev/null | awk '{print substr($1,1,7)}' || true)"
+            body="$(curl --silent --show-error --max-time 20 "${URL}" || true)"
             if echo "${body}" | grep -q '"status":"ok"'; then
               version="$(echo "${body}" | sed -n 's/.*"version":"\([^"]*\)".*/\1/p' || echo '')"
               uptime="$(echo "${body}" | sed -n 's/.*"uptime_seconds":\([0-9]*\).*/\1/p' || echo 0)"
-              echo "  instance version=${version:-inconnue} uptime_seconds=${uptime:-0}"
-              if [[ -n "${version}" && "${version}" == "${expected_version}" \
-                && -n "${uptime}" && "${uptime}" -lt 900 ]]; then
-                echo "Render deployment healthy (nouvelle instance, version attendue)."
+              echo "  [${attempt}/60] instance version=${version:-inconnue} (main=${main_sha7:-?}, baseline=${baseline}, uptime=${uptime}s)"
+              if [[ -n "${version}" && ( "${version}" == "${expected_sha}" \
+                || ( -n "${expected_version}" && "${version}" == "${expected_version}" ) \
+                || ( "${version}" != "${baseline}" && "${version}" == "${main_sha7}" ) ) ]]; then
+                echo "Render dev deployment healthy — nouvelle instance live : ${version} (SHA déclencheur : ${expected_sha})."
+                {
+                  echo "## Déploiement Render dev vérifié"
+                  echo "- **SHA live** : \`${version}\` (SHA déclencheur : \`${expected_sha}\`)"
+                  echo "- **Baseline avant hook** : \`${baseline}\`"
+                  echo "- **APP_VERSION** : \`${expected_version:-n/a}\`"
+                } >> "$GITHUB_STEP_SUMMARY"
                 exit 0
               fi
-              echo "  instance saine mais ANCIENNE (version/uptime inattendus) — attente du nouveau déploiement..."
+              [[ "${version}" == "${baseline}" ]] && echo "  instance inchangée (build en cours ou hook sans effet) — attente du nouveau déploiement..."
+            else
+              echo "  [${attempt}/60] health pas encore ok (instance froide ou indisponible)..."
             fi
             sleep 20
           done
 
-          echo "API healthcheck did not detect the new instance/version in time (build failure or stale instance)."
+          echo "::error::Render dev : aucune nouvelle instance détectée en 20 min (hook sans effet ou build en échec) — intervention dashboard Render requise (#6834/#6973)."
           exit 1
 
       - name: Rollback on failure

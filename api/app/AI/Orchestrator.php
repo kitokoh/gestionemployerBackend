@@ -14,6 +14,14 @@ use Illuminate\Support\Facades\File;
 
 class Orchestrator
 {
+    /**
+     * C1 (#6859) — borne de la boucle d'outils du chat « commande » (EPIC
+     * #6846) : 3 rounds d'exécution d'outils après l'appel LLM initial =
+     * 4 échanges maximum (spec §6 : « boucle ≤ 4 itérations »). Au-delà,
+     * plus aucun outil n'est exécuté — arrêt propre avec réponse finale.
+     */
+    private const MAX_TOOL_ITERATIONS = 3;
+
     public function __construct(
         private readonly ToolRegistry $toolRegistry,
         private readonly IntentEngine $intentEngine,
@@ -96,17 +104,45 @@ class Orchestrator
 
             $response = $this->chat($llmMessages, $tools);
 
-            $maxIterations = 3;
             $iteration = 0;
 
             // BC-23-D10 : cumul de tokens de LA requête courante (toutes itérations).
             $requestTokens = 0;
 
-            while ($response->hasToolCalls() && $iteration < $maxIterations) {
+            while ($response->hasToolCalls() && $iteration < self::MAX_TOOL_ITERATIONS) {
                 $requestTokens += $response->inputTokens + $response->outputTokens;
                 $this->tokenBudgetGuard->assertRequestWithinBudget($requestTokens, 0);
 
                 $results = $this->intentEngine->executeToolCalls($response, $request->companyId, $request->userId);
+
+                // A5 (#6852) : chaque outil exécuté ou proposé est journalisé
+                // (ai_tool_executions) avec le contexte de conversation — la
+                // chaîne conversation → action → effet devient rejouable.
+                foreach ($response->toolCalls as $index => $toolCall) {
+                    $result = $results[$index] ?? null;
+                    if ($result === null) {
+                        continue;
+                    }
+
+                    $decoded = json_decode($result->content, true);
+                    $confirmationRequired = is_array($decoded) && ($decoded['status'] ?? null) === 'confirmation_required';
+
+                    $this->auditLogger->logToolExecution(
+                        companyId: $request->companyId,
+                        userId: $request->userId,
+                        conversationId: $conversationId,
+                        pendingActionId: is_array($decoded) && is_string($decoded['pending_action_id'] ?? null)
+                            ? $decoded['pending_action_id']
+                            : null,
+                        toolName: $toolCall->name,
+                        toolInput: $toolCall->arguments,
+                        stage: $confirmationRequired
+                            ? 'confirmation_required'
+                            : ($result->success ? 'executed' : 'error'),
+                        success: $result->success,
+                        resultSummary: $result->content,
+                    );
+                }
 
                 foreach ($results as $result) {
                     $toolsUsed[] = $result->name;
@@ -155,8 +191,20 @@ class Orchestrator
             $requestTokens += $response->inputTokens + $response->outputTokens;
             $this->tokenBudgetGuard->assertRequestWithinBudget($requestTokens, 0);
 
+            // C1 (#6859) — arrêt propre à la borne d'itérations : si le modèle
+            // demande encore des outils SANS avoir produit de texte final, on
+            // n'exécute rien de plus et on rend une réponse explicite en
+            // français (état des exécutions déjà faites) au lieu d'une réponse
+            // vide. Cas « confirmation requise » : non concerné (break avant la
+            // borne, réponse pilotée par pending_confirmations côté client).
+            $finalContent = $response->hasToolCalls()
+                && $iteration >= self::MAX_TOOL_ITERATIONS
+                && trim($response->content) === ''
+                ? $this->iterationLimitResponse($toolsUsed)
+                : $response->content;
+
             $messages[] = ['role' => 'user', 'content' => $request->message];
-            $messages[] = ['role' => 'assistant', 'content' => $response->content];
+            $messages[] = ['role' => 'assistant', 'content' => $finalContent];
 
             $totalTokens = $response->inputTokens + $response->outputTokens;
             $this->memoryManager->saveMessages($conversationId, $messages, $totalTokens);
@@ -173,7 +221,7 @@ class Orchestrator
                 userId: $request->userId,
                 conversationId: $conversationId,
                 prompt: $request->message,
-                response: $response->content,
+                response: $finalContent,
                 toolsCalled: $toolsUsed,
                 provider: $this->client->provider(),
                 model: $response->model,
@@ -186,7 +234,7 @@ class Orchestrator
 
             return [
                 'conversation_id' => $conversationId,
-                'response' => $response->content,
+                'response' => $finalContent,
                 'tools_used' => $toolsUsed,
                 'pending_confirmations' => $pendingConfirmations,
                 'tokens' => ['input' => $response->inputTokens, 'output' => $response->outputTokens],
@@ -268,6 +316,22 @@ class Orchestrator
             'pending_confirmations' => [],
             'tokens' => ['input' => 0, 'output' => 0],
         ];
+    }
+
+    /**
+     * C1 (#6859) — réponse de fin de boucle quand la borne d'itérations est
+     * atteinte sans texte final du modèle : liste honnête (noms d'outils
+     * uniquement, aucune donnée métier/PII) des exécutions déjà effectuées.
+     *
+     * @param  array<int, string>  $toolsUsed
+     */
+    private function iterationLimitResponse(array $toolsUsed): string
+    {
+        $summary = $toolsUsed !== []
+            ? ' Outils déjà exécutés : '.implode(', ', array_unique($toolsUsed)).'.'
+            : '';
+
+        return "J'ai atteint la limite d'itérations autorisée pour cette demande (4 échanges maximum).".$summary.' Reformule ou précise ta demande pour continuer.';
     }
 
     private function loadSystemPrompt(string $companyId): string

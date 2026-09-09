@@ -50,7 +50,7 @@
 
 ## 4. Support (canal pilote)
 
-- Canal SLA pilotes : voir `docs/pilotes/SLA_PILOTES.md` (#5155) — triage < 24 h, hotfix < 24 h.
+- Canal SLA pilotes : voir `docs/ops/SLA_PILOTES.md` (#5155) — triage < 24 h, hotfix < 24 h.
 - Carnets de feedback : `docs/pilotes/carnets/` (#5152) — un carnet par pilote DZ.
 - Contacts d'escalade : fondateur (décisions produit, ex. #5171) / ops Render (provisionnement, secrets).
 

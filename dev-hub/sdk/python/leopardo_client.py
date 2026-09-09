@@ -1196,6 +1196,70 @@ class LeopardoClient:
         """Rejeter un evenement de carriere (pending → rejected)"""
         return self.request("PUT", "/career-events/{careerEvent}/reject", **kwargs)
 
+    def get_catalog_categories(self, **kwargs):
+        """Lister les categories du catalogue (membres du tenant)"""
+        return self.request("GET", "/catalog/categories", **kwargs)
+
+    def post_catalog_categories(self, **kwargs):
+        """Creer une categorie (gestion principal/rh)"""
+        return self.request("POST", "/catalog/categories", **kwargs)
+
+    def delete_catalog_categories_by_category(self, **kwargs):
+        """Supprimer une categorie (gestion principal/rh)"""
+        return self.request("DELETE", "/catalog/categories/{category}", **kwargs)
+
+    def get_catalog_categories_by_category(self, **kwargs):
+        """Detail d'une categorie (membres du tenant)"""
+        return self.request("GET", "/catalog/categories/{category}", **kwargs)
+
+    def put_catalog_categories_by_category(self, **kwargs):
+        """Mettre a jour une categorie (gestion principal/rh)"""
+        return self.request("PUT", "/catalog/categories/{category}", **kwargs)
+
+    def get_catalog_inquiries(self, **kwargs):
+        """Lister les demandes de devis B2B du tenant (back-office)"""
+        return self.request("GET", "/catalog/inquiries", **kwargs)
+
+    def delete_catalog_inquiries_by_inquiry(self, **kwargs):
+        """Effacer une demande de devis (droit RGPD, canal tenant)"""
+        return self.request("DELETE", "/catalog/inquiries/{inquiry}", **kwargs)
+
+    def patch_catalog_inquiries_by_inquiry_status(self, **kwargs):
+        """Transition de statut d'une demande de devis (back-office)"""
+        return self.request("PATCH", "/catalog/inquiries/{inquiry}/status", **kwargs)
+
+    def get_catalog_inquiries_export(self, **kwargs):
+        """Exporter les demandes de devis B2B en CSV (back-office)"""
+        return self.request("GET", "/catalog/inquiries/export", **kwargs)
+
+    def get_catalog_products(self, **kwargs):
+        """Lister les produits du catalogue (membres du tenant)"""
+        return self.request("GET", "/catalog/products", **kwargs)
+
+    def post_catalog_products(self, **kwargs):
+        """Creer un produit (gestion principal/rh)"""
+        return self.request("POST", "/catalog/products", **kwargs)
+
+    def delete_catalog_products_by_product(self, **kwargs):
+        """Supprimer un produit (gestion principal/rh)"""
+        return self.request("DELETE", "/catalog/products/{product}", **kwargs)
+
+    def get_catalog_products_by_product(self, **kwargs):
+        """Detail d'un produit (membres du tenant)"""
+        return self.request("GET", "/catalog/products/{product}", **kwargs)
+
+    def put_catalog_products_by_product(self, **kwargs):
+        """Mettre a jour un produit (gestion principal/rh)"""
+        return self.request("PUT", "/catalog/products/{product}", **kwargs)
+
+    def post_catalog_products_by_product_publish(self, **kwargs):
+        """Publier un produit (statut published)"""
+        return self.request("POST", "/catalog/products/{product}/publish", **kwargs)
+
+    def post_catalog_products_by_product_unpublish(self, **kwargs):
+        """Depublier un produit (statut draft)"""
+        return self.request("POST", "/catalog/products/{product}/unpublish", **kwargs)
+
     def post_client_events(self, **kwargs):
         """Persister un evenement UX client tenant-scope"""
         return self.request("POST", "/client-events", **kwargs)
@@ -1340,6 +1404,14 @@ class LeopardoClient:
         """Simuler les cotisations sociales employe/employeur et l'impot sur le revenu pour un salaire brut donne, sans persister (manager)"""
         return self.request("POST", "/cotisation-simulation", **kwargs)
 
+    def get_crm_accounts(self, **kwargs):
+        """Liste paginée des comptes du tenant (répertoire client web)"""
+        return self.request("GET", "/crm/accounts", **kwargs)
+
+    def get_crm_contacts(self, **kwargs):
+        """Liste paginée des contacts du tenant (répertoire client web)"""
+        return self.request("GET", "/crm/contacts", **kwargs)
+
     def get_crm_dedup_suggestions(self, **kwargs):
         """Suggestions de doublons (explicables, tenant-scoped)"""
         return self.request("GET", "/crm/dedup/suggestions", **kwargs)
@@ -1360,6 +1432,10 @@ class LeopardoClient:
         """Committer un import CSV prévisualisé (explicite, idempotent)"""
         return self.request("POST", "/crm/imports/{crmImport}/commit", **kwargs)
 
+    def get_crm_leads(self, **kwargs):
+        """Liste paginée des leads du tenant (répertoire client web)"""
+        return self.request("GET", "/crm/leads", **kwargs)
+
     def post_crm_leads_by_crmlead_convert(self, **kwargs):
         """Convertir un lead en account + contact + opportunity"""
         return self.request("POST", "/crm/leads/{crmLead}/convert", **kwargs)
@@ -1371,6 +1447,10 @@ class LeopardoClient:
     def get_crm_merge_preview(self, **kwargs):
         """Preview d'une fusion (aucune écriture)"""
         return self.request("GET", "/crm/merge/preview", **kwargs)
+
+    def get_crm_opportunities(self, **kwargs):
+        """Liste paginée des opportunités du tenant (pipeline client web)"""
+        return self.request("GET", "/crm/opportunities", **kwargs)
 
     def get_dashboard_admin(self, **kwargs):
         """Synthese dashboard admin (principal)"""
@@ -2115,6 +2195,10 @@ class LeopardoClient:
     def get_kiosks_by_devicecode_announcements(self, **kwargs):
         """Annonces du kiosk (device token)"""
         return self.request("GET", "/kiosks/{deviceCode}/announcements", **kwargs)
+
+    def get_kiosks_by_devicecode_config(self, **kwargs):
+        """Configuration du kiosk (device token) — BIO-006 (#6767)"""
+        return self.request("GET", "/kiosks/{deviceCode}/config", **kwargs)
 
     def post_kiosks_by_devicecode_employee_info(self, **kwargs):
         """Infos employe pour ecran kiosk (device token)"""
@@ -3051,6 +3135,18 @@ class LeopardoClient:
     def post_public_careers_by_companyslug_jobs_by_jobposting_apply(self, **kwargs):
         """Postuler à une offre publique (anti-doublon par email, #3860)"""
         return self.request("POST", "/public/careers/{companySlug}/jobs/{jobPosting}/apply", **kwargs)
+
+    def get_public_catalog_by_companyslug(self, **kwargs):
+        """Catalogue public d'un tenant (categories + produits publies, sans auth)"""
+        return self.request("GET", "/public/catalog/{companySlug}", **kwargs)
+
+    def post_public_catalog_by_companyslug_inquiries(self, **kwargs):
+        """Demander un devis B2B (formulaire public, sans auth)"""
+        return self.request("POST", "/public/catalog/{companySlug}/inquiries", **kwargs)
+
+    def get_public_catalog_by_companyslug_products_by_productslug(self, **kwargs):
+        """Fiche publique d'un produit publie (sans auth)"""
+        return self.request("GET", "/public/catalog/{companySlug}/products/{productSlug}", **kwargs)
 
     def post_push_notifications_send(self, **kwargs):
         """Envoyer une notification push de test a un employe"""
