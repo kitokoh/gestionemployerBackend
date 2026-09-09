@@ -3124,6 +3124,10 @@ class LeopardoClient:
         """Catalogue public d'un tenant (categories + produits publies, sans auth)"""
         return self.request("GET", "/public/catalog/{companySlug}", **kwargs)
 
+    def post_public_catalog_by_companyslug_inquiries(self, **kwargs):
+        """Demander un devis B2B (formulaire public, sans auth)"""
+        return self.request("POST", "/public/catalog/{companySlug}/inquiries", **kwargs)
+
     def get_public_catalog_by_companyslug_products_by_productslug(self, **kwargs):
         """Fiche publique d'un produit publie (sans auth)"""
         return self.request("GET", "/public/catalog/{companySlug}/products/{productSlug}", **kwargs)

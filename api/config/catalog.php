@@ -15,4 +15,8 @@ declare(strict_types=1);
  */
 return [
     'public_cache_ttl' => (int) env('CATALOG_PUBLIC_CACHE_TTL', 600),
+
+    // C-LEAD #6884 — durée de conservation des demandes de devis B2B
+    // (RGPD spec §9 : conservation bornée ; purge = C-RGPD #6889).
+    'inquiry_retention_days' => (int) env('CATALOG_INQUIRY_RETENTION_DAYS', 90),
 ];
