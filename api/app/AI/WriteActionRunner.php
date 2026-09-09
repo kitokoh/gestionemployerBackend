@@ -6,6 +6,8 @@ namespace App\AI;
 
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Tenant\Infrastructure\Services\TenantCacheService;
+use App\Modules\Notification\Domain\Models\CompanyAnnouncement;
+use App\Modules\Notification\Infrastructure\Services\AnnouncementService;
 use App\Modules\Planning\Application\Actions\ApproveAbsence;
 use App\Modules\Planning\Application\Actions\RejectAbsence;
 use App\Modules\Planning\Domain\Exceptions\AbsenceNotPendingException;
@@ -14,6 +16,7 @@ use App\Modules\Planning\Domain\Models\Absence;
 use App\Modules\Planning\Domain\Models\AbsenceType;
 use App\Modules\Planning\Domain\Models\Schedule;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class WriteActionRunner
 {
@@ -28,6 +31,10 @@ class WriteActionRunner
         // tenant après affectation (même service que
         // ScheduleController::assignEmployees).
         private readonly TenantCacheService $tenantCache,
+        // B3c (#6858) — l'outil `notify_team` passe par le service canonique
+        // d'annonces du module Notification (BC-13 COMMS), même chemin que
+        // l'endpoint REST POST /api/v1/announcements.
+        private readonly AnnouncementService $announcements,
     ) {}
 
     /**
@@ -313,14 +320,17 @@ class WriteActionRunner
         }
 
         // Anti-spam : plafond d'envois confirmés par acteur et par heure.
-        $maxPerHour = max(1, (int) config('ai.notify_team_rate.max_per_hour', 10));
+        $limit = config('ai.notify_team_rate.max_per_hour', 10);
+        $maxPerHour = max(1, is_numeric($limit) ? (int) $limit : 10);
         $bucket = 'ai:notify_team:'.$companyId.':'.$userId.':'.now()->format('YmdH');
-        $sent = (int) Cache::get($bucket, 0);
+        $cached = Cache::get($bucket, 0);
+        $sent = is_numeric($cached) ? (int) $cached : 0;
         if ($sent >= $maxPerHour) {
             return ['error' => 'NOTIFY_RATE_LIMITED', 'message' => "Team notifications are limited to {$maxPerHour} per hour per manager"];
         }
 
         try {
+            /** @var \App\Modules\Notification\Domain\Models\CompanyAnnouncement $announcement */
             $announcement = $this->announcements->publish($actor, [
                 'title' => $title,
                 'body' => $message,
