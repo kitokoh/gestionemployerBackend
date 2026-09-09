@@ -62,6 +62,28 @@ Côté API prod, `CORS_EXTRA_ORIGIN`/`ADMIN_DASHBOARD_URL` =
 `https://leo-admin-prod.pages.dev`, `FRONTEND_URL` =
 `https://leopardo-prod.vercel.app` (posés sur le service Render prod).
 
+## Registre des volets dev/prod — vue consolidée (issue #7073, 2026-09-09)
+
+> Complément « deux volets » : chaque service a un volet dev (intégration, déployé
+> depuis `main`) et un volet prod (promu par tag, `deploy-prod.yml`). Règles de
+> gouvernance : `docs/PROTOCOLES/07_ARCHITECTURE_DEV_PROD.md` (ENV-*). Source des
+> domaines : `docs/ops/DOMAINS.md` (registre machine-checkable).
+
+| Service | Volet dev | Volet prod | Canal de distribution |
+|---|---|---|---|
+| API Laravel (backend) | `gestionemployerbackend.onrender.com` (service Render `gestionemployerBackend`) | `leopardo-prod.onrender.com` (service Render `leopardo-prod`) | — |
+| Web / vitrine Next.js | `gestionemployer-backend.vercel.app` (projet Vercel `leopardo`) | `leopardo-prod.vercel.app` (projet Vercel `leopardo-prod`) | — |
+| Portails verticaux (delivery/edu/fuel/travel/resto) | `leopardo-<verticale>.vercel.app` (compte `africanovatech`) | `leopardo-<verticale>-prod.vercel.app` (compte `ibrahimkoubaye`) | pages de validation au 2026-09-06 (DOMAINS.md §verticals) |
+| Admin dashboard (Vue) | `leo-admin.pages.dev` | `leo-admin-prod.pages.dev` | — |
+| Site produit | GitHub Pages `kitokoh.github.io/leopardo-hr` (depuis `main`) | idem (public) | — |
+| Mobile Android | Firebase App Distribution (APK dev) | Firebase App Distribution (release) puis stores | `mobile-distribute*.yml` |
+| Desktop Windows/macOS | (à activer — protocole 06, `docs/desktop/README.md`) | idem | GitHub Releases cibles |
+| Email transactionnel | Mailgun — domaine/sandbox dev | Mailgun — domaine prod | **à configurer** (« plus tard ») |
+
+Vérifié le 2026-09-09 (revue API Vercel/Render/Cloudflare + registres DOMAINS.md /
+DEPLOYMENT_URLS.md). Toute évolution (nouveau service, domaine, canal) met à jour ce
+tableau ET `DOMAINS.md` (règle ENV-7).
+
 ## Déclenchement d'un déploiement
 
 **Prod (3 surfaces)** : pousser le tag `vX.Y.Z` sur HEAD de `main` →

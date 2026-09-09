@@ -47,21 +47,6 @@ Listez les risques connus, limitations, ou dette technique deliberement laissee 
 
 ---
 
-## 🎨 Design Review — DSG-6 (PR touchant une UI)
-
-> Obligatoire si une surface UI est cochée ci-dessus (Web / Admin / Mobile / Kiosk / Vitrine).
-> Référence : `docs/PROTOCOLES/P05_DESIGN_HARMONISE.md` (DSG-6) + `docs/REFERENTIEL_PRODUIT/COULEURS.md` (tokens).
-
--   [ ] Tokens : couleurs/typo/rayons issus du design system (pas de hex hors palette ni classes legacy).
--   [ ] États UI couverts (vide, chargement, erreur, succès, disabled).
--   [ ] Contraste AA vérifié (texte sur fond).
--   [ ] Responsive : rendu contrôlé aux breakpoints principaux (mobile/tablette/desktop).
--   [ ] i18n/RTL : chaînes externalisées (×4 langues) et rendu RTL (ar) vérifié.
--   [ ] Assets : tailles/format conformes, pas de tracker tiers ajouté.
--   [ ] Golden tests / captures : captures avant/après jointes pour toute évolution visuelle (P05 §3).
--   [ ] Non applicable (PR sans impact visuel).
-
----
 ## 🛡 Quality Checklist (Enterprise Standards)
 
 -   [ ] **Code Quality:** My code follows the project's coding conventions (PSR-12, ESLint).
@@ -70,6 +55,22 @@ Listez les risques connus, limitations, ou dette technique deliberement laissee 
 -   [ ] **Documentation:** I have updated the relevant documentation hub files.
 -   [ ] **Security:** I have checked for potential security implications (RBAC, SQLi, XSS).
 -   [ ] **Breaking Changes:** This PR does not break existing functionality (or provides a migration path).
+
+---
+
+## 🎨 Design Review (obligatoire si UI — protocole 05, DSG-6)
+
+Checklist de revue design pour toute PR touchant une UI (Web, Admin, Mobile, Desktop) :
+
+- [ ] Valeurs issues de tokens (aucune couleur/typo/espacement en dur — APV L.05/L.07)
+- [ ] Typographie du design system ; états : hover / focus / pressed / disabled / erreur
+- [ ] Contraste WCAG AA ; texte sur image vérifié
+- [ ] Responsive / densité / cibles tactiles ; scaling multi-écrans (desktop)
+- [ ] Mode sombre si supporté ; i18n FR/EN/AR/TR sans rupture (RTL) — pas de texte en dur
+- [ ] Icônes/assets du système ; écran significatif couvert par golden test (mobile/desktop)
+- [ ] Capture avant/après jointe à la PR
+
+Non applicable si aucune surface UI n'est touchee (le preciser alors).
 
 ---
 

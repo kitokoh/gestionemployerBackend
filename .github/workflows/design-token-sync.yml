@@ -1,0 +1,38 @@
+name: Design Token Sync Check
+
+# Vérifie que COULEURS.md (source de vérité, APV L.07) reste synchronisé avec
+# app_colors.dart (Flutter) et les configs Tailwind (web + admin).
+# Issue #7070 / protocole 05 (DSG-2). Check NON requis (ne bloque pas le merge) :
+# rapport d'écart destiné au gardien design.
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/REFERENTIEL_PRODUIT/COULEURS.md'
+      - 'front/mobile_apps/leopardo_core/lib/core/theme/app_colors.dart'
+      - 'front/web/tailwind.config.ts'
+      - 'front/admin-dashboard/tailwind.config.js'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: design-token-sync-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  token-sync:
+    timeout-minutes: 10
+    name: Design token sync (COULEURS.md ↔ code)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          lfs: false
+
+      - name: Run token sync check
+        shell: bash
+        run: |
+          python3 dev-hub/tools/check-design-token-sync.py --root "${{ github.workspace }}"
