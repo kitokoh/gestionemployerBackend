@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Providers;
 
+use App\Modules\Catalog\Interfaces\Console\Commands\PurgeExpiredCatalogInquiries;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -31,5 +32,12 @@ class CatalogServiceProvider extends ServiceProvider
     {
         // Les Policies métier sont enregistrées centralement dans
         // App\Providers\AuthServiceProvider (règle PA2-ARCH-008).
+
+        // Commandes artisan du module (hors app/Console/Commands →
+        // enregistrement explicite, pattern TravelAgency #5729). La purge
+        // RGPD des demandes expirées est à planifier côté ops.
+        $this->commands([
+            PurgeExpiredCatalogInquiries::class,
+        ]);
     }
 }
