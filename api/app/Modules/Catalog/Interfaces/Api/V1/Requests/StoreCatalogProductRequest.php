@@ -7,6 +7,7 @@ namespace App\Modules\Catalog\Interfaces\Api\V1\Requests;
 use App\Core\Auth\Domain\Models\Employee;
 use App\Modules\Catalog\Domain\Enums\CatalogProductStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Modules\Catalog\Domain\Support\CatalogUnitsCurrencies;
 use Illuminate\Validation\Rule;
 
 /**
@@ -54,8 +55,9 @@ class StoreCatalogProductRequest extends FormRequest
             ],
             'description' => ['nullable', 'string', 'max:10000'],
             'price_minor' => ['required', 'integer', 'min:0', 'max:9223372036854775807'],
-            'currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
-            'unit' => ['nullable', 'string', 'max:20'],
+            // #6886 : devise ISO supportée (registre pays + EUR/USD) — défaut = devise du tenant (contrôleur).
+            'currency' => ['nullable', 'string', 'size:3', 'regex:/^[A-Z]{3}$/', 'in:'.implode(',', CatalogUnitsCurrencies::supportedCurrencies())],
+            'unit' => ['nullable', 'string', 'max:20', 'in:'.implode(',', CatalogUnitsCurrencies::supportedUnits())],
             'status' => ['nullable', Rule::in($statuses)],
             'meta' => ['nullable', 'array'],
         ];

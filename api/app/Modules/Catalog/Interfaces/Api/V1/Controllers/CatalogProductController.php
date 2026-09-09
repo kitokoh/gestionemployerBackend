@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Catalog\Domain\Enums\CatalogProductStatus;
 use App\Modules\Catalog\Domain\Models\CatalogProduct;
 use App\Modules\Catalog\Domain\Support\CatalogPublicCache;
+use App\Modules\Catalog\Domain\Support\CatalogUnitsCurrencies;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\StoreCatalogProductRequest;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\UpdateCatalogProductRequest;
 use Illuminate\Http\JsonResponse;
@@ -79,7 +80,9 @@ class CatalogProductController extends Controller
             ),
             'description' => $request->input('description'),
             'price_minor' => $request->integer('price_minor'),
-            'currency' => $request->input('currency'),
+            'currency' => CatalogUnitsCurrencies::normalizeCurrency(
+                (string) $request->input('currency', $this->tenantCurrency((string) $actor->company_id))
+            ) ?? 'EUR',
             'unit' => $request->input('unit', 'piece'),
             'status' => $request->input('status', CatalogProductStatus::Draft->value),
             'meta' => $request->input('meta'),
@@ -125,7 +128,9 @@ class CatalogProductController extends Controller
             'category_id' => $request->input('category_id'),
             'description' => $request->input('description'),
             'price_minor' => $request->integer('price_minor'),
-            'currency' => $request->input('currency'),
+            'currency' => CatalogUnitsCurrencies::normalizeCurrency(
+                (string) $request->input('currency', $product->currency)
+            ) ?? $product->currency,
             'unit' => $request->input('unit') ?? $product->unit,
             'status' => $request->input('status') ?? $product->status->value,
             'meta' => $request->input('meta'),
@@ -201,6 +206,13 @@ class CatalogProductController extends Controller
         CatalogPublicCache::forgetForCompany((string) $actor->company_id);
 
         return response()->json(['data' => $this->payload($product->refresh())]);
+    }
+
+    private function tenantCurrency(string $companyId): string
+    {
+        $currency = \App\Core\Tenant\Domain\Models\Company::query()->whereKey($companyId)->value('currency');
+
+        return is_string($currency) && $currency !== '' ? $currency : 'EUR';
     }
 
     /**
