@@ -1,0 +1,79 @@
+name: "🔁 RETEX — Retour d'expérience (capitalisation)"
+description: Capitaliser un retour d'expérience (symptôme, cause, preuve, action) — protocole P04 (docs/PROTOCOLES/P04_TACHES_ISSUES_EXPERIENCE.md §6).
+title: "[RETEX]: "
+labels: ["retex"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Protocole P04 — Capitalisation.** Structurer un RETEX immédiatement, pendant
+        que les faits sont frais (QUICK_CARD : « ouvrir une issue RETEX immédiate »).
+        Une issue RETEX laissée sans prise en charge est un échec du protocole (moisson
+        mensuelle). Flux complet : `docs/GOUVERNANCE/RETEX_FLUX.md`. Pour un constat
+        simple de dette/amélioration, le template `constat_lecon.yml` suffit.
+  - type: input
+    id: domaine
+    attributes:
+      label: Domaine / BC
+      description: Bounded context concerné (registre dev-hub/governance/bounded-context-registry.json) ou surface.
+      placeholder: "BC-XX / api / front/web / docs / CI"
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type de retour
+      options:
+        - "Temps perdu / friction outillage"
+        - "Erreur évitable (piège documenté ou non)"
+        - "Optimisation tentée — résultat"
+        - "Incident / régression en recette"
+        - "Intégration / collision multi-agents"
+    validations:
+      required: true
+  - type: textarea
+    id: symptome
+    attributes:
+      label: Symptôme factuel
+      description: Ce qui s'est passé, factuellement (quand, quoi, contexte de session).
+      placeholder: "Lors du lot du 2026-09-XX, deux agents ont implémenté la même issue..."
+    validations:
+      required: true
+  - type: textarea
+    id: cause
+    attributes:
+      label: Cause racine
+      description: Pourquoi c'est arrivé (process manquant, garde absente, doc ambiguë).
+    validations:
+      required: true
+  - type: input
+    id: preuve
+    attributes:
+      label: Preuve
+      description: PR, commit, run CI, issue liée.
+      placeholder: "PR #XXXX / commit abc123 / run #YYYY"
+    validations:
+      required: false
+  - type: textarea
+    id: action
+    attributes:
+      label: Action recommandée
+      description: Ce qui empêcherait la récidive (garde CI, doc, règle, protocole).
+    validations:
+      required: true
+  - type: dropdown
+    id: prise
+    attributes:
+      label: Prise en charge
+      options:
+        - "Par l'auteur (implémentation directe si petite portée)"
+        - "À déléguer (issue agent-ready)"
+        - "À arbitrer par le PM"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        **Après résolution** : consolider dans `AGENTS.md` (règle opérationnelle) et/ou
+        `docs/GESTION_PROJET/BIBLIOTHEQUE_ERREURS.md` (piège rejouable), clore avec
+        `Closes #N` dans le body de la PR (#2512).

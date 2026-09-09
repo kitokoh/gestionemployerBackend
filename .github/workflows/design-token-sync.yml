@@ -1,38 +1,36 @@
-name: Design Token Sync Check
+name: Design Token Sync Guard
 
-# Vérifie que COULEURS.md (source de vérité, APV L.07) reste synchronisé avec
-# app_colors.dart (Flutter) et les configs Tailwind (web + admin).
-# Issue #7070 / protocole P05. Check NON requis (ne bloque pas le merge) :
-# rapport d'écart destiné au gardien design.
+# Garde de synchronisation des tokens design (issue #7118, protocole P05 §5 T3) :
+# COULEURS.md <-> AppColors.dart (Flutter) <-> tailwind.config.* (web/admin)
+# doivent bouger ensemble (règle APV L.07). Script : dev-hub/tools/check-design-token-sync.sh
+
 on:
-  workflow_dispatch:
   pull_request:
+    paths:
+      - "docs/REFERENTIEL_PRODUIT/COULEURS.md"
+      - "front/mobile_apps/leopardo_core/lib/core/theme/**"
+      - "front/web/tailwind.config.ts"
+      - "front/admin-dashboard/tailwind.config.js"
+      - "dev-hub/tools/check-design-token-sync.*"
+  push:
     branches: [main]
     paths:
-      - 'docs/REFERENTIEL_PRODUIT/COULEURS.md'
-      - 'front/mobile_apps/leopardo_core/lib/core/theme/app_colors.dart'
-      - 'front/web/tailwind.config.ts'
-      - 'front/admin-dashboard/tailwind.config.js'
+      - "docs/REFERENTIEL_PRODUIT/COULEURS.md"
+      - "front/mobile_apps/leopardo_core/lib/core/theme/**"
+      - "front/web/tailwind.config.ts"
+      - "front/admin-dashboard/tailwind.config.js"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: design-token-sync-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  token-sync:
-    timeout-minutes: 10
-    name: Design token sync (COULEURS.md ↔ code)
+  check-sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v4
         with:
           lfs: false
-
-      - name: Run token sync check
-        shell: bash
-        run: |
-          python3 dev-hub/tools/check-design-token-sync.py --root "${{ github.workspace }}"
+      - name: Run design token sync guard
+        run: bash dev-hub/tools/check-design-token-sync.sh
