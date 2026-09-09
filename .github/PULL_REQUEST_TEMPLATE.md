@@ -2,6 +2,7 @@
 
 **Issue Reference(s):** Fixes # <!-- une ligne "Fixes #N" / "Closes #N" par issue si cette PR livre un lot BC (docs/GOUVERNANCE/BC_BATCH_BRANCH_PROTOCOL.md) -->
 > ⚠️ **Obligatoire (PA2-OPS-008 + règle #2512) :** cette PR doit obligatoirement inclure `Closes #XXX` (ou `Fixes #XXX` / `Resolves #XXX`) **dans le corps (description)** de la PR — le titre seul est fragile et ne ferme pas l'issue de façon fiable. Sauf PR explicitement typée `docs:`/`chore:`. Garde CI : `.github/workflows/pr-issue-guard.yml`, `dev-hub/tools/check-pr-closes-issue.sh`. Pour une PR de lot BC (branche `bc/<code>-*`), répéter le mot-clé pour CHAQUE issue fermée.
+> ⚠️ **Gardes CI (RET-1, triage 2026-09-09) :** une garde jugée inadaptée se corrige par une **PR dédiée** — il est interdit de la contourner ou de la désactiver localement ; tout contournement doit ouvrir une issue RETEX immédiate.
 **Category:** [Feature / Bug Fix / Documentation / Refactor]
 
 ---
@@ -65,6 +66,7 @@ Listez les risques connus, limitations, ou dette technique deliberement laissee 
 ## 🛡 Quality Checklist (Enterprise Standards)
 
 -   [ ] **Code Quality:** My code follows the project's coding conventions (PSR-12, ESLint).
+-   [ ] **i18n (L-10):** toute chaîne visible ajoutée l'est dans les **4 langues** (fr/en/ar/tr) — backend `api/lang`, `shared/i18n/locales`, ARB `leopardo_core` (garde `check-i18n-catalog-parity.sh`, #7089).
 -   [ ] **Testing:** I have added or updated tests for my changes.
 -   [ ] **Verification:** I have verified the changes locally (API, Web, or Mobile).
 -   [ ] **Documentation:** I have updated the relevant documentation hub files.

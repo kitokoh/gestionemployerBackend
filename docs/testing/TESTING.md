@@ -6,10 +6,15 @@ Leopardo RH maintains high reliability through a comprehensive multi-layered tes
 
 | Layer | Tool | Coverage Goal | Responsibility |
 |-------|------|---------------|----------------|
-| **Unit** | Pest PHP | 80%+ | Logic & Calculations |
-| **Feature** | Pest PHP | 100% Endpoints | API Contracts & RBAC |
-| **E2E** | Playwright | Critical Flows | Browser Integration |
-| **Mobile** | Flutter Test (melos, `front/mobile_apps/*`) | Core Screens | Mobile Experience |
+| **Unit / Feature** | Pest PHP (`api/`) | Backend ≥ 65 % (gate CI), 80 %+ sur la logique métier | API Contracts, RBAC, calculs |
+| **Widget / Unit** | Flutter (`front/mobile_apps/*`, via Melos) | Écrans et logique core | Mobile Experience |
+| **Unit** | Jest (`front/web`), Vitest (`front/web-offline`) | Logique vitrine/PWA | Contenus & offline |
+| **E2E** | Playwright (`front/web/e2e`, `front/admin-dashboard/e2e`) | Parcours critiques (funnel, admin) | Browser Integration |
+| **Unit** | JS/Python (`front/zkteco-kiosk`, `edge`) | Kiosk & edge-sync | Surfaces terrain |
+
+Pyramide alignée sur les surfaces réelles du monorepo (backend Laravel, vitrine
+Next.js, admin Vue, apps Flutter, kiosk ZKTeco, edge) — voir le registre canonique
+des scénarios : [REGISTRE_SCENARIOS_TESTS.md](../GESTION_PROJET/REGISTRE_SCENARIOS_TESTS.md).
 
 ## 🚀 Running Tests
 
@@ -22,21 +27,42 @@ cd api
 DB_CONNECTION=sqlite DB_DATABASE=:memory: ./vendor/bin/pest
 ```
 
-### 2. Frontend (Web)
+### 2. Frontend (Web & Admin)
 ```bash
+# Vitrine Next.js
 cd front/web
 npm run lint
-npm run test  # if applicable
+npx jest  # suite vitrine (633 tests) — à exécuter en local en attendant le job CI
+
+# Admin dashboard (Vue)
+cd front/admin-dashboard
+npm run lint
+npx playwright test  # E2E admin
 ```
 
-### 3. Mobile (Flutter, monorepo melos)
+### 3. Mobile (Flutter — monorepo Melos)
+
+Les apps vivent dans `front/mobile_apps/` (packages Melos, `melos.yaml` à la
+racine). Depuis la racine du dépôt :
+
 ```bash
-# Depuis la racine du monorepo (apps sous front/mobile_apps/, package partagé leopardo_core)
-melos bootstrap   # une fois, après clone
-melos run test    # tests unitaires/widgets de toutes les apps
-melos run analyze # flutter analyze sur toutes les apps
-# App ciblée : cd front/mobile_apps/leopardo_employee && flutter test
+melos bootstrap       # une fois, après clone (prépare les liens entre packages)
+melos run analyze     # dart analyze sur tous les packages
+melos run test        # unit + widget tests (tous les packages avec un dossier test/)
+melos run test:coverage
 ```
+
+Ou dans une app précise :
+
+```bash
+cd front/mobile_apps/leopardo_employee
+flutter test
+flutter analyze
+```
+
+> Les tests d'intégration sur device/émulateur (`integration_test/`) n'existent
+> pas encore dans les apps (constat 2026-09-09, protocole P01) — à créer pour
+> couvrir les parcours critiques mobile.
 
 ## 🛡️ Critical Scenarios
 
@@ -49,10 +75,9 @@ Detailed test registry: [REGISTRE_SCENARIOS_TESTS.md](../GESTION_PROJET/REGISTRE
 
 ## 📊 Continuous Integration
 
-Our GitHub Actions workflows (`.github/workflows/tests.yml`) execute the full suite on every Pull Request.
-- **Gate 1:** Linting & Static Analysis (PHPStan, ESLint).
-- **Gate 2:** Functional Tests.
-- **Gate 3:** Build Verification.
+Our GitHub Actions workflows execute the suites par surface (`.github/workflows/` :
+`tests.yml` backend, `mobile-apps-ci.yml` Flutter, `web-marketing-ci.yml` vitrine,
+`e2e-isolated.yml` Playwright…). Voir la cartographie : `.github/workflows/README.md`.
 
 ---
 
