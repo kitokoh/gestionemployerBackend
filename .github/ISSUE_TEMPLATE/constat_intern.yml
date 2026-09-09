@@ -1,0 +1,71 @@
+name: "💡 Constat interne / Amélioration"
+description: Expérience vécue dans le projet (dev, QA, recette, incident, intégration) à transformer en action ou en enseignement — protocole P4.
+title: "[CAPITALISATION]: "
+labels: ["capitalisation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Protocole P4 — Capitalisation de l'expérience** : tout constat devient une issue exploitable.
+        Une issue créée et laissée sans suite est un échec du protocole (suivi PM via `docs/GOUVERNANCE/REGISTRE_LECONS.md`).
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source du constat
+      options:
+        - Session QA / audit
+        - Tâche ayant dépassé > 2× l'estimation
+        - Rework en review (> 2 cycles)
+        - Échec CI récurrent / flaky
+        - Incident ou quasi-incident
+        - Doc obsolète lue pendant un travail
+        - Rétro (intégration, pilote, mensuelle)
+        - Autre
+      description: D'où vient ce constat ?
+    validations:
+      required: true
+  - type: textarea
+    id: constat
+    attributes:
+      label: Constat (quoi, où, quand)
+      description: Description factuelle et datée de ce qui s'est passé.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Temps perdu, risque, coût, répétition ? Précisez si l'événement s'est déjà produit (nb occurrences).
+    validations:
+      required: true
+  - type: dropdown
+    id: proposition
+    attributes:
+      label: Proposition
+      options:
+        - Implémentation (correction / amélioration de code)
+        - Règle ou mise à jour de documentation / protocole
+        - Garde CI bloquante
+        - Leçon à capitaliser uniquement
+      description: Que proposez-vous de faire de ce constat ?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critères d'acceptation (si implémentation)
+      description: Critères testables — la Definition of Ready (P2 §5) doit être complète pour qu'un autre agent puisse prendre l'issue.
+  - type: dropdown
+    id: delegation
+    attributes:
+      label: Prêt pour un autre agent ?
+      options:
+        - "Oui — DoR complète, label Agent-Ready"
+        - "Non — je l'implémente"
+        - "Non — à compléter par le PM / un agent senior"
+  - type: input
+    id: bc
+    attributes:
+      label: Bounded context / surface concernée
+      description: BC (registre dev-hub/governance) ou surface (API, web, admin, mobile, desktop, kiosk, docs, infra).
+      placeholder: ex. BC-04 Payroll / mobile employee
