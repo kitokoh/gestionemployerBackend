@@ -148,6 +148,47 @@ class AIToolRegistrySeeder extends Seeder
                 'required_role' => 'manager',
                 'module' => 'rh',
             ],
+            // B3a (#6856) — outil écriture BC-06 LEAVE déclaré au contrat A3
+            // (#6850). `parameters` aligné sur l'inputSchema du catalogue
+            // Absence (AbsenceDecisionToolCatalog) ; exécution après
+            // confirmation (flux A4) via WriteActionRunner → Actions
+            // canoniques Planning (ApproveAbsence/RejectAbsence).
+            [
+                'name' => 'absence_decision',
+                'description' => 'Approve or reject a pending absence request (manager, confirmation required before execution).',
+                'parameters' => json_encode([
+                    'type' => 'object',
+                    'properties' => [
+                        'absence_id' => ['type' => 'integer', 'description' => 'The absence request ID'],
+                        'decision' => ['type' => 'string', 'enum' => ['approve', 'reject'], 'description' => "Decision: 'approve' or 'reject'"],
+                        'reason' => ['type' => 'string', 'description' => 'Rejection reason — required when decision=reject'],
+                    ],
+                    'required' => ['absence_id', 'decision'],
+                ]),
+                'required_permissions' => '["absences.approve"]',
+                'required_role' => 'manager',
+                'module' => 'rh',
+            ],
+            // B3b (#6857) — outil écriture BC-05 WORKFORCE déclaré au contrat
+            // A3 (#6850). `parameters` aligné sur l'inputSchema du catalogue
+            // Planning (ShiftAssignToolCatalog) ; exécution après confirmation
+            // (flux A4) via WriteActionRunner, parité
+            // ScheduleController::assignEmployees.
+            [
+                'name' => 'shift_assign',
+                'description' => 'Assign a shift (schedule) to an employee of the tenant (manager, confirmation required before execution).',
+                'parameters' => json_encode([
+                    'type' => 'object',
+                    'properties' => [
+                        'schedule_id' => ['type' => 'integer', 'description' => 'The schedule (shift) ID to assign'],
+                        'employee_id' => ['type' => 'integer', 'description' => 'The employee ID to assign'],
+                    ],
+                    'required' => ['schedule_id', 'employee_id'],
+                ]),
+                'required_permissions' => '["schedules.assign"]',
+                'required_role' => 'manager',
+                'module' => 'rh',
+            ],
             [
                 'name' => 'get_daily_summary',
                 'description' => 'Get daily summary for an employee (attendance, tasks, estimations).',

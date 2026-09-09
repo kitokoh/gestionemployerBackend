@@ -101,6 +101,13 @@ return [
     'write_tools' => [
         'create_absence',
         'approve_absence',
+        // B3a (#6856) — décision (approbation/refus motivé) sur une demande
+        // d'absence, exécutée via les Actions canoniques Planning après
+        // confirmation (flux A4, contrat A3 #6850).
+        'absence_decision',
+        // B3b (#6857) — affectation d'un shift (schedule) à un employé,
+        // parité ScheduleController::assignEmployees (BC-05 WORKFORCE).
+        'shift_assign',
     ],
 
     // BC-23-D05 (issue #6237) — matrice de permissions par outil AI
@@ -133,6 +140,15 @@ return [
         'employee_leave_balance' => ['role' => 'employee', 'permissions' => ['leave.view']],
         'create_absence' => ['role' => 'employee', 'permissions' => ['absences.create']],
         'approve_absence' => ['role' => 'manager', 'permissions' => ['absences.approve']],
+        // B3a (#6856) — outil écriture BC-06 LEAVE (contrat A3, #6850) :
+        // décision sur demande d'absence, permission = policy décision REST
+        // existante (même portée que approve_absence, parité AbsenceController).
+        'absence_decision' => ['role' => 'manager', 'permissions' => ['absences.approve']],
+        // B3b (#6857) — outil écriture BC-05 WORKFORCE (contrat A3, #6850) :
+        // affectation d'un shift à un employé, parité REST
+        // ScheduleController::assignEmployees (api.manager + isManager +
+        // visibleToManager pour les managers d'équipe).
+        'shift_assign' => ['role' => 'manager', 'permissions' => ['schedules.assign']],
     ],
 
     // BC-23-D05 (issue #6237) — permissions accordées par rôle (résolution du
@@ -159,6 +175,7 @@ return [
             'attendance.view',
             'absences.approve',
             'payroll.view',
+            'schedules.assign',
         ],
         'admin' => [
             'employees.view',
@@ -172,6 +189,7 @@ return [
             'attendance.view',
             'absences.approve',
             'payroll.view',
+            'schedules.assign',
         ],
         'super_admin' => [
             'employees.view',
@@ -185,6 +203,7 @@ return [
             'attendance.view',
             'absences.approve',
             'payroll.view',
+            'schedules.assign',
         ],
     ],
 
