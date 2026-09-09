@@ -50,3 +50,14 @@ Ce dossier contient des **prompts prêts à l'emploi** pour piloter les agents I
 - **Pas de prose :** Un prompt doit être exécutable, pas explicatif
 - **Mettre à jour cet index** à chaque ajout
 - **Mettre à jour la carte rapide** (`00_AGENT_QUICK_CARD.md`) si un nouveau prompt est ajouté
+
+## Ressources
+
+| Ressource | Usage |
+|---|---|
+| `docs/PROTOCOLES/` (P01-P07) | Corpus de protocoles — la référence des règles |
+| `docs/REFERENTIEL_PRODUIT/TERMES.md` + `MESSAGE.md` | Lexique public & message canonique (vitrine) |
+| `docs/GOUVERNANCE/REGISTRE_GARDES.md` | Catalogue des gardes CI |
+| `docs/GOUVERNANCE/RETEX_FLUX.md` | Flux de capitalisation (constat → issue → leçon) |
+| `AGENTS.md` | Guide de travail complet (à lire chaque session) |
+| `docs/GOUVERNANCE/PROTOCOLE_LOTS_MULTI_AGENTS.md` | Procédure lots multi-agents & merge sous saturation |
