@@ -64,6 +64,13 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Check i18n catalog parity (backend/web/mobile ×4 langues)
+        # Garde consolidée #7089 (RETEX L-10) : une clé ajoutée dans une seule
+        # langue casse les 3 autres publics — parité fr/en/ar/tr sur api/lang,
+        # shared/i18n/locales et les ARB de leopardo_core. Bloquant sur toute
+        # PR touchant les catalogues (déclencheurs paths ci-dessus).
+        run: bash dev-hub/tools/check-i18n-catalog-parity.sh
+
       - name: Validate shared catalogs
         run: node shared/i18n/validators/validate.js
 

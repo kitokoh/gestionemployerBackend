@@ -1216,6 +1216,22 @@ class LeopardoClient:
         """Mettre a jour une categorie (gestion principal/rh)"""
         return self.request("PUT", "/catalog/categories/{category}", **kwargs)
 
+    def get_catalog_inquiries(self, **kwargs):
+        """Lister les demandes de devis B2B du tenant (back-office)"""
+        return self.request("GET", "/catalog/inquiries", **kwargs)
+
+    def delete_catalog_inquiries_by_inquiry(self, **kwargs):
+        """Effacer une demande de devis (droit RGPD, canal tenant)"""
+        return self.request("DELETE", "/catalog/inquiries/{inquiry}", **kwargs)
+
+    def patch_catalog_inquiries_by_inquiry_status(self, **kwargs):
+        """Transition de statut d'une demande de devis (back-office)"""
+        return self.request("PATCH", "/catalog/inquiries/{inquiry}/status", **kwargs)
+
+    def get_catalog_inquiries_export(self, **kwargs):
+        """Exporter les demandes de devis B2B en CSV (back-office)"""
+        return self.request("GET", "/catalog/inquiries/export", **kwargs)
+
     def get_catalog_products(self, **kwargs):
         """Lister les produits du catalogue (membres du tenant)"""
         return self.request("GET", "/catalog/products", **kwargs)
@@ -3119,6 +3135,18 @@ class LeopardoClient:
     def post_public_careers_by_companyslug_jobs_by_jobposting_apply(self, **kwargs):
         """Postuler à une offre publique (anti-doublon par email, #3860)"""
         return self.request("POST", "/public/careers/{companySlug}/jobs/{jobPosting}/apply", **kwargs)
+
+    def get_public_catalog_by_companyslug(self, **kwargs):
+        """Catalogue public d'un tenant (categories + produits publies, sans auth)"""
+        return self.request("GET", "/public/catalog/{companySlug}", **kwargs)
+
+    def post_public_catalog_by_companyslug_inquiries(self, **kwargs):
+        """Demander un devis B2B (formulaire public, sans auth)"""
+        return self.request("POST", "/public/catalog/{companySlug}/inquiries", **kwargs)
+
+    def get_public_catalog_by_companyslug_products_by_productslug(self, **kwargs):
+        """Fiche publique d'un produit publie (sans auth)"""
+        return self.request("GET", "/public/catalog/{companySlug}/products/{productSlug}", **kwargs)
 
     def post_push_notifications_send(self, **kwargs):
         """Envoyer une notification push de test a un employe"""

@@ -7,6 +7,7 @@ namespace App\Modules\Catalog\Interfaces\Api\V1\Controllers;
 use App\Core\Auth\Domain\Models\Employee;
 use App\Http\Controllers\Controller;
 use App\Modules\Catalog\Domain\Models\CatalogCategory;
+use App\Modules\Catalog\Domain\Support\CatalogPublicCache;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\StoreCatalogCategoryRequest;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\UpdateCatalogCategoryRequest;
 use Illuminate\Http\JsonResponse;
@@ -70,6 +71,8 @@ class CatalogCategoryController extends Controller
             'position' => $request->integer('position', 0),
         ]);
 
+        CatalogPublicCache::forgetCompany((string) $actor->company_id);
+
         return response()->json(['data' => $this->payload($category->refresh())], 201);
     }
 
@@ -98,6 +101,8 @@ class CatalogCategoryController extends Controller
 
         $this->authorize('update', $category);
 
+        CatalogPublicCache::forgetCompany((string) $actor->company_id);
+
         $category->update([
             'name' => $request->input('name'),
             'slug' => $this->uniqueSlug(
@@ -123,6 +128,7 @@ class CatalogCategoryController extends Controller
 
         $this->authorize('delete', $category);
 
+        CatalogPublicCache::forgetCompany((string) $actor->company_id);
         $category->delete();
 
         return response()->json(['data' => null], 200);
