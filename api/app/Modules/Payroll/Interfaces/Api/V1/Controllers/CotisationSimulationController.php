@@ -18,28 +18,28 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 /**
- * Simulation de cotisations sociales et d'impôt sur le revenu.
+ * Simulation de cotisations sociales et d'impot sur le revenu.
  *
- * Issue #1782 : ce contrôleur ne duplique PLUS aucune table de taux.
- * La source de vérité unique est le moteur de paie
- * (`PayrollCalculator::getRules()` → `CountryRulesInterface`), qui résout
- * DZ, MA, TN, FR, TR, SN, CEMAC×6, CEDEAO×6 et CA avec les mêmes règles que
- * les vrais bulletins — taux, caps, barèmes et abattements compris.
+ * Issue #1782 : ce controleur ne duplique PLUS aucune table de taux.
+ * La source de verite unique est le moteur de paie
+ * (`PayrollCalculator::getRules()` → `CountryRulesInterface`), qui resout
+ * DZ, MA, TN, FR, TR, SN, CEMAC×6, CEDEAO×6 et CA avec les memes regles que
+ * les vrais bulletins - taux, caps, baremes et abattements compris.
  *
  * Issue #1869 : la simulation et le bulletin passent par le MÊME noyau de
  * calcul (`PayrollCalculator::computeNetBreakdown()`), ce qui garantit des
- * résultats identiques pour un même brut et un même contexte de règles.
- * La réponse expose :
- *   - au niveau racine, les champs historiques (rétro-compatibles) ;
+ * resultats identiques pour un meme brut et un meme contexte de regles.
+ * La reponse expose :
+ *   - au niveau racine, les champs historiques (retro-compatibles) ;
  *   - sous `contract`, le contrat complet et explicable (pays, devise,
- *     identifiant/version des règles, période, politique d'arrondi,
+ *     identifiant/version des regles, periode, politique d'arrondi,
  *     bracket_tax, retenues totales…) — docs/payroll/CALCULATION_CONTRACT.md.
  *
  * Couche Application (ADR-0020, lot 6 — #6968) : le cas d'usage nommable
- * vit dans `SimulateCotisations` ; ce contrôleur ne garde que l'interface
+ * vit dans `SimulateCotisations` ; ce controleur ne garde que l'interface
  * HTTP — autorisation (manager principal/comptable), validation,
- * corrélation #1874, audit HTTP de l'acceptation « placeholder » (#1872),
- * présentation du contrat et enveloppe de réponse.
+ * corrélation #1874, audit HTTP de l'acceptation  placeholder  (#1872),
+ * presentation du contrat et enveloppe de reponse.
  */
 class CotisationSimulationController extends Controller
 {
@@ -60,11 +60,11 @@ class CotisationSimulationController extends Controller
 
         $validated = $request->validate([
             'gross_salary' => 'required|numeric|min:0',
-            // #1951 : contrat partagé du moteur (plus de liste in: hardcodée).
+            // #1951 : contrat partage du moteur (plus de liste in: hardcodee).
             'country_code' => ['required', 'string', Rule::in($this->payrollCalculator->rulesResolver()->supportedCountryCodes())],
             'rules_period' => ['nullable', 'date'],
-            // Issue #1872 — une règle « placeholder » (aucune valeur légale
-            // implémentée) exige une confirmation explicite.
+            // Issue #1872 - une regle  placeholder  (aucune valeur legale
+            // implementee) exige une confirmation explicite.
             'acknowledge_placeholder' => ['nullable', 'boolean'],
         ]);
 
@@ -75,16 +75,16 @@ class CotisationSimulationController extends Controller
         $rulesPeriod = $rulesPeriodValue !== null ? Carbon::parse($rulesPeriodValue) : null;
         $acknowledged = $request->boolean('acknowledge_placeholder');
 
-        // Issue #1874 — identifiant de corrélation de la requête (logs ↔
-        // réponse ↔ audit) : X-Correlation-ID / X-Request-Id header (repli
-        // UUID frais), propagé aux logs et à la réponse (RequestIdMiddleware).
+        // Issue #1874 - identifiant de correlation de la requete (logs ↔
+        // reponse ↔ audit) : X-Correlation-ID / X-Request-Id header (repli
+        // UUID frais), propage aux logs et a la reponse (RequestIdMiddleware).
         $correlationId = correlation_id();
         Log::withContext(['correlation_id' => $correlationId]);
 
         $companyId = (string) $actor->company_id;
 
-        // Cas d'usage nommable (ADR-0020, lot 6 #6968) — résolution des
-        // règles tenant+période (#1924), garde placeholder (#1872 → 422),
+        // Cas d'usage nommable (ADR-0020, lot 6 #6968) - resolution des
+        // regles tenant+periode (#1924), garde placeholder (#1872 → 422),
         // ventilation salarial/patronal et audit dans SimulateCotisations.
         try {
             $result = $this->simulateCotisations->execute(
@@ -104,9 +104,9 @@ class CotisationSimulationController extends Controller
             ], 422);
         }
 
-        // Issue #1872 — l'acceptation d'une règle « placeholder » est
-        // AUDITÉE (tenant, pays, acteur, navigateur) — jamais de secrets ni
-        // de données biométriques.
+        // Issue #1872 - l'acceptation d'une regle  placeholder  est
+        // AUDITEE (tenant, pays, acteur, navigateur) - jamais de secrets ni
+        // de donnees biometriques.
         if ($result['rules_meta']['confidence'] === 'placeholder' && $acknowledged) {
             AuditLog::create([
                 'company_id' => $actor->company_id,
@@ -127,9 +127,9 @@ class CotisationSimulationController extends Controller
 
         return response()->json([
             'data' => [
-                // Issue #1874 — corrélation requête ↔ logs ↔ audit.
+                // Issue #1874 - correlation requete ↔ logs ↔ audit.
                 'correlation_id' => $correlationId,
-                // ── Champs historiques (rétro-compatibles) ───────────────────
+                // ── Champs historiques (retro-compatibles) ───────────────────
                 'country_code' => $result['country_code'],
                 'gross_salary' => $result['gross'],
                 'employee_contributions' => $result['employee_contributions'],
@@ -141,12 +141,12 @@ class CotisationSimulationController extends Controller
                 'bracket_tax' => $result['bracket_tax'],
                 'total_deductions' => $result['total_deductions'],
                 'net_before_tax' => $result['net_before_tax'],
-                // Net réel = brut − retenues totales (issue #1782 + #1869).
+                // Net reel = brut − retenues totales (issue #1782 + #1869).
                 'net_salary' => $result['net_salary'],
                 'total_cost_employer' => $result['total_cost_employer'],
                 // ── Contrat complet et explicable (issue #1869) ──────────────
-                // Le contrat reflète les overrides entreprise et la période
-                // effective, comme le bulletin réel.
+                // Le contrat reflete les overrides entreprise et la periode
+                // effective, comme le bulletin reel.
                 'contract' => $this->presenter->present(
                     $result['country_code'],
                     $result['gross'],

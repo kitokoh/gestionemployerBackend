@@ -16,22 +16,22 @@ use ReflectionClass;
 use Throwable;
 
 /**
- * Cas d'usage : simulation de cotisations sociales et d'impôt sur le revenu
- * (#1782) — mêmes règles que le moteur de paie (`PayrollCalculator` →
- * `CountryRulesInterface`, résolution tenant + période effective, #1924),
- * aucun tableau de taux dupliqué.
+ * Cas d'usage : simulation de cotisations sociales et d'impot sur le revenu
+ * (#1782) - memes regles que le moteur de paie (`PayrollCalculator` →
+ * `CountryRulesInterface`, resolution tenant + periode effective, #1924),
+ * aucun tableau de taux duplique.
  *
- * Orchestration pure et nommable (ADR-0020, lot 6 — #6968) : résolution des
- * règles pays (échecs audités), garde « placeholder » (#1872/#5623 — l'Action
+ * Orchestration pure et nommable (ADR-0020, lot 6 - #6968) : resolution des
+ * regles pays (echecs audites), garde  placeholder  (#1872/#5623 - l'Action
  * lève `PayrollPlaceholderAcknowledgementRequiredException`, l'interface la
- * rend en 422), ventilation salarial/patronal des contributions (mêmes règles
+ * rend en 422), ventilation salarial/patronal des contributions (memes regles
  * d'assiette/tranche/plafond que le moteur, #2220), calcul par le pipeline
  * unique des bulletins (`computeNetBreakdown`, #1869) et audit de la
  * simulation (résultats agrégés uniquement, #1874).
  *
- * L'interface (contrôleur) conserve l'autorisation (manager principal/
+ * L'interface (controleur) conserve l'autorisation (manager principal/
  * comptable), la validation, l'audit HTTP de l'acceptation placeholder et
- * l'enveloppe de réponse (contrat `PayrollCalculationPresenter` compris).
+ * l'enveloppe de reponse (contrat `PayrollCalculationPresenter` compris).
  *
  * @return array{
  *     gross: float,
@@ -83,26 +83,26 @@ class SimulateCotisations
         bool $acknowledgePlaceholder,
         string $correlationId,
     ): array {
-        // Issue #1924/#1871 — le tenant et la période effective sont transmis
-        // afin que les overrides entreprise et les règles historiques soient
-        // identiques à ceux appliqués par un bulletin réel.
+        // Issue #1924/#1871 - le tenant et la periode effective sont transmis
+        // afin que les overrides entreprise et les regles historiques soient
+        // identiques a ceux appliques par un bulletin reel.
         $rules = $this->resolveRules($correlationId, $companyId, $countryCode, $gross, $rulesPeriod);
 
-        // Issue #1872 — les règles « placeholder » (BJ/TG/NE/CF/TD/GQ : aucune
-        // valeur légale sourcée) ne peuvent pas alimenter une simulation sans
+        // Issue #1872 - les regles  placeholder  (BJ/TG/NE/CF/TD/GQ : aucune
+        // valeur legale sourcee) ne peuvent pas alimenter une simulation sans
         // confirmation explicite ; l'acceptation est AUDITÉE côté interface.
         if ($rules->confidenceLevel() === 'placeholder' && ! $acknowledgePlaceholder) {
             throw new PayrollPlaceholderAcknowledgementRequiredException($countryCode);
         }
 
-        // Issue #1869 — mêmes appels métier que PayrollCalculator::calculateSlip().
+        // Issue #1869 - memes appels metier que PayrollCalculator::calculateSlip().
         $breakdown = $this->payrollCalculator->computeNetBreakdown($gross, $rules);
         $social = $breakdown['social'];
 
         $employeeContributions = [];
         $employerContributions = [];
         foreach ($rules->socialContributions() as $contribution) {
-            // Issue #2220 — la base suit la VRAIE règle du moteur :
+            // Issue #2220 - la base suit la VRAIE regle du moteur :
             //  1. assiette_rate (ex. CSG/CRDS FR sur 98,25 % du brut) ;
             //  2. tranche floor/ceiling (ex. IPRES T2 SN 432 001–2 160 000) ;
             //  3. cap simple (plafond classique) ;
@@ -134,7 +134,7 @@ class SimulateCotisations
             }
         }
 
-        // Issue #1874 — audit de la simulation (résultats agrégés uniquement,
+        // Issue #1874 - audit de la simulation (resultats agreges uniquement,
         // jamais de salaires individuels ni de secrets).
         $this->auditRecorder->recordSimulation(
             $correlationId,
@@ -159,8 +159,8 @@ class SimulateCotisations
         return [
             'gross' => $gross,
             'country_code' => $countryCode,
-            // Consommé par l'interface pour l'audit HTTP de l'acceptation
-            // placeholder (jamais exposé dans la réponse).
+            // Consomme par l'interface pour l'audit HTTP de l'acceptation
+            // placeholder (jamais expose dans la reponse).
             'rules_meta' => [
                 'short_name' => (new ReflectionClass($rules))->getShortName(),
                 'confidence' => $rules->confidenceLevel(),
@@ -173,17 +173,17 @@ class SimulateCotisations
             'income_tax' => $breakdown['income_tax'],
             'bracket_tax' => $breakdown['bracket_tax'],
             'total_deductions' => round($breakdown['base_deductions'], 2),
-            // Rétro-compatible : brut − cotisations salariales (sans impôt).
+            // Retro-compatible : brut − cotisations salariales (sans impot).
             'net_before_tax' => round($gross - $social['employee'], 2),
-            // Net réel = brut − retenues totales (issue #1782 + #1869).
+            // Net reel = brut − retenues totales (issue #1782 + #1869).
             'net_salary' => $breakdown['net_salary'],
             'total_cost_employer' => $breakdown['total_cost'],
         ];
     }
 
     /**
-     * Résout les règles pays pour la simulation ; toute erreur de résolution
-     * est tracée dans l'audit (rule_missing / validation_error /
+     * Resout les regles pays pour la simulation ; toute erreur de resolution
+     * est tracee dans l'audit (rule_missing / validation_error /
      * provider_error) puis relancée — la réponse HTTP reste inchangée.
      */
     private function resolveRules(
