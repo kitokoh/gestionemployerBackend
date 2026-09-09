@@ -1244,6 +1244,18 @@ class LeopardoClient:
         """Depublier un produit (statut draft)"""
         return self.request("POST", "/catalog/products/{product}/unpublish", **kwargs)
 
+    def get_catalog_quotes(self, **kwargs):
+        """Lister les demandes de devis B2B (back-office tenant)"""
+        return self.request("GET", "/catalog/quotes", **kwargs)
+
+    def patch_catalog_quotes_by_quote(self, **kwargs):
+        """Mettre a jour une demande (transition de statut + notes internes)"""
+        return self.request("PATCH", "/catalog/quotes/{quote}", **kwargs)
+
+    def get_catalog_quotes_export(self, **kwargs):
+        """Export CSV des demandes de devis B2B"""
+        return self.request("GET", "/catalog/quotes/export", **kwargs)
+
     def post_client_events(self, **kwargs):
         """Persister un evenement UX client tenant-scope"""
         return self.request("POST", "/client-events", **kwargs)

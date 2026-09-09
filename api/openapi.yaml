@@ -26940,6 +26940,82 @@ paths:
           $ref: '#/components/responses/Error403'
         '404':
           $ref: '#/components/responses/Error404'
+  /catalog/quotes:
+    get:
+      tags:
+      - Catalog
+      summary: Lister les demandes de devis B2B (back-office tenant)
+      description: Back-office des demandes recues sur le catalogue public (#6885). Acces responsable tenant (principal/rh). Filtres statut + recherche.
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [new, contacted, quote_sent, closed, lost]
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Liste paginee des demandes
+        '403':
+          $ref: '#/components/responses/Error403'
+  /catalog/quotes/export:
+    get:
+      tags:
+      - Catalog
+      summary: Export CSV des demandes de devis B2B
+      description: Export CSV (responsable tenant) des demandes du tenant — reference, statut, produit, acheteur, consentement. #6885.
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Fichier CSV (attachment)
+        '403':
+          $ref: '#/components/responses/Error403'
+  /catalog/quotes/{quote}:
+    patch:
+      tags:
+      - Catalog
+      summary: Mettre a jour une demande (transition de statut + notes internes)
+      description: Transition bornee par le workflow new|contacted|quote_sent|closed|lost (422 hors transition) + notes internes. Isolation tenant (404).
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: quote
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [new, contacted, quote_sent, closed, lost]
+                internal_notes:
+                  type: string
+      responses:
+        '200':
+          description: Demande mise a jour
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+
   /catalog/products:
     get:
       tags:

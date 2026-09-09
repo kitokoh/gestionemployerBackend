@@ -193,3 +193,4 @@ Quand un domaine gagne une feature significative, ajouter:
 | Catalog B2B API | docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md | Tests - Leopardo RH | tests/Feature/Catalog/CatalogApiTest.php | backend-tests |
 | Catalog B2B public | docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md | Tests - Leopardo RH | tests/Feature/Catalog/CatalogPublicTest.php | backend-tests |
 | Catalog B2B lead public | docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md | Tests - Leopardo RH | tests/Feature/Catalog/CatalogQuoteLeadTest.php | backend-tests |
+| Catalog B2B back-office | docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md | Tests - Leopardo RH | tests/Feature/Catalog/CatalogQuoteBackofficeTest.php | backend-tests |

@@ -19,6 +19,7 @@
 
 use App\Modules\Catalog\Interfaces\Api\V1\Controllers\CatalogCategoryController;
 use App\Modules\Catalog\Interfaces\Api\V1\Controllers\CatalogProductController;
+use App\Modules\Catalog\Interfaces\Api\V1\Controllers\CatalogQuoteBackofficeController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['throttle:api', 'auth:sanctum', 'token.refresh', 'tenant', 'throttle:api-plan', 'module.catalog'])
@@ -39,4 +40,9 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'token.refresh', 'tenant', 't
         Route::delete('/products/{product}', [CatalogProductController::class, 'destroy'])->whereNumber('product');
         Route::post('/products/{product}/publish', [CatalogProductController::class, 'publish'])->whereNumber('product');
         Route::post('/products/{product}/unpublish', [CatalogProductController::class, 'unpublish'])->whereNumber('product');
+
+        // #6885 (C-BACKOFFICE) — demandes de devis B2B : liste/statuts/export.
+        Route::get('/quotes', [CatalogQuoteBackofficeController::class, 'index']);
+        Route::get('/quotes/export', [CatalogQuoteBackofficeController::class, 'export']);
+        Route::patch('/quotes/{quote}', [CatalogQuoteBackofficeController::class, 'update'])->whereNumber('quote');
     });

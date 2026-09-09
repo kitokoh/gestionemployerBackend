@@ -11,6 +11,7 @@ use App\Core\Tenant\TenantManager;
 use App\Mail\CommunicationMail;
 use App\Modules\Catalog\Domain\Enums\CatalogProductStatus;
 use App\Modules\Catalog\Domain\Models\CatalogProduct;
+use App\Modules\Catalog\Domain\Models\CatalogQuote;
 use App\Modules\Catalog\Domain\Support\CatalogEvents;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
@@ -47,6 +48,36 @@ class SubmitCatalogQuote
         }
 
         $reference = (string) Str::uuid();
+        $consentedAt = now();
+
+        // #6885 : enregistrement structuré de la demande (back-office) —
+        // table tenant du module, workflow de statuts dédié. Le lead CRM
+        // BC-11 reste l'intégration commerciale (#6884), corrélable par
+        // `reference`.
+        try {
+            $this->tenantManager->withinTenant($company, function () use ($company, $validated, $product, $reference, $consentedAt): void {
+                CatalogQuote::query()->create([
+                    'company_id' => (string) $company->id,
+                    'reference' => $reference,
+                    'product_slug' => $product->slug,
+                    'product_name' => $product->name,
+                    'quantity' => isset($validated['quantity']) ? (int) $validated['quantity'] : null,
+                    'buyer_company' => (string) $validated['buyer_company'],
+                    'contact_name' => (string) $validated['contact_name'],
+                    'email' => (string) $validated['email'],
+                    'phone' => isset($validated['phone']) && $validated['phone'] !== null ? (string) $validated['phone'] : null,
+                    'message' => isset($validated['message']) && $validated['message'] !== null ? (string) $validated['message'] : null,
+                    'status' => 'new',
+                    'consented_at' => $consentedAt,
+                ]);
+            });
+        } catch (\Throwable $e) {
+            Log::error('catalog.quote.persist_failed', [
+                'reference' => $reference,
+                'error' => $e->getMessage(),
+            ]);
+            abort(500);
+        }
 
         $payload = [
             'company_id' => (string) $company->id,
@@ -58,7 +89,7 @@ class SubmitCatalogQuote
             'email' => (string) $validated['email'],
             'phone' => isset($validated['phone']) && $validated['phone'] !== null ? (string) $validated['phone'] : null,
             'message' => isset($validated['message']) && $validated['message'] !== null ? (string) $validated['message'] : null,
-            'consented_at' => now()->toIso8601String(),
+            'consented_at' => $consentedAt->toIso8601String(),
             'reference' => $reference,
         ];
 

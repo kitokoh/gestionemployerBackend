@@ -1530,6 +1530,21 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("POST", "/catalog/products/{product}/unpublish", options);
     },
 
+    /** Lister les demandes de devis B2B (back-office tenant) */
+    getCatalogQuotes(options = {}) {
+      return request("GET", "/catalog/quotes", options);
+    },
+
+    /** Mettre a jour une demande (transition de statut + notes internes) */
+    patchCatalogQuotesByQuote(options = {}) {
+      return request("PATCH", "/catalog/quotes/{quote}", options);
+    },
+
+    /** Export CSV des demandes de devis B2B */
+    getCatalogQuotesExport(options = {}) {
+      return request("GET", "/catalog/quotes/export", options);
+    },
+
     /** Persister un evenement UX client tenant-scope */
     postClientEvents(options = {}) {
       return request("POST", "/client-events", options);

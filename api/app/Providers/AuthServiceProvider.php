@@ -14,8 +14,10 @@ use App\Modules\Cameras\Domain\Models\Camera;
 use App\Modules\Cameras\Domain\Models\CameraAccessToken;
 use App\Modules\Catalog\Domain\Models\CatalogCategory;
 use App\Modules\Catalog\Domain\Models\CatalogProduct;
+use App\Modules\Catalog\Domain\Models\CatalogQuote;
 use App\Modules\Catalog\Domain\Policies\CatalogCategoryPolicy;
 use App\Modules\Catalog\Domain\Policies\CatalogProductPolicy;
+use App\Modules\Catalog\Domain\Policies\CatalogQuotePolicy;
 use App\Modules\CRM\Domain\Models\CrmAccount;
 use App\Modules\CRM\Domain\Models\CrmImport;
 use App\Modules\CRM\Domain\Models\CrmLead;
@@ -340,6 +342,7 @@ class AuthServiceProvider extends ServiceProvider
         // — Catalog (BC-28 #6880 : socle domaine — catégories & produits B2B)
         Gate::policy(CatalogCategory::class, CatalogCategoryPolicy::class);
         Gate::policy(CatalogProduct::class, CatalogProductPolicy::class);
+        Gate::policy(CatalogQuote::class, CatalogQuotePolicy::class);
         // — Showcase (BC-27 #6865 : socle domaine — vitrine entreprise)
         Gate::policy(CompanyShowcase::class, CompanyShowcasePolicy::class);
         Gate::policy(Department::class, DepartmentPolicy::class);
