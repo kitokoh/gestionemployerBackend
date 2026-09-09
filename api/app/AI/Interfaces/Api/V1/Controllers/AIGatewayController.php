@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\AI\Interfaces\Api\V1\Controllers;
 
+use App\AI\AIAuditLogger;
 use App\AI\DTOs\AIRequest;
 use App\AI\IntentEngine;
 use App\AI\Orchestrator;
@@ -22,6 +23,7 @@ class AIGatewayController extends Controller
         private readonly Orchestrator $orchestrator,
         private readonly IntentEngine $intentEngine,
         private readonly PendingActionStore $pendingActionStore,
+        private readonly AIAuditLogger $auditLogger,
     ) {}
 
     public function chat(Request $request): JsonResponse
@@ -110,8 +112,24 @@ class AIGatewayController extends Controller
             (int) $user->id,
         );
 
-        if (isset($result['error'])) {
-            return response()->json(['error' => $result['error'], 'data' => $result], 422);
+        // A5 (#6852) : l'exécution confirmée est journalisée — la chaîne se
+        // relie à la proposition (même pending_action_id, posé au chat).
+        $error = $result['error'] ?? null;
+        $this->auditLogger->logToolExecution(
+            companyId: (string) $user->company_id,
+            userId: (int) $user->id,
+            conversationId: null,
+            pendingActionId: $pendingActionId,
+            toolName: (string) $pending['tool'],
+            toolInput: $pending['arguments'],
+            stage: $error === null ? 'executed' : 'error',
+            success: $error === null,
+            resultSummary: $error === null ? (json_encode($result, JSON_UNESCAPED_UNICODE) ?: null) : null,
+            error: is_string($error) ? $error : null,
+        );
+
+        if ($error !== null) {
+            return response()->json(['error' => $error, 'data' => $result], 422);
         }
 
         return response()->json([
@@ -137,6 +155,20 @@ class AIGatewayController extends Controller
         if ($pending === null) {
             abort(404, 'PENDING_ACTION_NOT_FOUND');
         }
+
+        // A5 (#6852) : un refus humain est tracé (stage: rejected) — même
+        // pending_action_id que la proposition issue du chat.
+        $this->auditLogger->logToolExecution(
+            companyId: (string) $user->company_id,
+            userId: (int) $user->id,
+            conversationId: null,
+            pendingActionId: $pendingActionId,
+            toolName: (string) $pending['tool'],
+            toolInput: $pending['arguments'],
+            stage: 'rejected',
+            success: true,
+            resultSummary: (string) __('errors.AI_ACTION_REJECTED'),
+        );
 
         return response()->json([
             'data' => [
