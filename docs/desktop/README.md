@@ -14,7 +14,7 @@
 | `leopardo_hr` | RH dédié | ✅ windows/macos/linux | ❌ aucune |
 | `leopardo_marketing` | Marketing/communication | ✅ windows/macos/linux | ❌ aucune |
 | `leopardo_platform_admin` | Super-admin plateforme | ✅ windows/macos/linux | ❌ aucune |
-| `leopardo_accounting` | Comptabilité | ❌ (Android only) | ❌ |
+| `leopardo_accounting` | Comptabilité | ✅ windows/macos (lot 1 — PR #7095, issue #7106) | 🚧 pilote (lot 2 — branche `feat/7056-desktop-tooling`) |
 | `leopardo_travel_agent` | Agent/vendeur Travel | ❌ | ❌ |
 
 Aucun script melos `build:windows`/`build:macos`, aucun workflow desktop, aucune
@@ -28,7 +28,7 @@ signature/canal : **tout est à créer**. La CI mobile actuelle (`mobile-apps-ci
 
 | Tranche | BC | App | Cas d'usage | OS cibles | Décision PM |
 |---|---|---|---|---|---|
-| Comptabilité bureau | BC-08 ACCOUNTING | `leopardo_accounting` | facturation/saisie intensive, impayés | Windows (+macOS ?) | ⏳ requise |
+| Comptabilité bureau | BC-08 ACCOUNTING | `leopardo_accounting` | facturation/saisie intensive, impayés | Windows + macOS | **GO** — #7055 (PM, 2026-09-09) |
 | Kiosk / poste fixe (pointage) | BC-05 WORKFORCE / BC-25 RESTAURANT | `leopardo_employee` | badgeuse, offline, écran fixe | Windows | ⏳ requise |
 | Super-admin bureau | BC-01 PLATFORM | `leopardo_platform_admin` | pilotage plateforme multi-écrans | Windows/macOS | ⏳ requise |
 
