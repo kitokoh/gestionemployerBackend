@@ -11,15 +11,15 @@ use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationService;
 use Illuminate\Database\ConnectionInterface;
 
 /**
- * Cas d'usage : déclaration trimestrielle CNSS (MA) — une ligne par employé
- * actif du trimestre (n° CNSS, identité, brut, jours travaillés déduits des
- * logs de présence), agrégée depuis les bulletins (route …/generate-cnss-ma).
+ * Cas d'usage : declaration trimestrielle CNSS (MA) - une ligne par employe
+ * actif du trimestre (n° CNSS, identite, brut, jours travailles deduits des
+ * logs de presence), agregee depuis les bulletins (route .../generate-cnss-ma).
  *
- * Orchestration pure et nommable (ADR-0020, lot 3b déclarations — #6968) :
- * la collecte (employés actifs, mois du trimestre, données de paie, jours de
- * présence) et le formatage restent dans `SocialDeclarationService` /
+ * Orchestration pure et nommable (ADR-0020, lot 3b declarations - #6968) :
+ * la collecte (employes actifs, mois du trimestre, donnees de paie, jours de
+ * presence) et le formatage restent dans `SocialDeclarationService` /
  * `SocialDeclarationGenerator` (Infrastructure). L'Action retourne le contenu
- * prêt à servir ; l'interface (contrôleur) conserve l'autorisation, la
+ * prêt à servir ; l'interface (controleur) conserve l'autorisation, la
  * validation et l'enveloppe HTTP.
  *
  * @return array{content: string, employee_count: int, filename: string}

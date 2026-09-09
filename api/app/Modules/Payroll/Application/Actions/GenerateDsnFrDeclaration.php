@@ -11,15 +11,15 @@ use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationService;
 use DateTimeInterface;
 
 /**
- * Cas d'usage : DSN mensuelle (FR) — une ligne par employé actif du mois
- * (NIR, identité, date de naissance, brut/net/net imposable, heures,
- * contrat), agrégée depuis les bulletins (route …/generate-dsn-fr).
+ * Cas d'usage : DSN mensuelle (FR) - une ligne par employe actif du mois
+ * (NIR, identite, date de naissance, brut/net/net imposable, heures,
+ * contrat), agregee depuis les bulletins (route .../generate-dsn-fr).
  *
- * Orchestration pure et nommable (ADR-0020, lot 3b déclarations — #6968) :
- * la collecte (employés actifs, données de paie mensuelles) et le formatage
+ * Orchestration pure et nommable (ADR-0020, lot 3b declarations - #6968) :
+ * la collecte (employes actifs, donnees de paie mensuelles) et le formatage
  * restent dans `SocialDeclarationService` / `SocialDeclarationGenerator`
  * (Infrastructure). L'Action retourne le contenu prêt à servir ; l'interface
- * (contrôleur) conserve l'autorisation, la validation et l'enveloppe HTTP.
+ * (controleur) conserve l'autorisation, la validation et l'enveloppe HTTP.
  *
  * @return array{content: string, employee_count: int, filename: string}
  */
