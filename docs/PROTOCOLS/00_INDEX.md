@@ -118,8 +118,6 @@ par le fondateur lors des prochains rituels :
   choix de la première tranche verticale desktop pilote.
 - **DO-C (protocole 07 §8)** — arbitrage budgétaire Render/Neon payants (workers prod,
   scheduler, staging #1485) ; solde des dettes de nommage (APP_ENV sur le volet dev).
-- **DO-D (transverse)** — création des labels `tech-debt`/`lecon` (protocole 04 §6) ;
-  re-certification produit post-corrections (protocole 01) ; alignment des apps
-  accounting/travel_agent sur le core (protocole 05).
+- **DO-D (transverse)** — adoption du label `tech-debt` (déjà présent sur le dépôt, vérifié 2026-09-09) pour les issues REX + ajustement de sa description si besoin (protocole 04 §6) ; re-certification produit post-corrections (protocole 01) ; alignement des apps accounting/travel_agent sur le core (protocole 05).
 
 Chaque décision tranchée met à jour le protocole concerné (PR) et archive la ligne ici.

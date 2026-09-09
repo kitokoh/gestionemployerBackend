@@ -1,7 +1,7 @@
 name: "🔁 Retour d'expérience (REX)"
 description: Capitaliser une leçon terrain (temps perdu, optimisation tentée, dette découverte, erreur évitable) en issue exploitable — PROTOCOLE 04.
 title: "[REX]: "
-labels: []
+labels: ["tech-debt"]
 body:
   - type: markdown
     attributes:

@@ -140,8 +140,8 @@ Auto-test de l'auteur avant de lâcher l'issue : « un agent qui n'a jamais trav
 
 **Décisions** :
 
-1. Créer le label **`tech-debt`** (recommandé : catégorie de travail standard pour dette découverte et re-travail évitable) :
-   `gh label create tech-debt --description "Retour d'experience / dette decouverte — protocole 04" --color B60205`
+1. Utiliser le label **`tech-debt`** — il existe déjà sur le dépôt (vérifié 2026-09-09) ; s'il n'a pas de description, l'ajuster :
+   `gh label edit tech-debt --description "Retour d'experience / dette decouverte — protocole 04" --color B60205`
    Alternative acceptable si l'équipe préfère marquer la source : **`lecon`**. Un seul des deux suffit au tri ; ne pas les empiler.
 2. Labels systématiques d'une issue REX : `BC-XX` (registre), `tech-debt` (ou `lecon`), priorité, et `Agent-Ready` si le format §5 est complet.
 3. Priorité : `P1` seulement pour un re-travail récurrent avéré ou un risque de parcours pilote ; `P2` pour la dette d'hygiène ; les urgences passent par les flux bug/security/pilot-blocker, jamais par `tech-debt`.
