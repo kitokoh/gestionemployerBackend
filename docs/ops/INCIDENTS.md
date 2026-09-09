@@ -151,3 +151,20 @@ Détails : `docs/ALERTS_CONFIGURATION.md` (v2.0, config réelle).
 - Backup : `docs/GESTION_PROJET/RUNBOOK_BACKUP_RESTORE.md` · Sécurité : purge #1472/#1601
 
 *À mettre à jour à chaque incident P0/P1.*
+
+---
+
+## 10. Incident 2026-09-08 — tier dev Render : env incomplète (DB_URL absente), deploys en échec silencieux (issues #6973/#6957/#6958/#6681)
+
+**Symptôme** : le service Render dev (`gestionemployerbackend`, srv-d7dro8u7r5hc73a395pg) ne reçoit plus `main` — les hooks Render « réussissent » mais aucune nouvelle instance ne devient live ; l'ancien conteneur (SHA `623ed31`) continue de servir (API ok, couche web cassée). Les deploys échouent en `update_failed` après ~2 min 30, même en re-déployant le commit connu-bon.
+
+**Cause racine (constat API, 2026-09-08 ~17:00Z)** : l'env du service ne contient plus les variables `DB_*` (ni `DB_URL` ni `REDIS_URL`) — l'ancien conteneur tourne avec l'env capturée à son déploiement ; tout NOUVEAU conteneur boote puis `/api/v1/health` renvoie 503 (check DB KO, pas de `DB_URL`) → Render rollback. Cause secondaire corrigée : `healthCheckPath` du service était VIDE (Render sondait `/` → 500 chiffrement) — corrigé via API vers `/api/v1/health`.
+
+**Procédure de récupération (vérifiée via API Render/Neon)** :
+1. Lire l'env actuelle : `GET /v1/services/srv-d7dro8u7r5hc73a395pg/env-vars` (les valeurs sont renvoyées en clair avec le token propriétaire).
+2. ⚠️ **Piège** : `PUT /v1/services/{id}/env-vars` **remplace TOUTE** la liste (incident #6921 du 2026-09-06 : un PUT a vidé l'env). Toujours : GET complet → merger les ajouts → PUT de la liste complète → GET de contrôle.
+3. Restaurer au minimum `DB_URL` = chaîne Neon DEV `postgresql://<user>:<password>@ep-<branch>.eu-west-2.aws.neon.tech/neondb?sslmode=require` (hôte DIRECT ; le pooler `-pooler` aborte les migrations DDL, leçons #6916/#6924 ; `docker-entrypoint.sh` dérive `DB_MIGRATE_URL` de `DB_URL`). Source : console Neon (console.neon.tech → projet dev → Connection details) ou API `https://api.neon.tech/v2/projects` (⚠️ `api.neon.tech` n'est PAS résoluble DNS depuis certains sandbox — utiliser console.neon.tech ou un autre environnement si le token napi_ répond pas).
+4. Déclencher un deploy du HEAD main : `workflow_dispatch` sur `deploy-main.yml` avec `force_deploy=true` (input ajouté par #7000) — le gate vérifie désormais qu'une instance NOUVELLE (version ≠ baseline, #6984) sert le SHA attendu.
+5. Vérifier : `GET https://gestionemployerbackend.onrender.com/api/v1/health` → `version` = SHA court du HEAD main ; `/api/v1/demo-users` → 200 ; couche web → `checks.web.ok=true`.
+
+**Statut** : en attente de la valeur `DB_URL` (action fondateur/agent avec accès Neon fonctionnel). Le redéploiement automatique (catchup horaire `deploy-main-catchup.yml`) fera le reste dès l'env restaurée.
