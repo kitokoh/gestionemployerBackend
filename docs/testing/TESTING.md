@@ -9,7 +9,7 @@ Leopardo RH maintains high reliability through a comprehensive multi-layered tes
 | **Unit** | Pest PHP | 80%+ | Logic & Calculations |
 | **Feature** | Pest PHP | 100% Endpoints | API Contracts & RBAC |
 | **E2E** | Playwright | Critical Flows | Browser Integration |
-| **Mobile** | Flutter Test | Core Screens | Mobile Experience |
+| **Mobile** | Flutter Test (melos, `front/mobile_apps/*`) | Core Screens | Mobile Experience |
 
 ## 🚀 Running Tests
 
@@ -24,16 +24,18 @@ DB_CONNECTION=sqlite DB_DATABASE=:memory: ./vendor/bin/pest
 
 ### 2. Frontend (Web)
 ```bash
-cd web
+cd front/web
 npm run lint
 npm run test  # if applicable
 ```
 
-### 3. Mobile
+### 3. Mobile (Flutter, monorepo melos)
 ```bash
-cd mobile
-flutter test
-flutter analyze
+# Depuis la racine du monorepo (apps sous front/mobile_apps/, package partagé leopardo_core)
+melos bootstrap   # une fois, après clone
+melos run test    # tests unitaires/widgets de toutes les apps
+melos run analyze # flutter analyze sur toutes les apps
+# App ciblée : cd front/mobile_apps/leopardo_employee && flutter test
 ```
 
 ## 🛡️ Critical Scenarios
