@@ -4,6 +4,10 @@ Derniere mise a jour : 2026-09-05 (audit PM architecture — liste des apps mobi
 
 Ce fichier doit etre lu au debut de chaque nouvelle session agent. Il doit aussi etre mis a jour a chaque push ou merge vers `main`, comme le `CHANGELOG.md`, des qu'une lecon operationnelle peut eviter de perdre du temps plus tard.
 
+> Bibliothèque transversale des pièges connus (vue rapide) : `docs/GESTION_PROJET/BIBLIOTHEQUE_ERREURS.md`.
+> Toute nouvelle leçon opérationnelle = mise à jour AGENTS.md **et**, si c'est un piège
+> rejouable, une ligne dans la bibliothèque des erreurs (flux RETEX, protocole P04).
+
 > **NOUVEL AGENT ? Commence par lire `dev-hub/prompts/00_AGENT_QUICK_CARD.md` (2 min) pour une carte de reference rapide. Ce fichier AGENTS.md est le guide complet.**
 
 ## ⚡ Spec-Driven Development — Spec Kit (NOUVEAU 2026-08-14)
