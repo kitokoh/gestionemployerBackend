@@ -165,12 +165,7 @@ class EdgeDatabase extends _$EdgeDatabase {
 
   Future<String> insertAttendanceLog(LocalAttendanceLogsCompanion log) async {
     final id = await into(localAttendanceLogs).insertReturning(log);
-    await _enqueue(
-      'attendance_logs',
-      id.id,
-      'create',
-      _attendanceLogCompanionToJson(log),
-    );
+    await _enqueue('attendance_logs', id.id, 'create', log.toJson());
     return id.id;
   }
 
@@ -330,33 +325,4 @@ LazyDatabase _openConnection() {
     final file = File(p.join(dbFolder.path, 'leopardo_edge.sqlite'));
     return NativeDatabase.createInBackground(file);
   });
-}
-
-/// Sérialise un companion d'insertion en payload de sync (clés snake_case,
-/// dates ISO-8601). #6590 : l'ancien fichier commité `edge_database.g.dart`
-/// portait un `Companion.toJson()` que le codegen drift actuel ne produit
-/// plus — le payload ne doit pas dépendre d'un artefact de génération.
-Map<String, dynamic> _attendanceLogCompanionToJson(
-  LocalAttendanceLogsCompanion log,
-) {
-  return {
-    if (log.id.present) 'id': log.id.value,
-    if (log.employeeId.present) 'employee_id': log.employeeId.value,
-    if (log.companyId.present) 'company_id': log.companyId.value,
-    if (log.checkIn.present) 'check_in': log.checkIn.value.toIso8601String(),
-    if (log.checkOut.present)
-      'check_out': log.checkOut.value?.toIso8601String(),
-    if (log.method.present) 'method': log.method.value,
-    if (log.workType.present) 'work_type': log.workType.value,
-    if (log.gpsLat.present) 'gps_lat': log.gpsLat.value,
-    if (log.gpsLng.present) 'gps_lng': log.gpsLng.value,
-    if (log.status.present) 'status': log.status.value,
-    if (log.syncStatus.present) 'sync_status': log.syncStatus.value,
-    if (log.externalEventId.present)
-      'external_event_id': log.externalEventId.value,
-    if (log.createdAt.present)
-      'created_at': log.createdAt.value.toIso8601String(),
-    if (log.updatedAt.present)
-      'updated_at': log.updatedAt.value.toIso8601String(),
-  };
 }

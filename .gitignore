@@ -103,8 +103,3 @@ docs/validation/I18N_DEBT_REPORT_2026_08_09.md
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
-
-# Flutter/Dart codegen (jamais commité — régénéré en CI, cf. #6590)
-*.g.dart
-*.freezed.dart
-**/lib/l10n/generated/

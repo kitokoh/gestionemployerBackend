@@ -10,8 +10,8 @@ Index de la documentation technique et stratégique du projet.
 
 | Doc | Contenu |
 |---|---|
-| [`QUICKSTART.md`](QUICKSTART.md) | Setup local en 5 minutes (doc canonique) |
-| [`DEMARRAGE_RAPIDE.md`](DEMARRAGE_RAPIDE.md) | ⚠️ Obsolète/archivé — voir QUICKSTART.md |
+| [`QUICKSTART.md`](QUICKSTART.md) | Setup local en 5 minutes |
+| [`DEMARRAGE_RAPIDE.md`](DEMARRAGE_RAPIDE.md) | Guide de démarrage détaillé |
 | [`../DEVELOPMENT.md`](../DEVELOPMENT.md) | Conventions de développement |
 | [`MONOREPO_TOOLING.md`](MONOREPO_TOOLING.md) | Commandes melos, npm --prefix, Makefile backend |
 
@@ -99,9 +99,8 @@ Index de la documentation technique et stratégique du projet.
 | Doc | Contenu |
 |---|---|
 | [`REFERENTIEL_PRODUIT/`](REFERENTIEL_PRODUIT/) | Référentiel produit |
-| [`../PILOTAGE.md`](../PILOTAGE.md) | ⚠️ Archivé (#6698) — la gestion de projet vit dans GitHub Issues/Projects |
+| [`../PILOTAGE.md`](../PILOTAGE.md) | Pilotage projet (filières actives, source de vérité programme) |
 | [`GESTION_PROJET/`](GESTION_PROJET/) | Runbooks, audits d'écarts, supports d'exécution, réponse au cahier des charges |
-| [`PROTOCOLES/`](PROTOCOLES/) | Cadre de protocoles opérationnels P01-P07 (validation marché, onboarding, vitrine, issues/expérience, design, desktop, architecture dev/prod) — révisé chaque fin de mois |
 | [`api/README.md`](api/README.md) | Documentation API |
 
 ---
@@ -161,7 +160,7 @@ Index de la documentation technique et stratégique du projet.
 > Ne pas les modifier. **Depuis le 2026-07-26, la gestion de projet active se fait exclusivement
 > via GitHub Issues et GitHub Projects** (voir `AGENTS.md`, section « NOUVELLE MÉTHODE DE GESTION
 > DE PROJET ») — ne pas chercher de travail dans `PLAN_ACTION2/` ni y créer de nouveaux tickets.
-> La gestion de projet active se fait exclusivement via **GitHub Issues / GitHub Projects** (PILOTAGE.md archivé, #6698).
+> Consulter `PILOTAGE.md` pour les filières actives.
 
 ---
 

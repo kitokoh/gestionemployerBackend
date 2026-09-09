@@ -1,10 +1,8 @@
 # Branch Protection — main
 
-> **Mise à jour : 2026-09-09** — état vérifié via l'API GitHub (audit PM + saturation CI #6928) ;
-> le référentiel machine de la garde #2011 (`dev-hub/tools/branch-protection-canonical.json`) est
-> synchronisé sur cet état. Référence : audit ratio fix/feat (5.24 → cible ≤ 2.5), post-audit 2026-08-26.
-> Correction 2026-09-09 (issue #7096) : la liste des checks requis passe de 5 à **4** — le check
-> `Backend Coverage` n'est **pas** requis au merge (fast-path #6928) mais reste exigé à la release.
+> **Mise à jour : 2026-09-05** — état vérifié via l'API GitHub (audit PM) ; le référentiel machine
+> de la garde #2011 (`dev-hub/tools/branch-protection-canonical.json`) est synchronisé sur cet état.
+> Référence : audit ratio fix/feat (5.24 → cible ≤ 2.5), post-audit 2026-08-26.
 
 ---
 
@@ -21,23 +19,14 @@
 
 ## Checks requis (bloquants sur toute PR → main)
 
-Vérifié via l'API branche protection le **2026-09-09** : 4 contexts requis seulement.
-
 | Check | Workflow émetteur (PR) | Depuis |
 |---|---|---|
+| `Backend Coverage (PHP 8.4 + PostgreSQL 16)` | `coverage-gate.yml` | Phase 2 |
 | `PHPStan — Strict (Core/Modules/Shared, level 8)` | `architecture-check.yml` | Phase 3 |
 | `Module Structure Validator` | `architecture-check.yml` | #5584 |
 | `Frontend — ESLint + TypeScript` | `architecture-check.yml` | Phase 1 |
 | `actionlint (+ shellcheck)` | `actionlint.yml` | #2131 |
 | `Ratio fix/feat (cible ≤ 2.5)` *(signal fort, **non requis**)* | `fix-feat-ratio-guard.yml` | 2026-08-26 |
-
-> **Backend Coverage — PAS requis au merge, exigé à la release.** `Backend Coverage
-> (PHP 8.4 + PostgreSQL 16)` (`coverage-gate.yml`) a été retiré des checks requis au merge
-> lors du fast-path anti-saturation (#6928, correctifs 2026-09-08/09). Il reste **exigé par
-> `release.yml`** sur le commit taggé (liste des checks requis à la release : Backend Coverage
-> ≥ 65 % backend, ≥ 80 % Payroll via `payroll-ci.yml`). Un agent/PM ne doit donc pas croire que
-> le coverage bloque le merge (il est informatif) ni ignorer qu'il bloque la release (vrai).
-> Le job `flutter-analyze` suit le même régime (fast-path #6928, non requis au merge).
 
 ## Règles du garde ratio fix/feat
 

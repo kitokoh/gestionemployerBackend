@@ -52,9 +52,4 @@ Voir `docs/REFERENTIEL_PRODUIT/STATUTS.md` pour l'association statut ↔ couleur
 - **Jamais de couleur hardcodée** dans un écran ou une vue. Toujours passer par les tokens.
 - **Une couleur = un domaine** (L.05). Interdiction de réutiliser le vert RH pour de la finance.
 - **Contraste minimum** : le texte sur un fond doit respecter WCAG AA (ratio ≥ 4.5 pour texte normal, ≥ 3 pour texte large).
-- **Mode sombre / clair par surface** : **mobile (apps Flutter) = dark par défaut**
-  (expérience principale, décision PA2-MOB-012 — `app_theme.dart`), le light étant conservé
-  pour previews/tests ; **web & admin = light par défaut** (Tailwind). Les tokens `Dark`
-  s'appliquent au mobile et aux thèmes sombres via `Theme.of(context).brightness`. Ne pas
-  annoncer « dark partout » ni « dark optionnel » : la règle dépend de la surface
-  (aligné le 2026-09-09 sur PA2-MOB-012).
+- **Mode sombre** : le dark mode est supporté mais n'est pas le défaut. Les tokens `Dark` sont utilisés via `Theme.of(context).brightness`.

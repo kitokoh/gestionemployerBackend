@@ -1,0 +1,59 @@
+name: RETEX — Retour d'expérience
+description: Capitaliser une leçon opérationnelle (douleur, optimisation, tentative) pour qu'elle devienne une action.
+title: "RETEX: <sujet court>"
+labels: [retex]
+body:
+  - type: input
+    id: domaine
+    attributes:
+      label: Domaine / BC
+      description: BC-XX (registre bounded-context-registry.json) ou surface (CI, docs, infra, design, vitrine, desktop).
+    validations: { required: true }
+  - type: input
+    id: date
+    attributes:
+      label: Date de l'expérience
+    validations: { required: true }
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - correction
+        - optimisation
+        - dette
+        - processus
+        - design
+        - vitrine
+        - infra
+    validations: { required: true }
+  - type: textarea
+    id: symptome
+    attributes:
+      label: Ce qui s'est passé (symptôme concret)
+      description: Faits, pas jugements. Combien de temps cela a coûté ?
+    validations: { required: true }
+  - type: textarea
+    id: cause
+    attributes:
+      label: Cause racine
+      description: Pourquoi cela est arrivé ? (règle manquante, doc ambiguë, garde absente…)
+    validations: { required: true }
+  - type: input
+    id: preuve
+    attributes:
+      label: Preuve (PR / commit / issue / capture)
+      description: Lien vers l'élément qui prouve l'expérience.
+  - type: textarea
+    id: action
+    attributes:
+      label: Action recommandée
+      description: Ce qu'il faudrait faire pour que cela ne se reproduise pas (garde, doc, refactor, processus).
+    validations: { required: true }
+  - type: dropdown
+    id: prise
+    attributes:
+      label: Prise en charge
+      options:
+        - Je l'implémente moi-même (si BC confié et portée courte)
+        - À mettre au backlog (tri PM)

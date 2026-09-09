@@ -99,10 +99,7 @@ PR → merge sur main (push)
 
 ### Mobile
 - **Flutter analyze** — bloquant (no fatal errors)
-- **Coverage minimum** : non câblé en CI à ce jour — la variable `MOBILE_COVERAGE_MIN`
-  (21 % documenté) n'existe pas dans `mobile-apps-ci.yml` (constat 2026-09-09) ; état réel :
-  58 fichiers `*_test.dart` (unit/widget), 0 `integration_test`. Suivi : gate mobile à créer
-  (protocole P07, dette D7).
+- **Coverage minimum** : 21% (variable `MOBILE_COVERAGE_MIN`)
 
 ### OpenAPI
 - Validation spec contre les routes Laravel (`openapi-ci.yml`)

@@ -30,7 +30,6 @@ Ce dossier contient des **prompts prêts à l'emploi** pour piloter les agents I
 | 13 | `13_REGRESSION_GUARD.md` | Traquer les régressions et patterns interdits | Moyen |
 | 14 | `14_ONBOARDING_AGENT.md` | Onboarding d'un nouvel agent (premier prompt) | Court |
 | 15 | `15_DESIGN_AUDIT_UI.md` | Audit et refonte visuelle Premium (avec generate_image) | Long |
-| 16 | `16_FIN_DE_SESSION.md` | Contrat de sortie / rapport de fin de session (P02) | Court |
 
 ## Comment utiliser
 

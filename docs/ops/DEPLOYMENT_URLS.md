@@ -20,21 +20,6 @@
 > projet Vercel distinct à clarifier/rationaliser avec
 > `gestionemployer-backend.vercel.app` (la variable `PROD_WEB_URL` désigne
 > ce dernier comme web dev de référence).
-> Re-vérification live le **2026-09-09** : 9/9 URLs HTTP 200 (API dev/prod, web
-> dev/prod, admin dev/prod, `leopardo-resto`, `leopardo-travel-prod`, gh-pages).
-
-## Volets dev & prod (vue matricielle — registre du protocole P07)
-
-| Volet | Déclencheur | API (Render) | Web (Vercel) | Admin (Cloudflare Pages) | Base de données |
-|---|---|---|---|---|---|
-| **dev** (continu) | push `main` (`deploy-main.yml`) | `gestionemployerbackend.onrender.com` | workspace dev — `gestionemployer-backend.vercel.app` + verticales `leopardo-<v>.vercel.app` | `leo-admin.pages.dev` | Neon (projet dev) |
-| **prod** (stable) | Release taguée `vX.Y.Z` (`deploy-prod.yml`) | `leopardo-prod.onrender.com` | workspace prod — `leopardo-prod.vercel.app` + verticales `leopardo-<v>-prod.vercel.app` | `leo-admin-prod.pages.dev` | Neon (branche `production`) |
-
-Règles (P07) : 1 volet = 1 compte/workspace par fournisseur ; zéro clé prod dans le
-volet dev ; la prod ne se déploie que par tag ; la prod n'est jamais un environnement
-de test ; toute modif d'infra = même PR que le registre (`DOMAINS.md`). Détail
-verticales : `docs/ops/DOMAINS.md` (section « Surfaces verticales »). Desktop :
-aucun canal public (#3257).
 
 ## Services Render (backend)
 

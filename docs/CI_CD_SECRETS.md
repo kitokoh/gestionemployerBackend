@@ -71,7 +71,7 @@
 
 | Variable | Used by | Purpose | Default if unset |
 |---|---|---|---|
-| `BACKEND_COVERAGE_MIN` | `tests.yml`, `coverage-gate.yml` | PHPUnit statement coverage threshold (%) | `65` (`DEFAULT_BACKEND_COVERAGE_MIN` in `tests.yml` — vérifié 2026-09-09) |
+| `BACKEND_COVERAGE_MIN` | `tests.yml`, `coverage-gate.yml` | PHPUnit statement coverage threshold (%) | `60` (`DEFAULT_BACKEND_COVERAGE_MIN` in `tests.yml`) |
 | `CI_REPORT_TO` | `tests.yml` | Recipient address for the CI report email | `nouractu.com@gmail.com` |
 | `CI_REPORT_FROM` | `tests.yml` | From address for the CI report email | `CI_SMTP_USERNAME` |
 | `ENABLE_CODEQL_PR` | `codeql.yml` | `"true"` runs the CodeQL (Actions) job on `pull_request` events too | Off (schedule/push only) |

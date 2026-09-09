@@ -4,7 +4,7 @@
 > source de vérité documentaire, synchronisée avec le référentiel machine de la
 > garde #2011 (`dev-hub/tools/branch-protection-canonical.json`).
 
-## Protection réelle de `main` (vérifiée via API le 2026-09-09)
+## Protection réelle de `main` (vérifiée via API le 2026-09-05)
 
 - `enforce_admins` : activé (aucun push direct, même admin)
 - Branche à jour avant merge (`strict`) : activé
@@ -12,14 +12,11 @@
 - `allow_force_pushes` / `allow_deletions` : désactivés
 - Merge Queue GitHub : non configurée (0 ruleset) — à activer si > 15 PRs/jour
 
-### Les 4 required checks (bloquent le merge) — corrigé 2026-09-09 (#7096)
-
-> Depuis le fast-path anti-saturation #6928 (2026-09-08/09), **Backend Coverage n'est plus
-> requis au merge** — il reste exigé par `release.yml` à la release (≥ 65 % backend,
-> ≥ 80 % Payroll). Cf. le fichier racine `BRANCH_PROTECTION_REQUIRED.md` pour le détail.
+### Les 5 required checks (bloquent le merge)
 
 | Check requis | Workflow émetteur |
 |---|---|
+| `Backend Coverage (PHP 8.4 + PostgreSQL 16)` | `coverage-gate.yml` |
 | `PHPStan — Strict (Core/Modules/Shared, level 8)` | `architecture-check.yml` |
 | `Module Structure Validator` | `architecture-check.yml` |
 | `Frontend — ESLint + TypeScript` | `architecture-check.yml` |
@@ -37,5 +34,5 @@
 - OWASP ZAP Baseline (non bloquant, flag `-I`)
 - Ratio fix/feat (`fix-feat-ratio-guard.yml`) — signal fort, non requis
 
-> Les portes ci-dessus s'ajoutent aux 4 required checks ; seuls les 4 required
+> Les portes ci-dessus s'ajoutent aux 5 required checks ; seuls les 5 required
 > checks bloquent effectivement le merge (protection réelle, cf. garde #2011).

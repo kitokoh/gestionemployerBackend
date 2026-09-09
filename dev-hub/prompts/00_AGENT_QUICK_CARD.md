@@ -12,7 +12,6 @@
 | Créer des fichiers dans `docs/PLAN_ACTION2/` ou `docs/PLAN_ACTION/` | Archivés. Le backlog est sur GitHub Issues |
 | Lire les dossiers `docs/archive/` pour chercher du travail | Obsolètes. Utilise `gh issue list` |
 | Merger une PR avec des checks CI rouges | Main doit rester vert |
-| Contourner / désactiver une garde CI « pour avancer » (validation sautée, check local neutralisé) | Toute garde inadaptée se modifie par **PR dédiée**, jamais en local ; contourner = régression silencieuse → ouvrir une issue RETEX immédiate (règle RET-1, triage 2026-09-09) |
 | Force push sur `main` | Destructif et irréversible |
 | Créer une PR sans `Closes #<numero>` dans la description | L'issue ne se fermera pas automatiquement |
 | Travailler sur une issue déjà assignée à quelqu'un | Vérifie les assignés d'abord |
@@ -36,7 +35,6 @@
 | Vérifier les stashes existants | `git stash list` — ne jamais les perdre |
 | S'assigner l'issue avant de coder | `gh issue edit <N> --add-assignee "@me"` |
 | Inclure `Closes #<N>` dans la description de PR | Fermeture automatique de l'issue |
-| Ouvrir une issue RETEX **immédiate** si une garde a été contournée (RET-1) | Le contournement sans issue = régression silencieuse pour les agents suivants |
 | Ajouter une entrée CHANGELOG.md | Pour tout changement de comportement, migration, CI |
 | Vérifier la CI après push | `gh pr checks <N>` — doit être vert |
 | Utiliser `requestWithRetry` + `extractDataList/extractDataMap` | Pattern mobile obligatoire |
