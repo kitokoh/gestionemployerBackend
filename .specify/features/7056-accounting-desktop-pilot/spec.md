@@ -24,6 +24,19 @@ saisie intensive, offline bureau. Aucun installateur public n'existe (#3257) —
 - patterns existants à réutiliser : garde `PushUnavailable` (#3932), `StartupGate` (anti page noire),
   `requestWithRetry` + `extractDataList/extractDataMap`, offline/sync (`sync_service.dart`).
 
+**Constats T1 (analyse 2026-09-09, code lu) :**
+- `main.dart` de `leopardo_accounting` **n'initialise aucun Firebase** : bootstrap = formats de dates
+  (`_criticalBootstrap`) ; pas d'appel push/GPS/notifications au démarrage → risque desktop plus faible
+  que supposé.
+- `AppPreferences`/`SecureStorage` (core) : `flutter_secure_storage` v11 (Windows/macOS OK) + fallback
+  mémoire si box Hive non ouverte ; pas d'init Hive obligatoire sur le parcours comptable.
+- `ApiClient.resolveBaseUrl()` : hors Android, défaut `127.0.0.1:8000` — build desktop dev utilisable
+  tel quel ; `API_BASE_URL` (define) pour cibler un volet (garde #4524).
+- Le build desktop peut réussir même avec des plugins mobile-only dans le graphe (plugin sans
+  implémentation Windows = simplement non enregistré) — le vrai risque est un **appel runtime**
+  (`MissingPluginException`) ; à confirmer par un build + smoke réel (US-2 devient « vérifier »,
+  pas « neutraliser d'office »).
+
 ## Objectifs du pilote (périmètre borné)
 
 1. **Builds reproductibles** Windows (`.exe`/zip) et macOS (`.app`) de `leopardo_accounting` en CI, en plus des builds locaux dev.
@@ -50,14 +63,15 @@ En tant que développeur, je veux produire un build Windows et un build macOS de
 3. `leopardo_core` exclu du build (packageFilters.ignore), cohérent avec `build:android`.
 4. Aucun impact sur `mobile-apps-ci.yml` (paths/checks mobiles inchangés).
 
-### US-2 — Desktop buildable sans les plugins mobile-only (P1)
-En tant que développeur, je veux que l'app compile sur Windows/macOS alors que `leopardo_core` référence des plugins sans support desktop.
+### US-2 — Build desktop vérifié, appels runtime non supportés neutralisés (P1)
+En tant que développeur, je veux un build Windows/macOS vert de `leopardo_accounting` malgré les plugins mobile-only du graphe `leopardo_core`.
 
 **Acceptance Scenarios**:
-1. L'analyse (`flutter analyze`) est verte sur desktop pour `leopardo_accounting` + `leopardo_core`.
-2. Les initialisations mobile-only (Firebase/push, GPS, notifications, Google Sign-In) sont **neutralisées sur desktop** via profil/addendum conditionnel (pattern `PushUnavailable` #3932), **sans aucun changement de comportement mobile** (vérifié par les tests mobiles existants).
+1. `flutter analyze` verte et `flutter build windows`/`macos` verts en CI pour `leopardo_accounting` (+ core compilé).
+2. Si un smoke révèle un `MissingPluginException` (push/GPS/notifications/Google Sign-In appelés sur desktop), neutralisation ciblée via profil/addendum conditionnel (pattern `PushUnavailable` #3932) — **sans aucun changement de comportement mobile** (tests mobiles existants verts).
 3. `StartupGate` reste le premier widget (anti page noire) ; aucun `await` devant `runApp()` (quick card).
-4. Si un plugin desktop exige une déclaration (entitlements macOS, manifest Windows), elle est documentée dans le guide d'installation.
+4. Déclarations desktop éventuelles (entitlements macOS, manifest Windows) documentées dans le guide d'installation.
+5. **Décision tracée** : constat du build réel (avec/sans neutralisation) consigné sur l'issue #7056 — la leçon alimente P06 pour les autres BC.
 
 ### US-3 — Lancement & login sur poste pilote (P1)
 En tant que comptable pilote, je veux installer et ouvrir la session sur mon poste Windows/macOS.
@@ -94,7 +108,7 @@ En tant que comptable pilote, je veux retrouver les documents récents même san
 
 | Risque | Mitigation |
 |---|---|
-| Plugins core sans support desktop (firebase_messaging…) | Profil desktop conditionnel (US-2) ; tests mobiles existants = filet anti-régression |
+| Plugins core sans implémentation desktop (firebase_messaging, google_sign_in…) | Constat par build réel (US-2) ; neutralisation ciblée uniquement si appel runtime ; tests mobiles = filet anti-régression |
 | Coût runners macOS en CI | Workflow déclenché à la demande (workflow_dispatch) — jamais sur chaque push ; budget suivi en revue mensuelle |
 | Drift/sqlite desktop (dépendances natives) | Builds desktop locaux d'abord ; documenter versions toolchain (Visual Studio / Xcode) dans le guide |
 | Dérive de promesse vitrine | US-5 ; aucune surface publique modifiée sans décision GA (P01/P03) |

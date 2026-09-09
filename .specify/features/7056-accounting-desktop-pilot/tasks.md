@@ -3,7 +3,7 @@
 **Spec**: `.specify/features/7056-accounting-desktop-pilot/spec.md`
 **Décision**: #7055 (GO)
 
-- [ ] T1. Analyse : dépendances desktop de `leopardo_core` (plugins sans support, initialisations dans main/StartupGate), contrats API consommés par `leopardo_accounting`, conventions CI mobiles
+- [x] T1. Analyse : dépendances desktop de `leopardo_core` (plugins sans support, initialisations dans main/StartupGate), contrats API consommés par `leopardo_accounting`, conventions CI mobiles — **fait 2026-09-09** : app sans Firebase au boot, secure_storage v11 desktop OK, défaut loopback ApiClient OK ; risque = appels runtime à confirmer par build réel (spec US-2)
 - [ ] T2. Spec + plan + tasks `.specify` (ce dossier)
 - [ ] T3. Scaffolds desktop `leopardo_accounting` (`flutter create --platforms=windows,macos`, identifiants `com.leopardo.accounting`, icônes)
 - [ ] T4. Profil desktop `leopardo_core` — neutralisation push/GPS/notifications/Google Sign-In (pattern #3932), zéro changement mobile
