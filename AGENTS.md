@@ -6,6 +6,8 @@ Ce fichier doit etre lu au debut de chaque nouvelle session agent. Il doit aussi
 
 > **NOUVEL AGENT ? Commence par lire `dev-hub/prompts/00_AGENT_QUICK_CARD.md` (2 min) pour une carte de reference rapide. Ce fichier AGENTS.md est le guide complet.**
 
+> **🗂️ SOCLE DE PROTOCOLES (2026-09-09)** : les bases du projet sont definies dans `docs/GOUVERNANCE/README.md` — protocoles P0-P7 (pret marche, onboarding agent, vitrine mensuelle, capitalisation de l'experience, harmonie design, distribution desktop, architecture dev/prod) + registre des lecons. A lire avec ce fichier et a tenir a jour (revue de fin de mois).
+
 ## ⚡ Spec-Driven Development — Spec Kit (NOUVEAU 2026-08-14)
 
 Leopardo HR utilise desormais **GitHub Spec Kit** pour structurer tout travail significatif.
