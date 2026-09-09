@@ -27211,6 +27211,63 @@ paths:
         '429':
           $ref: '#/components/responses/Error429'
 
+  /public/catalog/{companySlug}/leads:
+    post:
+      tags:
+      - Catalog
+      summary: Demande de devis/contact B2B (lead)
+      description: >-
+        Formulaire public de demande de devis sur un produit PUBLIÉ d'un
+        tenant. Anti-spam : honeypot + rate limit. RGPD : consentement
+        explicite requis (consent_processing). Crée un lead CRM BC-11
+        (événement-chaîne) + notification managers tenant + confirmation
+        acheteur (best-effort). BC-28 CATALOG #6884.
+      parameters:
+      - name: companySlug
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_slug, buyer_company, contact_name, email, consent_processing]
+              properties:
+                product_slug:
+                  type: string
+                quantity:
+                  type: integer
+                  minimum: 1
+                buyer_company:
+                  type: string
+                contact_name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                message:
+                  type: string
+                consent_processing:
+                  type: boolean
+                  description: Consentement RGPD explicite (obligatoire)
+                website:
+                  type: string
+                  description: Honeypot anti-spam (laisser vide)
+      responses:
+        '201':
+          description: Demande reçue — data.status=received + data.reference
+        '404':
+          description: Entreprise inconnue/suspendue/sans module, ou produit inconnu/non publié
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+
 components:
   securitySchemes:
     BearerAuth:

@@ -3124,6 +3124,10 @@ class LeopardoClient:
         """Catalogue public B2B d'un tenant (catégories + produits publiés)"""
         return self.request("GET", "/public/catalog/{companySlug}", **kwargs)
 
+    def post_public_catalog_by_companyslug_leads(self, **kwargs):
+        """Demande de devis/contact B2B (lead)"""
+        return self.request("POST", "/public/catalog/{companySlug}/leads", **kwargs)
+
     def post_push_notifications_send(self, **kwargs):
         """Envoyer une notification push de test a un employe"""
         return self.request("POST", "/push-notifications/send", **kwargs)

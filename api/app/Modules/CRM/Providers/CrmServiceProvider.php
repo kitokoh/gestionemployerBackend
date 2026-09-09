@@ -35,6 +35,7 @@ use App\Modules\CRM\Infrastructure\Services\CrmConditionEvaluator;
 
 use App\Modules\CRM\Infrastructure\Services\CrmOutboxPublisher;
 use Illuminate\Contracts\Foundation\Application;
+use App\Modules\CRM\Application\Listeners\CaptureCatalogQuoteListener;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -136,5 +137,11 @@ class CrmServiceProvider extends ServiceProvider
         // #5722 — propagation du retrait de consentement vers les campagnes
         // (#5724) : annulation des envois pending/queued du contact.
         Event::listen(CrmConsentRevoked::class, PropagateConsentRevocation::class);
+
+        // #6884 (C-LEAD, BC-28 → BC-11) : demande de devis B2B reçue sur le
+        // catalogue public d'un tenant → création du lead CRM. Contrat par
+        // CHAÎNE (zéro import cross-BC) : valeur = constante
+        // `CatalogEvents::QUOTE_REQUESTED` du module Catalog.
+        Event::listen('catalog.quote.requested', CaptureCatalogQuoteListener::class);
     }
 }

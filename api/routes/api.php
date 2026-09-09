@@ -15,6 +15,7 @@ use App\Modules\Billing\Interfaces\Api\V1\Controllers\PlatformCompanySubscriptio
 use App\Modules\Billing\Interfaces\Api\V1\Controllers\PlatformPlanController;
 use App\Modules\Billing\Interfaces\Api\V1\Controllers\SelfServiceTrialController;
 use App\Modules\Catalog\Interfaces\Api\V1\Controllers\CatalogPublicController;
+use App\Modules\Catalog\Interfaces\Api\V1\Controllers\CatalogPublicQuoteController;
 use App\Modules\Billing\Interfaces\Api\V1\Controllers\StripeWebhookController;
 use App\Modules\EdgeSync\Interfaces\Api\V1\Controllers\EdgeNodeController;
 use App\Modules\HR\Interfaces\Api\V1\Controllers\CompanyBankingController;
@@ -217,6 +218,10 @@ Route::prefix('v1')->group(function (): void {
     // cache Redis TTL court (CatalogPublicCache), invalidé à chaque mutation
     // côté API privée. Throttling renforcé `shop-public` (pattern #6114).
     Route::middleware(['throttle:shop-public'])->get('/public/catalog/{companySlug}', [CatalogPublicController::class, 'index']);
+
+    // #6884 (C-LEAD) — demande de devis/contact B2B : produit publié requis,
+    // honeypot anti-spam + consentement RGPD explicite (voir Request).
+    Route::middleware(['throttle:shop-public'])->post('/public/catalog/{companySlug}/leads', [CatalogPublicQuoteController::class, 'store']);
 
     // RESTO-805 (#6226) — boutique publique RestaurantManager (jeton signé par
     // tenant, sans auth utilisateur) — throttling renforcé `shop-public` +
