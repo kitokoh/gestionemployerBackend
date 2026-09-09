@@ -27210,6 +27210,61 @@ paths:
           description: Liste publique (company, categories, produits publies)
         '404':
           $ref: '#/components/responses/Error404'
+  /public/catalog/{companySlug}/inquiries:
+    post:
+      tags:
+      - Catalog
+      summary: Demander un devis B2B (formulaire public, sans auth)
+      description: >-
+        BC-28 CATALOG C-LEAD (#6884) - soumission du formulaire public
+        'Demander un devis'. Honeypot anti-spam (champ cache), consentement
+        RGPD explicite requis, produit publie exigé, rate limit shop-public.
+        A la reception : demande persistee (consentement horodate, retention
+        bornee) + lead CRM BC-11 (source b2b_catalog) + notification in-app
+        des managers. Aucune donnee acheteur exposee publiquement.
+      security: []
+      parameters:
+      - name: companySlug
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_slug, company_name, email, consent]
+              properties:
+                product_slug:
+                  type: string
+                  description: Slug d'un produit PUBLIE du catalogue
+                quantity:
+                  type: integer
+                  minimum: 1
+                company_name:
+                  type: string
+                  maxLength: 150
+                email:
+                  type: string
+                  format: email
+                message:
+                  type: string
+                  maxLength: 5000
+                consent:
+                  type: boolean
+                  description: Consentement RGPD explicite (requis)
+                company_website:
+                  type: string
+                  description: Honeypot - champ cache, a laisser vide
+      responses:
+        '201':
+          description: Accuse de reception (status received + reference)
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
   /public/catalog/{companySlug}/products/{productSlug}:
     get:
       tags:
