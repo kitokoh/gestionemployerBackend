@@ -197,3 +197,6 @@ Quand un domaine gagne une feature significative, ajouter:
 
 - v4.27.0 (BC-28 C-LEAD #6884) : formulaire public de demande de devis — `POST /public/catalog/{companySlug}/inquiries` SANS auth (honeypot anti-spam, consentement RGPD requis, produit publié exigé) → demande `catalog_inquiries` (tenant, minimisation, rétention bornée) + événement `catalog.inquiry_received` (contrat cross-BC, catalogue d'événements v1.0.0) → lead CRM BC-11 source `b2b_catalog` + notification in-app managers (canal app). Scénarios couverts par `tests/Feature/Catalog/CatalogPublicInquiryApiTest.php`.
 | Catalog inquiries B2B | docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md | Tests - Leopardo RH | tests/Feature/Catalog/CatalogPublicInquiryApiTest.php | backend-tests |
+
+- v4.29.0 (BC-28 C-BACKOFFICE #6885) : back-office tenant des demandes de devis — `GET /catalog/inquiries` (liste + filtres), `PATCH /catalog/inquiries/{inquiry}/status` (matrice new→contacted→quote_sent→closed|lost, notes horodatées), `GET /catalog/inquiries/export` (CSV). RBAC principal/rh/manager, isolation 404. Scénarios couverts par `tests/Feature/Catalog/CatalogInquiryBackofficeTest.php`.
+| Catalog back-office devis | docs/GESTION_PROJET/SCENARIOS_TEST_API_GITHUB_ACTIONS.md | Tests - Leopardo RH | tests/Feature/Catalog/CatalogInquiryBackofficeTest.php | backend-tests |
