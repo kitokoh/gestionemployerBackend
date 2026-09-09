@@ -1,0 +1,74 @@
+name: "💡 Constat / Leçon"
+description: Expérience vécue dans le projet (dev, QA, recette, incident, intégration) à transformer en action ou en enseignement — protocole P04.
+title: "[LECON]: "
+labels: ["lecon"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Protocole P04 — Capitalisation** : tout constat devient une issue exploitable.
+        Une issue créée et laissée sans suite est un échec du protocole (suivi via la
+        moisson mensuelle). Guide pas-à-pas : `docs/GOUVERNANCE/RETEX_FLUX.md`.
+  - type: textarea
+    id: constat
+    attributes:
+      label: Constat / expérience vécue
+      description: Ce qui s'est passé, factuellement (session, date, contexte).
+      placeholder: "Lors de la session QA du 2026-09-XX, 2 h ont été perdues car..."
+    validations:
+      required: true
+  - type: textarea
+    id: cause
+    attributes:
+      label: Cause racine
+      description: Pourquoi c'est arrivé (outil, doc manquante, règle ambiguë, dette...).
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact si non corrigé
+      description: Qui va revivre le problème, à quelle fréquence, à quel coût.
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: Correction proposée
+      description: Ce qu'il faudrait changer (code, doc, garde CI, processus).
+    validations:
+      required: true
+  - type: input
+    id: surface
+    attributes:
+      label: Surface / BC
+      description: Partie du dépôt concernée et label BC si connu (registre dev-hub/governance/bounded-context-registry.json).
+      placeholder: "api, front/web, docs, .github/workflows..."
+    validations:
+      required: true
+  - type: dropdown
+    id: decision
+    attributes:
+      label: Décision proposée
+      options:
+        - "Implémentation directe par l'auteur (petite portée)"
+        - "À déléguer à un autre agent (issue agent-ready)"
+        - "À arbitrer par le PM (cas limite / freeze / BC non confié)"
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critères d'acceptation
+      description: Conditions vérifiables (obligatoire si déléguée — format agent-ready).
+      placeholder: |
+        1. ...
+        2. Tests verts sur le parcours concerné
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        **Après correction** : consolider la leçon dans `AGENTS.md` (si règle
+        opérationnelle) et/ou `docs/GESTION_PROJET/BIBLIOTHEQUE_ERREURS.md` (si piège
+        rejouable), puis clore avec `Closes #N` dans le body de la PR.
