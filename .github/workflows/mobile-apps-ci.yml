@@ -4,10 +4,14 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [main]
-    # Issue #5517 : PAS de filtre paths — les checks Analyse mobile + Split
-    # guard deviennent REQUIS (protection de branche) ; un check requis doit
-    # s'exécuter sur CHAQUE PR (sinon blocage « expected — waiting »). Le
-    # build debug lourd reste filtré par le job `changes` ci-dessous.
+    # PAS de filtre paths au niveau workflow : le job `mobile-apps-guard`
+    # (validations structurelles) reste inconditionnel, et dorny/paths-filter
+    # (job `changes`) est la source de vérité pour les jobs lourds. Depuis
+    # 2026-09-08 (#6928) la matrice `flutter-analyze` est gatée par
+    # `changes.outputs.mobile` — les checks Analyze/Split guard ne font PAS
+    # partie des contexts requis de la protection main (vérifié via l'API
+    # branche protection) : un skip de PR docs/backend-only est sans effet
+    # sur la mergeabilité, et libère la file pour les checks requis.
   push:
     branches: [main]
     paths:
@@ -146,7 +150,15 @@ jobs:
     timeout-minutes: 90
     name: Analyze ${{ matrix.project.name }}
     runs-on: ubuntu-latest
-    needs: mobile-apps-guard
+    needs: [changes, mobile-apps-guard]
+    # #6928 / saturation CI (2026-09-08) : la matrice 8× Flutter (pub get +
+    # analyze + gate Dart incrémental, ~5-15 min/app) ne tourne QUE si les
+    # apps mobiles (ou le workflow lui-même) ont changé. Vérifié 2026-09-08 :
+    # ces checks ne sont PAS dans les contexts requis de la protection main
+    # (seuls PHPStan Strict, Module Validator, ESLint+TS, actionlint le sont)
+    # → un skip est sans effet sur la mergeabilité. Le `mobile-apps-guard`
+    # (validations structurelles légères) reste inconditionnel.
+    if: needs.changes.outputs.mobile == 'true'
     strategy:
       fail-fast: false
       matrix:

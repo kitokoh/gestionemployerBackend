@@ -316,6 +316,14 @@ pour les résoudre au checkout.
 
 ## Pieges connus
 
+### 2026-09-08 - Merge lane, garde PA2-OPS-008, pureté des couches Application, mergeability GitHub
+
+- **Garde PA2-OPS-008 BLoquante (nouvelle) : toute PR de code (hors `docs:`/`chore:`) DOIT porter `Closes #N` / `Fixes #N` / `Resolves #N` dans le titre ou le body** (`dev-hub/tools/check-pr-closes-issue.sh`). Une PR « Part of #N » seule est rouge → pour une tranche d'une campagne (ex. #6569, #6968) : **créer une sous-issue de tranche** et mettre `Closes #<sous-issue>` dans le body (précédent : sous-issue #7004 pour la tranche PlatformUsersController de #6569, PR #7002). Les PRs payroll « Part of #6968 » (#6976, #6980…) sont bloquées par cette garde tant qu'elles ne closent rien.
+- **Pureté des couches : les facades Laravel (`use Illuminate\Support\Facades\DB`) sont INTERDITES dans `Application/`** (`check-layer-purity.sh`, issue #6568) — les `Generate*ReportAction` historiques de Platform sont allowlistés, les nouveaux fichiers ne le sont pas. Pour de l'accès données depuis une Action Application : **déléguer à un service `Infrastructure/Services`** (pattern `ProvisionCompany` → `CompanyProvisioningService`, ADR-0020 ; précédent PR #7002) ou utiliser les modèles Eloquent directement (précédents Delivery/Recruitment).
+- **Mergeability GitHub stale sur gros diffs** : une PR peut afficher « merge conflicts » / « not mergeable » alors que `git merge` local est propre (constaté #6983, #6998, #7003, #6955 — diffs énormes ou CHANGELOG) → **fusionner `origin/main` dans la branche et pousser** force le recalcul. Après CHAQUE merge dans main, toute PR ouverte touchant le haut de `CHANGELOG.md` devient `dirty` — la réaligner avant de merger.
+- **Garde « Check unique issue claim per PR » cassée** (`dev-hub/tools/check-issue-claim-unique.sh`) : `gh: Resource not accessible by integration (HTTP 403)` puis `AttributeError: 'str' object has no attribute 'get'` — échoue sur TOUTES les PRs. Non bloquante pour le merge (les 4 checks requis sont PHPStan Strict, Module Structure Validator, Frontend ESLint+TS, actionlint) mais rend « PR Issue Guard » rouge : à corriger dans l'outillage (permissions GITHUB_TOKEN + parsing).
+- **Protection main en `strict`** : 4 checks requis + branche à jour exigée → après chaque merge dans main, les PRs `behind` doivent être mises à jour (update-branch API parfois 404 → fusion locale + push) puis repassent un cycle CI complet. Un « merge sweep » périodique (merge auto des PRs clean + 4 checks verts + inactives ≥ 5 min) évite les heures d'attente.
+
 ### 2026-05-14 - Integration branche Devin Plan 14
 
 - La branche distante `devin/1778717175-plan14-phase1-tests` apportait les suites Plan 14 Phase 1 : E2E admin-dashboard, integration API et tests de modeles Flutter. Elle doit etre integree depuis un `origin/main` recent, pas mergee telle quelle si les checks GitHub Actions sont rouges.
