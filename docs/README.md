@@ -102,6 +102,7 @@ Index de la documentation technique et stratégique du projet.
 | [`../PILOTAGE.md`](../PILOTAGE.md) | Pilotage projet (filières actives, source de vérité programme) |
 | [`GOUVERNANCE/`](GOUVERNANCE/) | **Socle de protocoles P0-P7** (prêt marché, onboarding agent, vitrine mensuelle, capitalisation de l'expérience, harmonie design, distribution desktop, architecture dev/prod) + protocoles de branches (BC, CRM, freeze 60 j) + registre des leçons |
 | [`GESTION_PROJET/`](GESTION_PROJET/) | Runbooks, audits d'écarts, supports d'exécution, réponse au cahier des charges |
+| [`PROTOCOLES/`](PROTOCOLES/) | Cadre de protocoles opérationnels P01-P07 (validation marché, onboarding, vitrine, issues/expérience, design, desktop, architecture dev/prod) — révisé chaque fin de mois |
 | [`api/README.md`](api/README.md) | Documentation API |
 
 ---
