@@ -10,7 +10,7 @@ use App\Modules\Showcase\Domain\Models\CompanyShowcaseSection;
 use App\Modules\Showcase\Domain\Support\ShowcaseLegalDefaults;
 use App\Modules\Showcase\Domain\Support\ShowcaseLocales;
 use App\Modules\Showcase\Domain\Support\ShowcaseThemeRegistry;
-use App\Modules\Showcase\Infrastructure\Services\ShowcaseProductsResolver;
+use App\Shared\Contracts\Catalog\PublishedProductsProvider;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -53,7 +53,7 @@ final class VitrinePublicResource extends JsonResource
         private readonly array $sections,
         private readonly string $companyName,
         private readonly string $locale = ShowcaseLocales::DEFAULT,
-        private readonly ?ShowcaseProductsResolver $productsResolver = null,
+        private readonly ?PublishedProductsProvider $productsProvider = null,
     ) {
         parent::__construct($showcase);
     }
@@ -105,7 +105,7 @@ final class VitrinePublicResource extends JsonResource
             $content = ShowcaseLocales::resolveContent($section->content ?? [], $section->content_i18n, $this->locale);
 
             if ($section->type === ShowcaseSectionType::Products) {
-                $items = $this->productsResolver?->resolve($content) ?? [];
+                $items = $this->productsProvider?->resolve($content) ?? [];
 
                 if ($items === []) {
                     continue; // dépendance BC-28 optionnelle — section absente

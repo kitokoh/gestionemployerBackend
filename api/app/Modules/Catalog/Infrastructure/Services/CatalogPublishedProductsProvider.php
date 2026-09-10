@@ -2,26 +2,29 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Showcase\Infrastructure\Services;
+namespace App\Modules\Catalog\Infrastructure\Services;
 
 use App\Modules\Catalog\Domain\Enums\CatalogProductStatus;
 use App\Modules\Catalog\Domain\Models\CatalogCategory;
 use App\Modules\Catalog\Domain\Models\CatalogProduct;
+use App\Shared\Contracts\Catalog\PublishedProductsProvider;
 
 /**
- * Résolution des produits d'une section `products` (BC-27 SHOWCASE,
- * C-VITRINE #6891) — lecture du catalogue BC-28, **dépendance optionnelle**.
+ * Résolution des produits d'une section `products` (BC-28 CATALOG, C-VITRINE
+ * #6891) — implémentation du contrat partagé
+ * {@see PublishedProductsProvider} consommé par BC-27 SHOWCASE.
  *
- * La vitrine ne duplique aucune logique catalogue : elle lit les produits
- * PUBLIÉS du tenant courant (déjà résolu par le contrôleur public) et
+ * La vitrine ne duplique aucune logique catalogue : ce service lit les
+ * produits PUBLIÉS du tenant courant (déjà résolu par le contexte appelant) et
  * retourne une shape publique minimale (slug, nom, description, prix minor,
- * devise, unité, catégorie). Si le tenant n'a pas le catalogue (flag/solution
- * absents) ou aucun produit publié, la section est **omise** du rendu
- * (jamais de vitrine cassée) — cf. critère d'acceptation #6891.
+ * devise, unité). Si le tenant n'a pas le catalogue (flag/solution absents,
+ * table inexistante) ou aucun produit publié, la liste est **vide** — le
+ * consommateur omet alors la section (jamais de vitrine cassée), cf. critère
+ * d'acceptation #6891.
  *
  * Aucune donnée interne (stock, marge, fournisseur, meta) n'est exposée.
  */
-final class ShowcaseProductsResolver
+final class CatalogPublishedProductsProvider implements PublishedProductsProvider
 {
     public const DEFAULT_LIMIT = 6;
 

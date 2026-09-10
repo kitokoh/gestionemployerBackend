@@ -25,7 +25,7 @@ final class ShowcaseLegalDefaults
     public static function notice(): string
     {
         return "Leopardo RH — site vitrine de l'entreprise. Éditeur : le titulaire du compte Leopardo RH. "
-            ."Hébergement : infrastructures du titulaire du compte. Contact : utilisez le formulaire de contact de cette page.";
+            .'Hébergement : infrastructures du titulaire du compte. Contact : utilisez le formulaire de contact de cette page.';
     }
 
     /**
@@ -33,7 +33,7 @@ final class ShowcaseLegalDefaults
      */
     public static function privacy(): string
     {
-        return "Ce site vitrine ne collecte aucune donnée personnelle de visiteur et ne dépose aucun cookie tiers. "
+        return 'Ce site vitrine ne collecte aucune donnée personnelle de visiteur et ne dépose aucun cookie tiers. '
             ."Les données affichées (catalogue, actualités) sont publiées par l'entreprise titulaire du compte. "
             ."Pour exercer vos droits, contactez l'entreprise via le formulaire de contact.";
     }

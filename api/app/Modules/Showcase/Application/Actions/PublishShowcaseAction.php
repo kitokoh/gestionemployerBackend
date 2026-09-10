@@ -59,7 +59,7 @@ final class PublishShowcaseAction
             'auditable_type' => CompanyShowcase::class,
             'auditable_id' => $showcase->id,
             'old_values' => ['status' => $previousStatus->value],
-            'new_values' => ['status' => $showcase->status->value, 'published_at' => $showcase->published_at?->toIso8601String()],
+            'new_values' => ['status' => $showcase->status->value, 'published_at' => $showcase->published_at->toIso8601String()],
         ]);
 
         return $showcase;
