@@ -3080,6 +3080,8 @@ trait CreatesMvpSchema
                 $table->unsignedBigInteger('showcase_id');
                 $table->string('type', 40);
                 $table->json('content')->nullable();
+                // #6874 — surcouches de contenu par locale (fr/en/ar/tr).
+                $table->json('translations')->nullable();
                 $table->unsignedInteger('sort_order')->default(0);
                 $table->unsignedSmallInteger('schema_version')->default(1);
                 $table->timestamps();

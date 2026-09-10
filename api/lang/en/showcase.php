@@ -36,4 +36,9 @@ return [
     'theme_service' => 'Service',
     'theme_commerce' => 'Commerce',
     'theme_invalid' => 'Unknown theme.',
+    'section_type_unknown' => 'Unknown section type: :type.',
+    'section_field_required' => 'The :field field is required.',
+    'section_locale_unsupported' => 'Unsupported locale :locale (allowed locales: :locales).',
+    'section_locale_is_default' => 'Locale :locale is carried by the reference content (content), never by translations.',
+    'section_translation_not_object' => 'The :locale translation must be an object.',
 ];

@@ -36,4 +36,9 @@ return [
     'theme_service' => 'Hizmet',
     'theme_commerce' => 'Ticaret',
     'theme_invalid' => 'Bilinmeyen tema.',
+    'section_type_unknown' => 'Bilinmeyen bölüm türü: :type.',
+    'section_field_required' => ':field alanı zorunludur.',
+    'section_locale_unsupported' => 'Desteklenmeyen yerel ayar :locale (izin verilenler: :locales).',
+    'section_locale_is_default' => ':locale yerel ayarı referans içerik (content) tarafından taşınır, translations tarafından asla.',
+    'section_translation_not_object' => ':locale çevirisi bir nesne olmalıdır.',
 ];

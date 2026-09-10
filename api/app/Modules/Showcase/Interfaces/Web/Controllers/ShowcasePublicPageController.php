@@ -12,6 +12,7 @@ use App\Modules\Showcase\Domain\Models\CompanyShowcase;
 use App\Modules\Showcase\Domain\Models\CompanyShowcaseSection;
 use App\Modules\Showcase\Domain\Models\ShowcaseMedia;
 use App\Modules\Showcase\Domain\Support\ShowcaseThemeRegistry;
+use App\Modules\Showcase\Infrastructure\Services\ShowcaseLocaleResolver;
 use App\Modules\Showcase\Infrastructure\Services\ShowcasePublicCache;
 use App\Modules\Showcase\Infrastructure\Services\ShowcaseThemeRenderer;
 use App\Modules\Showcase\Interfaces\Api\V1\Resources\VitrinePublicResource;
@@ -44,6 +45,7 @@ final class ShowcasePublicPageController extends Controller
         private readonly TenantManager $tenantManager,
         private readonly ShowcasePublicCache $cache,
         private readonly ShowcaseThemeRenderer $renderer,
+        private readonly ShowcaseLocaleResolver $localeResolver,
     ) {}
 
     public function show(Request $request, string $slug): Response
@@ -53,8 +55,11 @@ final class ShowcasePublicPageController extends Controller
 
         $isPreview = false;
 
+        // #6874 — locale de contenu (`?lang=` puis `Accept-Language`, repli fr).
+        $locale = $this->localeResolver->resolve($request);
+
         /** @var array<string, mixed>|null $payload */
-        $payload = $this->resolvePayload($request, $slug, $providedToken, $isPreview);
+        $payload = $this->resolvePayload($request, $slug, $locale, $providedToken, $isPreview);
 
         if ($payload === null) {
             return response()
@@ -131,9 +136,9 @@ final class ShowcasePublicPageController extends Controller
     /**
      * @param  string|null  $providedToken
      */
-    private function resolvePayload(Request $request, string $slug, ?string $providedToken, bool &$isPreview): ?array
+    private function resolvePayload(Request $request, string $slug, string $locale, ?string $providedToken, bool &$isPreview): ?array
     {
-        $resolver = function () use ($request, $slug, $providedToken, &$isPreview): ?array {
+        $resolver = function () use ($request, $slug, $locale, $providedToken, &$isPreview): ?array {
             /** @var Company|null $company */
             $company = Company::query()
                 ->where('slug', $slug)
@@ -144,7 +149,7 @@ final class ShowcasePublicPageController extends Controller
                 return null;
             }
 
-            return $this->tenantManager->withinTenant($company, function () use ($request, $slug, $providedToken, $company, &$isPreview): ?array {
+            return $this->tenantManager->withinTenant($company, function () use ($request, $slug, $locale, $providedToken, $company, &$isPreview): ?array {
                 /** @var CompanyShowcase|null $showcase */
                 $showcase = CompanyShowcase::query()
                     ->where('slug', $slug)
@@ -182,7 +187,7 @@ final class ShowcasePublicPageController extends Controller
                     ->get()
                     ->all();
 
-                return (new VitrinePublicResource($showcase, $sections, $company->name, $media))->resolve($request);
+                return (new VitrinePublicResource($showcase, $sections, $company->name, $media, $locale))->resolve($request);
             });
         };
 
@@ -190,6 +195,7 @@ final class ShowcasePublicPageController extends Controller
             return $resolver();
         }
 
-        return $this->cache->remember($slug, $resolver);
+        // #6874 — clé de cache par locale (rendu SSR localisé).
+        return $this->cache->remember($slug, $locale, $resolver);
     }
 }

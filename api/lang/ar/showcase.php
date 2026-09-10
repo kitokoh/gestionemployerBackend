@@ -36,4 +36,9 @@ return [
     'theme_service' => 'الخدمات',
     'theme_commerce' => 'التجارة',
     'theme_invalid' => 'سمة غير معروفة.',
+    'section_type_unknown' => 'نوع القسم غير معروف: :type.',
+    'section_field_required' => 'الحقل :field مطلوب.',
+    'section_locale_unsupported' => 'اللغة :locale غير مدعومة (اللغات المسموح بها: :locales).',
+    'section_locale_is_default' => 'اللغة :locale محمولة بواسطة المحتوى المرجعي (content)، وليس بواسطة translations.',
+    'section_translation_not_object' => 'يجب أن تكون ترجمة :locale كائنًا.',
 ];

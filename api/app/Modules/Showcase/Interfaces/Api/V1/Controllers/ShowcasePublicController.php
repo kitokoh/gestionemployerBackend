@@ -11,6 +11,7 @@ use App\Modules\Showcase\Domain\Enums\CompanyShowcaseStatus;
 use App\Modules\Showcase\Domain\Models\CompanyShowcase;
 use App\Modules\Showcase\Domain\Models\CompanyShowcaseSection;
 use App\Modules\Showcase\Domain\Models\ShowcaseMedia;
+use App\Modules\Showcase\Infrastructure\Services\ShowcaseLocaleResolver;
 use App\Modules\Showcase\Infrastructure\Services\ShowcasePublicCache;
 use App\Modules\Showcase\Interfaces\Api\V1\Resources\VitrinePublicResource;
 use Illuminate\Http\JsonResponse;
@@ -49,6 +50,7 @@ final class ShowcasePublicController extends Controller
     public function __construct(
         private readonly TenantManager $tenantManager,
         private readonly ShowcasePublicCache $cache,
+        private readonly ShowcaseLocaleResolver $localeResolver,
     ) {}
 
     public function show(Request $request, string $slug): JsonResponse
@@ -58,8 +60,11 @@ final class ShowcasePublicController extends Controller
 
         $isPreview = false;
 
+        // #6874 — locale de contenu (`?lang=` puis `Accept-Language`, repli fr).
+        $locale = $this->localeResolver->resolve($request);
+
         /** @var array<string, mixed>|null $payload */
-        $payload = $this->resolvePayload($request, $slug, $providedToken, $isPreview);
+        $payload = $this->resolvePayload($request, $slug, $locale, $providedToken, $isPreview);
 
         if ($payload === null) {
             return response()
@@ -120,9 +125,9 @@ final class ShowcasePublicController extends Controller
     /**
      * @param  string|null  $providedToken
      */
-    private function resolvePayload(Request $request, string $slug, ?string $providedToken, bool &$isPreview): ?array
+    private function resolvePayload(Request $request, string $slug, string $locale, ?string $providedToken, bool &$isPreview): ?array
     {
-        $resolver = function () use ($request, $slug, $providedToken, &$isPreview): ?array {
+        $resolver = function () use ($request, $slug, $locale, $providedToken, &$isPreview): ?array {
             /** @var Company|null $company */
             $company = Company::query()
                 ->where('slug', $slug)
@@ -133,7 +138,7 @@ final class ShowcasePublicController extends Controller
                 return null;
             }
 
-            return $this->tenantManager->withinTenant($company, function () use ($request, $slug, $providedToken, $company, &$isPreview): ?array {
+            return $this->tenantManager->withinTenant($company, function () use ($request, $slug, $locale, $providedToken, $company, &$isPreview): ?array {
                 /** @var CompanyShowcase|null $showcase */
                 $showcase = CompanyShowcase::query()
                     ->where('slug', $slug)
@@ -171,7 +176,7 @@ final class ShowcasePublicController extends Controller
                     ->get()
                     ->all();
 
-                $resource = new VitrinePublicResource($showcase, $sections, $company->name, $media);
+                $resource = new VitrinePublicResource($showcase, $sections, $company->name, $media, $locale);
 
                 return $resource->resolve($request);
             });
@@ -183,7 +188,9 @@ final class ShowcasePublicController extends Controller
             return $resolver();
         }
 
-        return $this->cache->remember($slug, $resolver);
+        // #6874 — clé de cache par locale : jamais le contenu d'une locale
+        // servi sous une autre.
+        return $this->cache->remember($slug, $locale, $resolver);
     }
 
     private function buildSitemap(): string

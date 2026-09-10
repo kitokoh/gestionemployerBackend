@@ -4766,7 +4766,8 @@
     "travelAgency": "Agence de voyage",
     "surveyStats": "Surveys de solutions",
     "solutionSurveys": "Surveys de solutions",
-    "travel": "Agence de voyage"
+    "travel": "Agence de voyage",
+    "showcase": "Site vitrine"
   },
   "companydetailCoreModuleAlwaysActive": "Module cœur toujours actif",
   "smartAttendanceSessionsTitle": "Sessions Smart Attendance",
@@ -6015,5 +6016,141 @@
   "fuelPumpistSubmit": "Enregistrer le relevé",
   "crmAccounts": "Comptes CRM",
   "crmContacts": "Contacts CRM",
-  "crmLeads": "Leads CRM"
+  "crmLeads": "Leads CRM",
+  "showcase": {
+    "title": "Site vitrine",
+    "subtitle": "Composez la page publique de votre entreprise par sections, puis publiez en 1 clic.",
+    "loading": "Chargement de la vitrine…",
+    "retry": "Réessayer",
+    "publish": "Publier",
+    "unpublish": "Dépublier",
+    "publishing": "Traitement…",
+    "creating": "Création…",
+    "status": {
+      "draft": "Brouillon",
+      "published": "Publié"
+    },
+    "empty": {
+      "title": "Aucune vitrine pour le moment",
+      "body": "Créez la vitrine de votre entreprise : elle est préparée en brouillon, rien n’est publié avant votre validation.",
+      "create": "Créer ma vitrine"
+    },
+    "gate": {
+      "featureTitle": "Module vitrine inactif",
+      "featureBody": "Le module vitrine n'est pas activé pour cette entreprise. Contactez un administrateur plateforme.",
+      "tenantTitle": "Contexte entreprise requis",
+      "tenantBody": "La vitrine se gère avec une session entreprise (responsable ou RH).",
+      "errorTitle": "Chargement impossible",
+      "errorBody": "Une erreur est survenue en interrogeant l'API vitrine."
+    },
+    "locale": {
+      "fr": "Français",
+      "en": "Anglais",
+      "ar": "Arabe",
+      "tr": "Turc"
+    },
+    "type": {
+      "hero": "Bandeau principal",
+      "features": "Atouts",
+      "gallery": "Galerie",
+      "testimonials": "Témoignages",
+      "contact": "Contact",
+      "footer": "Pied de page"
+    },
+    "theme": {
+      "industrie": "Industrie",
+      "service": "Service",
+      "commerce": "Commerce"
+    },
+    "color": {
+      "primary": "Primaire",
+      "accent": "Accent",
+      "surface": "Fond",
+      "on_primary": "Texte sur primaire"
+    },
+    "collection": {
+      "items": "Éléments",
+      "links": "Liens"
+    },
+    "field": {
+      "heading": "Titre principal",
+      "subheading": "Sous-titre",
+      "image_id": "Visuel",
+      "image_url": "URL du visuel",
+      "cta_label": "Libellé du bouton",
+      "cta_url": "Cible du bouton",
+      "title": "Titre",
+      "icon": "Icône",
+      "description": "Description",
+      "caption": "Légende",
+      "quote": "Citation",
+      "author": "Auteur",
+      "role": "Fonction",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "address": "Adresse",
+      "text": "Texte",
+      "label": "Libellé",
+      "url": "URL",
+      "mediaHint": "PNG, JPEG ou WebP — 5 Mo max (SVG pour le logo)."
+    },
+    "media": {
+      "upload": "Choisir un fichier",
+      "uploading": "Envoi…",
+      "remove": "Retirer",
+      "preview": "Aperçu du média",
+      "library": "Médias de la vitrine",
+      "choose": "— Médiathèque —",
+      "uploadError": "L'envoi du fichier a échoué."
+    },
+    "preview": {
+      "title": "Aperçu",
+      "noindex": "Brouillon — noindex",
+      "published": "Publié",
+      "refresh": "Rafraîchir",
+      "open": "Ouvrir",
+      "unavailable": "Aperçu indisponible : enregistrez la vitrine pour générer le lien."
+    },
+    "settings": {
+      "title": "Thème et identité",
+      "theme": "Thème",
+      "brandName": "Nom de marque",
+      "tagline": "Slogan",
+      "logo": "Logo",
+      "logoHint": "PNG, JPEG, WebP ou SVG — 2 Mo max.",
+      "colors": "Couleurs",
+      "legalNotice": "Mentions légales",
+      "legalPrivacy": "Politique de confidentialité",
+      "legalEmail": "E-mail de contact (mentions)",
+      "save": "Enregistrer les réglages"
+    },
+    "editor": {
+      "title": "Édition de la section",
+      "sections": "Sections de la page",
+      "language": "Langue du contenu",
+      "rtl": "RTL",
+      "translationHint": "Traduisez les champs : ceux laissés vides reprennent automatiquement le contenu de référence.",
+      "rtlHint": "L'arabe s'affiche de droite à gauche sur la vitrine publiée.",
+      "selectPrompt": "Sélectionnez une section ou ajoutez-en une.",
+      "addSection": "Ajouter une section",
+      "addItem": "Ajouter un élément",
+      "removeItem": "Supprimer",
+      "itemNumber": "Élément",
+      "duplicate": "Dupliquer",
+      "delete": "Supprimer",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "dragHandle": "Réordonner",
+      "confirmDelete": "Supprimer cette section ? Cette action est irréversible.",
+      "emptySection": "Section vide",
+      "noSections": "Aucune section : ajoutez-en une pour composer la page.",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "required": "Ce champ est obligatoire.",
+      "tooLong": "Texte trop long.",
+      "refreshToken": "Régénérer le lien d'aperçu",
+      "openSite": "Voir le site"
+    }
+  }
 }

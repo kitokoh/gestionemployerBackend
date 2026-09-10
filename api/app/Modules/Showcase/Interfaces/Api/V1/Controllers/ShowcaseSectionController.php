@@ -69,7 +69,12 @@ final class ShowcaseSectionController extends Controller
         /** @var array<string, mixed> $content */
         $content = $request->validated('content');
 
-        $section = $this->createSection->execute($showcase, $type, $content);
+        // #6874 — surcouches multilingues optionnelles.
+        $translations = $request->has('translations')
+            ? (array) $request->validated('translations')
+            : null;
+
+        $section = $this->createSection->execute($showcase, $type, $content, $translations);
 
         return (new ShowcaseSectionResource($section))->response()->setStatusCode(JsonResponse::HTTP_CREATED);
     }
@@ -89,11 +94,18 @@ final class ShowcaseSectionController extends Controller
         $type = $request->validated('type');
         $content = $request->validated('content');
 
+        // #6874 — `translations` présent → remplace la carte (tableau vide →
+        // purge) ; absent → traductions inchangées.
+        $translationsProvided = $request->has('translations');
+        $translations = $translationsProvided ? (array) $request->validated('translations') : null;
+
         $updated = $this->updateSection->execute(
             $showcase,
             $section,
             is_string($type) ? $type : null,
             is_array($content) ? $content : null,
+            $translations,
+            $translationsProvided,
         );
 
         return (new ShowcaseSectionResource($updated))->response();

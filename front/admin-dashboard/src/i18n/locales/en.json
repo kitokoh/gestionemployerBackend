@@ -4760,7 +4760,8 @@
     "travelAgency": "Travel agency",
     "surveyStats": "Solution surveys",
     "solutionSurveys": "Solution surveys",
-    "travel": "Travel Agency"
+    "travel": "Travel Agency",
+    "showcase": "Showcase site"
   },
   "companydetailCoreModuleAlwaysActive": "Core module always active",
   "smartAttendanceSessionsTitle": "Smart Attendance sessions",
@@ -6009,5 +6010,141 @@
   "fuelPumpistSubmit": "Submit reading",
   "crmAccounts": "CRM accounts",
   "crmContacts": "CRM contacts",
-  "crmLeads": "CRM leads"
+  "crmLeads": "CRM leads",
+  "showcase": {
+    "title": "Showcase site",
+    "subtitle": "Build your company public page section by section, then publish in one click.",
+    "loading": "Loading the showcase…",
+    "retry": "Retry",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "publishing": "Processing…",
+    "creating": "Creating…",
+    "status": {
+      "draft": "Draft",
+      "published": "Published"
+    },
+    "empty": {
+      "title": "No showcase yet",
+      "body": "Create your company showcase: it starts as a draft, nothing is published until you confirm.",
+      "create": "Create my showcase"
+    },
+    "gate": {
+      "featureTitle": "Showcase module inactive",
+      "featureBody": "The showcase module is not enabled for this company. Contact a platform administrator.",
+      "tenantTitle": "Company context required",
+      "tenantBody": "The showcase is managed with a company session (owner or HR).",
+      "errorTitle": "Unable to load",
+      "errorBody": "An error occurred while calling the showcase API."
+    },
+    "locale": {
+      "fr": "French",
+      "en": "English",
+      "ar": "Arabic",
+      "tr": "Turkish"
+    },
+    "type": {
+      "hero": "Hero banner",
+      "features": "Highlights",
+      "gallery": "Gallery",
+      "testimonials": "Testimonials",
+      "contact": "Contact",
+      "footer": "Footer"
+    },
+    "theme": {
+      "industrie": "Industry",
+      "service": "Service",
+      "commerce": "Commerce"
+    },
+    "color": {
+      "primary": "Primary",
+      "accent": "Accent",
+      "surface": "Background",
+      "on_primary": "Text on primary"
+    },
+    "collection": {
+      "items": "Items",
+      "links": "Links"
+    },
+    "field": {
+      "heading": "Main heading",
+      "subheading": "Subheading",
+      "image_id": "Visual",
+      "image_url": "Visual URL",
+      "cta_label": "Button label",
+      "cta_url": "Button target",
+      "title": "Title",
+      "icon": "Icon",
+      "description": "Description",
+      "caption": "Caption",
+      "quote": "Quote",
+      "author": "Author",
+      "role": "Role",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "text": "Text",
+      "label": "Label",
+      "url": "URL",
+      "mediaHint": "PNG, JPEG or WebP — 5 MB max (SVG for the logo)."
+    },
+    "media": {
+      "upload": "Choose a file",
+      "uploading": "Uploading…",
+      "remove": "Remove",
+      "preview": "Media preview",
+      "library": "Showcase media",
+      "choose": "— Media library —",
+      "uploadError": "The file upload failed."
+    },
+    "preview": {
+      "title": "Preview",
+      "noindex": "Draft — noindex",
+      "published": "Published",
+      "refresh": "Refresh",
+      "open": "Open",
+      "unavailable": "Preview unavailable: save the showcase to generate the link."
+    },
+    "settings": {
+      "title": "Theme and identity",
+      "theme": "Theme",
+      "brandName": "Brand name",
+      "tagline": "Tagline",
+      "logo": "Logo",
+      "logoHint": "PNG, JPEG, WebP or SVG — 2 MB max.",
+      "colors": "Colors",
+      "legalNotice": "Legal notice",
+      "legalPrivacy": "Privacy policy",
+      "legalEmail": "Contact email (legal)",
+      "save": "Save settings"
+    },
+    "editor": {
+      "title": "Edit section",
+      "sections": "Page sections",
+      "language": "Content language",
+      "rtl": "RTL",
+      "translationHint": "Translate the fields: empty ones automatically fall back to the reference content.",
+      "rtlHint": "Arabic is displayed right-to-left on the published showcase.",
+      "selectPrompt": "Select a section or add one.",
+      "addSection": "Add a section",
+      "addItem": "Add an item",
+      "removeItem": "Remove",
+      "itemNumber": "Item",
+      "duplicate": "Duplicate",
+      "delete": "Delete",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "dragHandle": "Reorder",
+      "confirmDelete": "Delete this section? This action is irreversible.",
+      "emptySection": "Empty section",
+      "noSections": "No section yet: add one to build the page.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "required": "This field is required.",
+      "tooLong": "Text too long.",
+      "refreshToken": "Regenerate preview link",
+      "openSite": "View site"
+    }
+  }
 }

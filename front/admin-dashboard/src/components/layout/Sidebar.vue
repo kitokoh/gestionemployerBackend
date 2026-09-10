@@ -160,7 +160,8 @@ import {
   LifebuoyIcon,
   ServerIcon,
   ArrowTrendingUpIcon,
-  MegaphoneIcon
+  MegaphoneIcon,
+  BuildingStorefrontIcon
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { useDashboardStore } from '@/stores/dashboard'
@@ -287,6 +288,12 @@ const navigation = computed(() => [
         }
       ]
     : []),
+  {
+    name: 'showcase',
+    title: t('navigation.showcase', 'Site vitrine'),
+    path: '/showcase',
+    icon: BuildingStorefrontIcon
+  },
   {
     name: 'fuelStation',
     title: t('navigation.fuelStation', 'Stations-service'),

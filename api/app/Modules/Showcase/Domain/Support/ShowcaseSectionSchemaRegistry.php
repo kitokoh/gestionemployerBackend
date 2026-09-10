@@ -22,6 +22,24 @@ final class ShowcaseSectionSchemaRegistry
 {
     public const SCHEMA_VERSION = 1;
 
+    /** Locale de référence du contenu (`content` porte toujours cette locale). */
+    public const DEFAULT_LOCALE = 'fr';
+
+    /**
+     * Locales de contenu supportées par la vitrine (spec §10, #6874).
+     *
+     * @var list<string>
+     */
+    public const SUPPORTED_LOCALES = ['fr', 'en', 'ar', 'tr'];
+
+    /**
+     * Locales à direction d'écriture droite-à-gauche (RTL) — l'arabe impose
+     * l'attribut `dir="rtl"` au rendu public (#6874).
+     *
+     * @var list<string>
+     */
+    public const RTL_LOCALES = ['ar'];
+
     /**
      * Documents JSON Schema (draft-07 subset) par type de section.
      *
@@ -191,5 +209,68 @@ final class ShowcaseSectionSchemaRegistry
     public static function isKnownType(string $type): bool
     {
         return self::schemaFor($type) !== null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function supportedLocales(): array
+    {
+        return self::SUPPORTED_LOCALES;
+    }
+
+    public static function defaultLocale(): string
+    {
+        return self::DEFAULT_LOCALE;
+    }
+
+    public static function isSupportedLocale(string $locale): bool
+    {
+        return in_array($locale, self::SUPPORTED_LOCALES, true);
+    }
+
+    public static function isRtlLocale(string $locale): bool
+    {
+        return in_array($locale, self::RTL_LOCALES, true);
+    }
+
+    /**
+     * Direction d'écriture (`ltr`/`rtl`) d'une locale supportée — `ltr` par
+     * repli pour une locale inconnue.
+     */
+    public static function directionFor(string $locale): string
+    {
+        return self::isRtlLocale($locale) ? 'rtl' : 'ltr';
+    }
+
+    /**
+     * Champs localisables d'une section, par type — chemins relatifs au
+     * contenu (`items.title` = sous-champ `title` de chaque élément du
+     * tableau `items`). Les champs non listés (médias, icônes, e-mails,
+     * URLs) sont partagés entre les locales : l'éditeur V-EDITOR #6870 ne
+     * les duplique pas dans `translations`.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function localizableFields(): array
+    {
+        return [
+            ShowcaseSectionType::Hero->value => ['heading', 'subheading', 'cta_label'],
+            ShowcaseSectionType::Features->value => ['title', 'items.title', 'items.description'],
+            ShowcaseSectionType::Gallery->value => ['title', 'items.caption'],
+            ShowcaseSectionType::Testimonials->value => ['title', 'items.quote', 'items.author', 'items.role'],
+            ShowcaseSectionType::Contact->value => ['title', 'phone', 'address'],
+            ShowcaseSectionType::Footer->value => ['text', 'links.label'],
+        ];
+    }
+
+    /**
+     * Champs localisables d'un type (`[]` si le type est inconnu).
+     *
+     * @return list<string>
+     */
+    public static function localizableFieldsFor(string $type): array
+    {
+        return self::localizableFields()[$type] ?? [];
     }
 }

@@ -4766,7 +4766,8 @@
     "travelAgency": "Seyahat acentesi",
     "surveyStats": "Çözüm anketleri",
     "solutionSurveys": "Çözüm anketleri",
-    "travel": "Seyahat acentesi"
+    "travel": "Seyahat acentesi",
+    "showcase": "Vitrin sitesi"
   },
   "companydetailCoreModuleAlwaysActive": "Çekirdek modül her zaman aktif",
   "smartAttendanceSessionsTitle": "Akıllı yoklama oturumları",
@@ -6148,5 +6149,141 @@
   "fuelPumpistSubmit": "Okumayı kaydet",
   "crmAccounts": "CRM hesapları",
   "crmContacts": "CRM kişileri",
-  "crmLeads": "CRM potansiyel müşterileri"
+  "crmLeads": "CRM potansiyel müşterileri",
+  "showcase": {
+    "title": "Vitrin sitesi",
+    "subtitle": "Şirketinizin genel sayfasını bölüm bölüm oluşturun, tek tıkla yayımlayın.",
+    "loading": "Vitrin yükleniyor…",
+    "retry": "Yeniden dene",
+    "publish": "Yayımla",
+    "unpublish": "Yayımdan kaldır",
+    "publishing": "İşleniyor…",
+    "creating": "Oluşturuluyor…",
+    "status": {
+      "draft": "Taslak",
+      "published": "Yayımlandı"
+    },
+    "empty": {
+      "title": "Henüz vitrin yok",
+      "body": "Şirket vitrininizi oluşturun: taslak olarak hazırlanır, siz onaylamadan hiçbir şey yayımlanmaz.",
+      "create": "Vitrinimi oluştur"
+    },
+    "gate": {
+      "featureTitle": "Vitrin modülü etkin değil",
+      "featureBody": "Vitrin modülü bu şirket için etkin değil. Platform yöneticisine başvurun.",
+      "tenantTitle": "Şirket bağlamı gerekli",
+      "tenantBody": "Vitrin bir şirket oturumuyla (sahip veya İK) yönetilir.",
+      "errorTitle": "Yüklenemedi",
+      "errorBody": "Vitrin API'si çağrılırken bir hata oluştu."
+    },
+    "locale": {
+      "fr": "Fransızca",
+      "en": "İngilizce",
+      "ar": "Arapça",
+      "tr": "Türkçe"
+    },
+    "type": {
+      "hero": "Ana banner",
+      "features": "Öne çıkanlar",
+      "gallery": "Galeri",
+      "testimonials": "Referanslar",
+      "contact": "İletişim",
+      "footer": "Alt bilgi"
+    },
+    "theme": {
+      "industrie": "Endüstri",
+      "service": "Hizmet",
+      "commerce": "Ticaret"
+    },
+    "color": {
+      "primary": "Ana renk",
+      "accent": "Vurgu",
+      "surface": "Arka plan",
+      "on_primary": "Ana renk üzeri metin"
+    },
+    "collection": {
+      "items": "Öğeler",
+      "links": "Bağlantılar"
+    },
+    "field": {
+      "heading": "Ana başlık",
+      "subheading": "Alt başlık",
+      "image_id": "Görsel",
+      "image_url": "Görsel URL'si",
+      "cta_label": "Düğme etiketi",
+      "cta_url": "Düğme hedefi",
+      "title": "Başlık",
+      "icon": "Simge",
+      "description": "Açıklama",
+      "caption": "Alt yazı",
+      "quote": "Alıntı",
+      "author": "Yazar",
+      "role": "Görev",
+      "email": "E-posta",
+      "phone": "Telefon",
+      "address": "Adres",
+      "text": "Metin",
+      "label": "Etiket",
+      "url": "URL",
+      "mediaHint": "PNG, JPEG veya WebP — en fazla 5 MB (logo için SVG)."
+    },
+    "media": {
+      "upload": "Dosya seç",
+      "uploading": "Yükleniyor…",
+      "remove": "Kaldır",
+      "preview": "Medya önizlemesi",
+      "library": "Vitrin medyası",
+      "choose": "— Medya kitaplığı —",
+      "uploadError": "Dosya yüklenemedi."
+    },
+    "preview": {
+      "title": "Önizleme",
+      "noindex": "Taslak — noindex",
+      "published": "Yayımlandı",
+      "refresh": "Yenile",
+      "open": "Aç",
+      "unavailable": "Önizleme kullanılamıyor: bağlantıyı oluşturmak için vitrini kaydedin."
+    },
+    "settings": {
+      "title": "Tema ve kimlik",
+      "theme": "Tema",
+      "brandName": "Marka adı",
+      "tagline": "Slogan",
+      "logo": "Logo",
+      "logoHint": "PNG, JPEG, WebP veya SVG — en fazla 2 MB.",
+      "colors": "Renkler",
+      "legalNotice": "Yasal bildirim",
+      "legalPrivacy": "Gizlilik politikası",
+      "legalEmail": "İletişim e-postası (yasal)",
+      "save": "Ayarları kaydet"
+    },
+    "editor": {
+      "title": "Bölümü düzenle",
+      "sections": "Sayfa bölümleri",
+      "language": "İçerik dili",
+      "rtl": "RTL",
+      "translationHint": "Alanları çevirin: boş bırakılanlar otomatik olarak referans içeriğe döner.",
+      "rtlHint": "Arapça, yayımlanan vitrinde sağdan sola gösterilir.",
+      "selectPrompt": "Bir bölüm seçin veya yeni bir bölüm ekleyin.",
+      "addSection": "Bölüm ekle",
+      "addItem": "Öğe ekle",
+      "removeItem": "Kaldır",
+      "itemNumber": "Öğe",
+      "duplicate": "Çoğalt",
+      "delete": "Sil",
+      "moveUp": "Yukarı taşı",
+      "moveDown": "Aşağı taşı",
+      "dragHandle": "Yeniden sırala",
+      "confirmDelete": "Bu bölüm silinsin mi? Bu işlem geri alınamaz.",
+      "emptySection": "Boş bölüm",
+      "noSections": "Bölüm yok: sayfayı oluşturmak için bir bölüm ekleyin.",
+      "cancel": "İptal",
+      "save": "Kaydet",
+      "saving": "Kaydediliyor…",
+      "required": "Bu alan zorunludur.",
+      "tooLong": "Metin çok uzun.",
+      "refreshToken": "Önizleme bağlantısını yenile",
+      "openSite": "Siteyi görüntüle"
+    }
+  }
 }

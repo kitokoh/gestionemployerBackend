@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ $vitrine['lang'] ?? 'fr' }}">
+<html lang="{{ $vitrine['lang'] ?? 'fr' }}" dir="{{ $vitrine['direction'] ?? 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,7 +7,12 @@
     @if (! empty($vitrine['meta']['description']))
         <meta name="description" content="{{ $vitrine['meta']['description'] }}">
     @endif
-    <link rel="canonical" href="{{ url('/vitrine/'.$vitrine['slug']) }}">
+    @php($canonicalLang = ($vitrine['lang'] ?? 'fr') !== 'fr' ? '?lang='.$vitrine['lang'] : '')
+    <link rel="canonical" href="{{ url('/vitrine/'.$vitrine['slug'].$canonicalLang) }}">
+    {{-- #6874 — alternatives de langue (multilingue fr/en/ar/tr) --}}
+    @foreach (($vitrine['available_locales'] ?? []) as $alternateLocale)
+        <link rel="alternate" hreflang="{{ $alternateLocale }}" href="{{ url('/vitrine/'.$vitrine['slug'].'?lang='.$alternateLocale) }}">
+    @endforeach
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ $vitrine['company_name'] }}">
     <meta property="og:title" content="{{ $vitrine['meta']['title'] ?? $vitrine['company_name'] }}">

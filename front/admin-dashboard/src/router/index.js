@@ -379,6 +379,18 @@ const routes = [
           icon: 'MegaphoneIcon'
         }
       },
+      // ── BC-27 SHOWCASE — éditeur du site vitrine (#6870/#6874) ────────────
+      // L'écran consomme exclusivement les endpoints réels /showcase/* ;
+      // les états (module inactif, contexte tenant) sont gérés dans la vue.
+      {
+        path: '/showcase',
+        name: 'showcase',
+        component: () => import('@/views/showcase/ShowcaseEditorView.vue'),
+        meta: {
+          title: 'navigation.showcase',
+          icon: 'BuildingStorefrontIcon'
+        }
+      },
       {
         path: '/settings',
         name: 'settings',

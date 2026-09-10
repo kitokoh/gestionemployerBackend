@@ -26,14 +26,21 @@ final class ShowcaseSectionSchemaValidator
     /**
      * Valide le contenu et lève une ValidationException si invalide.
      *
+     * En mode `$partial` (surcouche de traduction, #6874), les contraintes de
+     * complétude (`required`, `minItems`) sont ignorées : une traduction peut
+     * ne couvrir qu'une partie des champs localisables, les autres retombant
+     * sur le contenu de référence au rendu. Les contraintes de forme
+     * (`type`, `additionalProperties`, `maxLength`, `maxItems`) restent
+     * appliquées.
+     *
      * @param  array<string, mixed>  $content
      * @return array<string, mixed> Contenu normalisé (clés connues uniquement).
      *
      * @throws ValidationException
      */
-    public function validateOrFail(string $type, array $content): array
+    public function validateOrFail(string $type, array $content, bool $partial = false): array
     {
-        $errors = $this->validate($type, $content);
+        $errors = $this->validate($type, $content, $partial);
 
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
@@ -46,18 +53,30 @@ final class ShowcaseSectionSchemaValidator
      * @param  array<string, mixed>  $content
      * @return array<string, list<string>> Erreurs indexées par chemin (style Laravel).
      */
-    public function validate(string $type, array $content): array
+    public function validate(string $type, array $content, bool $partial = false): array
     {
         $schema = ShowcaseSectionSchemaRegistry::schemaFor($type);
 
         if ($schema === null) {
-            return ['type' => [sprintf('Type de section inconnu : « %s ».', $type)]];
+            return ['type' => [$this->message('section_type_unknown', ['type' => $type], 'Unknown section type: '.$type.'.')]];
         }
 
         $errors = [];
-        $this->checkNode($schema, $content, 'content', $errors);
+        $this->checkNode($schema, $content, 'content', $errors, $partial);
 
         return $errors;
+    }
+
+    /**
+     * Message d'erreur localisé (clé `showcase.*`, catalogues fr/en/ar/tr —
+     * #6874) avec repli technique non accentué quand le traducteur Laravel
+     * n'est pas disponible (tests unitaires du contrat, PA2-I18N-007).
+     *
+     * @param  array<string, string>  $replace
+     */
+    private function message(string $key, array $replace, string $fallback): string
+    {
+        return ShowcaseMessage::get($key, $replace, $fallback);
     }
 
     /**
@@ -65,7 +84,7 @@ final class ShowcaseSectionSchemaValidator
      * @param  string  $pointer  Chemin JSON pointer concaténé (ex. content.items.2.title)
      * @param  array<string, list<string>>  $errors
      */
-    private function checkNode(array $schema, mixed $value, string $pointer, array &$errors): void
+    private function checkNode(array $schema, mixed $value, string $pointer, array &$errors, bool $partial = false): void
     {
         $expected = $schema['type'] ?? null;
 
@@ -92,9 +111,11 @@ final class ShowcaseSectionSchemaValidator
                 }
             }
 
-            foreach (($schema['required'] ?? []) as $required) {
-                if (! array_key_exists($required, $value)) {
-                    $errors[$pointer.'.'.$required] = [sprintf('Le champ %s est requis.', $required)];
+            if (! $partial) {
+                foreach (($schema['required'] ?? []) as $required) {
+                    if (! array_key_exists($required, $value)) {
+                        $errors[$pointer.'.'.$required] = [$this->message('section_field_required', ['field' => $required], 'The field '.$required.' is required.')];
+                    }
                 }
             }
 
@@ -107,7 +128,7 @@ final class ShowcaseSectionSchemaValidator
                     continue;
                 }
 
-                $this->checkNode($childSchema, $child, $pointer.'.'.$key, $errors);
+                $this->checkNode($childSchema, $child, $pointer.'.'.$key, $errors, $partial);
             }
 
             return;
@@ -122,7 +143,7 @@ final class ShowcaseSectionSchemaValidator
 
             $count = count($value);
 
-            if (isset($schema['minItems']) && $count < $schema['minItems']) {
+            if (! $partial && isset($schema['minItems']) && $count < $schema['minItems']) {
                 $errors[$pointer] = [sprintf('Le champ %s doit contenir au moins %d élément(s).', $pointer, $schema['minItems'])];
             }
 
@@ -134,7 +155,7 @@ final class ShowcaseSectionSchemaValidator
 
             if ($itemSchema !== null) {
                 foreach ($value as $index => $item) {
-                    $this->checkNode($itemSchema, $item, $pointer.'.'.$index, $errors);
+                    $this->checkNode($itemSchema, $item, $pointer.'.'.$index, $errors, $partial);
                 }
             }
 

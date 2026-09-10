@@ -9,6 +9,7 @@ use App\Modules\Showcase\Domain\Models\CompanyShowcase;
 use App\Modules\Showcase\Domain\Models\CompanyShowcaseSection;
 use App\Modules\Showcase\Domain\Support\ShowcaseSectionSchemaRegistry;
 use App\Modules\Showcase\Domain\Support\ShowcaseSectionSchemaValidator;
+use App\Modules\Showcase\Domain\Support\ShowcaseSectionTranslationValidator;
 use App\Modules\Showcase\Infrastructure\Services\ShowcasePublicCache;
 use Illuminate\Validation\ValidationException;
 
@@ -26,21 +27,24 @@ final class CreateShowcaseSectionAction
 {
     public function __construct(
         private readonly ShowcaseSectionSchemaValidator $validator,
+        private readonly ShowcaseSectionTranslationValidator $translationValidator,
         private readonly ShowcasePublicCache $publicCache,
     ) {}
 
     /**
      * @param  array<string, mixed>  $content
+     * @param  array<string, mixed>|null  $translations  Surcouches fr/en/ar/tr (#6874).
      */
-    public function execute(CompanyShowcase $showcase, string $type, array $content): CompanyShowcaseSection
+    public function execute(CompanyShowcase $showcase, string $type, array $content, ?array $translations = null): CompanyShowcaseSection
     {
         if (! ShowcaseSectionSchemaRegistry::isKnownType($type)) {
             throw ValidationException::withMessages([
-                'type' => [sprintf('Type de section inconnu : « %s ».', $type)],
+                'type' => [(string) __('showcase.section_type_unknown', ['type' => $type])],
             ]);
         }
 
         $content = $this->validator->validateOrFail($type, $content);
+        $translations = $this->translationsOrNull($type, $translations);
 
         $maxOrder = (int) CompanyShowcaseSection::query()
             ->where('showcase_id', $showcase->id)
@@ -52,6 +56,7 @@ final class CreateShowcaseSectionAction
             'showcase_id' => $showcase->id,
             'type' => $type,
             'content' => $content,
+            'translations' => $translations,
             'sort_order' => $maxOrder + 10,
             'schema_version' => ShowcaseSectionSchemaRegistry::SCHEMA_VERSION,
         ]);
@@ -59,6 +64,22 @@ final class CreateShowcaseSectionAction
         $this->invalidateIfPublished($showcase);
 
         return $section;
+    }
+
+    /**
+     * Valide les surcouches multilingues et normalise une carte vide en
+     * `null` (aucune traduction stockée).
+     *
+     * @param  array<string, mixed>|null  $translations
+     * @return array<string, mixed>|null
+     */
+    private function translationsOrNull(string $type, ?array $translations): ?array
+    {
+        if ($translations === null || $translations === []) {
+            return null;
+        }
+
+        return $this->translationValidator->validateOrFail($type, $translations);
     }
 
     private function invalidateIfPublished(CompanyShowcase $showcase): void

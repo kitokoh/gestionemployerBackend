@@ -31,6 +31,10 @@ final class StoreShowcaseSectionRequest extends FormRequest
         return [
             'type' => ['required', 'string', Rule::in(ShowcaseSectionType::v1())],
             'content' => ['required', 'array'],
+            // #6874 — surcouches de contenu par locale (fr/en/ar/tr) ; le
+            // détail (locale supportée, forme du contenu) est validé par
+            // ShowcaseSectionTranslationValidator → 422 indexé.
+            'translations' => ['sometimes', 'array'],
             'schema_version' => ['sometimes', 'integer', 'min:1', 'max:'.ShowcaseSectionSchemaRegistry::SCHEMA_VERSION],
         ];
     }

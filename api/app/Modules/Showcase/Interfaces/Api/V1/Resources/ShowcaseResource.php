@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Showcase\Interfaces\Api\V1\Resources;
 
 use App\Modules\Showcase\Domain\Models\CompanyShowcase;
+use App\Modules\Showcase\Domain\Support\ShowcaseSectionSchemaRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -45,6 +46,19 @@ final class ShowcaseResource extends JsonResource
             'preview_path' => $showcase->preview_token !== null
                 ? '/public/vitrine/'.$showcase->slug.'?token='.$showcase->preview_token
                 : null,
+            // #6870/#6874 — contrat de contenu exposé à l'éditeur admin : liste
+            // des types de sections v1, champs localisables par type et locales
+            // supportées. Source unique = ShowcaseSectionSchemaRegistry (le
+            // jour où `products` BC-28 #6891 entre dans le registre, l'éditeur
+            // le propose sans changement de code front).
+            'editor_contract' => [
+                'schema_version' => ShowcaseSectionSchemaRegistry::SCHEMA_VERSION,
+                'section_types' => ShowcaseSectionSchemaRegistry::knownTypes(),
+                'localizable_fields' => ShowcaseSectionSchemaRegistry::localizableFields(),
+                'supported_locales' => ShowcaseSectionSchemaRegistry::supportedLocales(),
+                'default_locale' => ShowcaseSectionSchemaRegistry::defaultLocale(),
+                'rtl_locales' => ShowcaseSectionSchemaRegistry::RTL_LOCALES,
+            ],
             'published_at' => $showcase->published_at?->toIso8601String(),
             'created_at' => $showcase->created_at?->toIso8601String(),
             'updated_at' => $showcase->updated_at?->toIso8601String(),

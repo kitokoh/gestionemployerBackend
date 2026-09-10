@@ -10,6 +10,7 @@ use App\Modules\Showcase\Domain\Models\CompanyShowcase;
 use App\Modules\Showcase\Domain\Models\CompanyShowcaseSection;
 use App\Modules\Showcase\Domain\Support\ShowcaseSectionSchemaRegistry;
 use App\Modules\Showcase\Domain\Support\ShowcaseSectionSchemaValidator;
+use App\Modules\Showcase\Domain\Support\ShowcaseSectionTranslationValidator;
 use App\Modules\Showcase\Infrastructure\Services\ShowcasePublicCache;
 use Illuminate\Validation\ValidationException;
 
@@ -26,19 +27,23 @@ final class UpdateShowcaseSectionAction
 {
     public function __construct(
         private readonly ShowcaseSectionSchemaValidator $validator,
+        private readonly ShowcaseSectionTranslationValidator $translationValidator,
         private readonly ShowcasePublicCache $publicCache,
     ) {}
 
     /**
      * @param  array<string, mixed>|null  $content
+     * @param  array<string, mixed>|null  $translations  Surcouches fr/en/ar/tr (#6874).
+     * @param  bool  $translationsProvided  `true` remplace la carte (tableau vide → purge) ;
+     *                                       `false` laisse les traductions inchangées.
      */
-    public function execute(CompanyShowcase $showcase, CompanyShowcaseSection $section, ?string $type, ?array $content = null): CompanyShowcaseSection
+    public function execute(CompanyShowcase $showcase, CompanyShowcaseSection $section, ?string $type, ?array $content = null, ?array $translations = null, bool $translationsProvided = false): CompanyShowcaseSection
     {
         $nextType = $type ?? $section->type->value;
 
         if (! ShowcaseSectionSchemaRegistry::isKnownType($nextType)) {
             throw ValidationException::withMessages([
-                'type' => [sprintf('Type de section inconnu : « %s ».', $nextType)],
+                'type' => [(string) __('showcase.section_type_unknown', ['type' => $nextType])],
             ]);
         }
 
@@ -49,6 +54,13 @@ final class UpdateShowcaseSectionAction
 
         $section->type = ShowcaseSectionType::from($nextType);
         $section->content = $nextContent;
+
+        if ($translationsProvided) {
+            $section->translations = ($translations === null || $translations === [])
+                ? null
+                : $this->translationValidator->validateOrFail($nextType, $translations);
+        }
+
         $section->schema_version = ShowcaseSectionSchemaRegistry::SCHEMA_VERSION;
         $section->save();
 

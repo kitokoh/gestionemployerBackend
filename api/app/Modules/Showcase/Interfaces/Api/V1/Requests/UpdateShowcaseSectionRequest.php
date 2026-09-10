@@ -32,6 +32,10 @@ final class UpdateShowcaseSectionRequest extends FormRequest
         return [
             'type' => ['sometimes', 'required', 'string', Rule::in(ShowcaseSectionType::v1())],
             'content' => ['sometimes', 'required', 'array'],
+            // #6874 — surcouches de contenu par locale. Présent → remplace la
+            // carte complète (`[]` purge toutes les traductions) ; absent →
+            // traductions inchangées.
+            'translations' => ['sometimes', 'array'],
             'schema_version' => ['sometimes', 'integer', 'min:1', 'max:'.ShowcaseSectionSchemaRegistry::SCHEMA_VERSION],
         ];
     }

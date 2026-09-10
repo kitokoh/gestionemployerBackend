@@ -8,6 +8,8 @@ use App\Modules\Showcase\Domain\Enums\ShowcaseSectionType;
 use App\Modules\Showcase\Domain\Models\CompanyShowcase;
 use App\Modules\Showcase\Domain\Models\CompanyShowcaseSection;
 use App\Modules\Showcase\Domain\Models\ShowcaseMedia;
+use App\Modules\Showcase\Domain\Support\ShowcaseSectionContentResolver;
+use App\Modules\Showcase\Domain\Support\ShowcaseSectionSchemaRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -63,6 +65,7 @@ final class VitrinePublicResource extends JsonResource
         private readonly array $sections,
         private readonly string $companyName,
         private readonly array $media = [],
+        private readonly string $locale = ShowcaseSectionSchemaRegistry::DEFAULT_LOCALE,
     ) {
         parent::__construct($showcase);
     }
@@ -81,6 +84,11 @@ final class VitrinePublicResource extends JsonResource
             'slug' => $showcase->slug,
             'company_name' => $this->companyName,
             'theme' => $showcase->theme,
+            // #6874 — locale de rendu et direction d'écriture (RTL arabe) :
+            // consommées par le gabarit SSR (`<html lang dir>`).
+            'lang' => $this->locale,
+            'direction' => ShowcaseSectionSchemaRegistry::directionFor($this->locale),
+            'available_locales' => $this->availableLocales(),
             'published_at' => $showcase->published_at?->toIso8601String(),
             'settings' => $this->publicSettings($showcase),
             'legal' => $this->legal($showcase),
@@ -97,13 +105,50 @@ final class VitrinePublicResource extends JsonResource
     private function publicSections(): array
     {
         return array_map(
-            static fn (CompanyShowcaseSection $section): array => [
-                'type' => $section->type->value,
-                'schema_version' => $section->schema_version,
-                'content' => $section->content ?? new \stdClass,
-            ],
+            function (CompanyShowcaseSection $section): array {
+                $content = is_array($section->content) ? $section->content : [];
+                $translations = is_array($section->translations) ? $section->translations : null;
+
+                $resolved = ShowcaseSectionContentResolver::resolve($content, $translations, $this->locale);
+
+                return [
+                    'type' => $section->type->value,
+                    'schema_version' => $section->schema_version,
+                    'content' => $resolved !== [] ? $resolved : new \stdClass,
+                ];
+            },
             $this->sections
         );
+    }
+
+    /**
+     * Locales réellement disponibles sur la vitrine (union des surcouches de
+     * sections + locale de référence) — alimente le sélecteur de langue
+     * exposé côté public. Aucune donnée interne (juste des codes de locale).
+     *
+     * @return list<string>
+     */
+    private function availableLocales(): array
+    {
+        $present = [ShowcaseSectionSchemaRegistry::defaultLocale() => true];
+
+        foreach ($this->sections as $section) {
+            $translations = is_array($section->translations) ? $section->translations : null;
+
+            foreach (ShowcaseSectionContentResolver::availableLocales($translations) as $locale) {
+                $present[$locale] = true;
+            }
+        }
+
+        $locales = [];
+
+        foreach (ShowcaseSectionSchemaRegistry::supportedLocales() as $locale) {
+            if (isset($present[$locale])) {
+                $locales[] = $locale;
+            }
+        }
+
+        return $locales;
     }
 
     /**
@@ -339,29 +384,42 @@ final class VitrinePublicResource extends JsonResource
         }
 
         foreach ($this->sections as $section) {
-            $content = $section->content ?? [];
+            $contents = [is_array($section->content) ? $section->content : []];
 
-            $imageId = $content['image_id'] ?? null;
-
-            if (is_string($imageId) && $imageId !== '') {
-                $ids[] = $imageId;
+            // #6874 — une surcouche de locale peut référencer un média
+            // (image_id) : il doit rester exposé même s'il n'apparaît pas
+            // dans le contenu de référence.
+            if (is_array($section->translations)) {
+                foreach ($section->translations as $translation) {
+                    if (is_array($translation)) {
+                        $contents[] = $translation;
+                    }
+                }
             }
 
-            $items = $content['items'] ?? null;
+            foreach ($contents as $content) {
+                $imageId = $content['image_id'] ?? null;
 
-            if (! is_array($items)) {
-                continue;
-            }
+                if (is_string($imageId) && $imageId !== '') {
+                    $ids[] = $imageId;
+                }
 
-            foreach ($items as $item) {
-                if (! is_array($item)) {
+                $items = $content['items'] ?? null;
+
+                if (! is_array($items)) {
                     continue;
                 }
 
-                $itemImageId = $item['image_id'] ?? null;
+                foreach ($items as $item) {
+                    if (! is_array($item)) {
+                        continue;
+                    }
 
-                if (is_string($itemImageId) && $itemImageId !== '') {
-                    $ids[] = $itemImageId;
+                    $itemImageId = $item['image_id'] ?? null;
+
+                    if (is_string($itemImageId) && $itemImageId !== '') {
+                        $ids[] = $itemImageId;
+                    }
                 }
             }
         }

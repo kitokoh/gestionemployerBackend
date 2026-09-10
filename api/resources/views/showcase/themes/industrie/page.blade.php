@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ $vitrine['lang'] ?? app()->getLocale() }}">
+<html lang="{{ $vitrine['lang'] ?? app()->getLocale() }}" dir="{{ $vitrine['direction'] ?? 'ltr' }}">
 <head>
     @include('showcase.partials.head')
     @include('showcase.partials.theme-styles')
