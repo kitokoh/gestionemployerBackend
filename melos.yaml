@@ -71,6 +71,25 @@ scripts:
       ignore:
         - leopardo_core
 
+  # ── Desktop (protocole P06, pilote BC Accounting #7056) ─────────
+  build:windows:
+    run: flutter build windows --release
+    description: Build Windows desktop (release)
+    exec:
+      concurrency: 1
+    packageFilters:
+      ignore:
+        - leopardo_core   # Core is a library, not an app
+
+  build:macos:
+    run: flutter build macos --release --no-codesign
+    description: Build macOS desktop (release, no codesign for CI)
+    exec:
+      concurrency: 1
+    packageFilters:
+      ignore:
+        - leopardo_core   # Core is a library, not an app
+
   # ── Codegen ───────────────────────────────────────────────
   gen:
     run: dart run build_runner build --delete-conflicting-outputs

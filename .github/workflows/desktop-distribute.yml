@@ -1,0 +1,122 @@
+name: Desktop - Build & Distribute (pilote)
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Application desktop a construire"
+        required: true
+        default: "leopardo_accounting"
+        type: choice
+        options:
+          - leopardo_accounting
+      platform:
+        description: "Plateforme(s) cible(s)"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - both
+          - windows
+          - macos
+      environment:
+        description: "Volet API cible (dev = continu ; pilot = pilote interne)"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - pilot
+      api_url:
+        description: "URL API explicite (defaut : vars.PROD_API_BASE_URL, garde #4524)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: desktop-distribute-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-package:
+    timeout-minutes: 120
+    name: Desktop build (${{ matrix.os.name }})
+    runs-on: ${{ matrix.os.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os:
+              name: windows
+              runner: windows-latest
+            build: windows
+            artifact_path: front/mobile_apps/leopardo_accounting/build/windows/x64/runner/Release/
+            extra_args: ""
+          - os:
+              name: macos
+              runner: macos-latest
+            build: macos
+            artifact_path: front/mobile_apps/leopardo_accounting/build/macos/Build/Products/Release/
+            extra_args: "--no-codesign"   # pilote interne : pas de notarisation (P06 §4)
+
+    steps:
+      # Garde #4524 : jamais de build sans URL d'API explicite (fail-open supprimé).
+      - name: Guard API_BASE_URL (#4524)
+        shell: bash
+        run: |
+          API_URL="${{ inputs.api_url }}"
+          if [[ -z "${API_URL}" ]]; then
+            API_URL="${{ vars.PROD_API_BASE_URL }}"
+          fi
+          if [[ -z "${API_URL}" ]]; then
+            echo "::error::API_BASE_URL must be set (input api_url ou vars.PROD_API_BASE_URL) — garde #4524."
+            exit 1
+          fi
+          echo "API_BASE_URL=${API_URL}" >> "$GITHUB_ENV"
+          echo "Cible API (volet ${{ inputs.environment }}) : ${API_URL}"
+
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          lfs: false
+
+      - name: Setup Flutter (stable)
+        uses: subosito/flutter-action@1a449c444387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build ${{ matrix.os.name }} (release)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "front/mobile_apps/${{ inputs.app }}"
+          flutter build ${{ matrix.build }} --release ${{ matrix.extra_args }} \
+            --dart-define=API_BASE_URL="${API_BASE_URL}"
+
+      - name: Verify artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ matrix.build }}" == "windows" ]]; then
+            ARTIFACT="front/mobile_apps/${{ inputs.app }}/build/windows/x64/runner/Release"
+            test -f "${ARTIFACT}/${{ inputs.app }}.exe"
+            du -h "${ARTIFACT}/${{ inputs.app }}.exe"
+          else
+            ARTIFACT="front/mobile_apps/${{ inputs.app }}/build/macos/Build/Products/Release"
+            test -d "${ARTIFACT}/${{ inputs.app }}.app"
+            du -sh "${ARTIFACT}/${{ inputs.app }}.app"
+          fi
+
+      - name: Upload artifact (canal pilote interne — aucun lien public)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: leopardo-desktop-${{ inputs.app }}-${{ matrix.os.name }}-${{ github.run_id }}
+          path: ${{ matrix.artifact_path }}
+          if-no-files-found: error
+          retention-days: 14
