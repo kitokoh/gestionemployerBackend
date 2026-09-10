@@ -49,7 +49,8 @@ final class ShowcaseSectionSchemaRegistry
                 'properties' => [
                     'heading' => ['type' => 'string', 'maxLength' => 120, 'description' => "Titre principal (ex. nom de l'entreprise)."],
                     'subheading' => ['type' => 'string', 'maxLength' => 280, 'description' => 'Sous-titre / slogan court.'],
-                    'image_url' => ['type' => 'string', 'maxLength' => 500, 'description' => 'URL publique du visuel principal (médias BC-27 #6872 à terme).'],
+                    'image_url' => ['type' => 'string', 'maxLength' => 500, 'description' => 'URL publique du visuel principal (externe, repli).'],
+                    'image_id' => ['type' => 'string', 'maxLength' => 64, 'description' => 'Identifiant stable (uuid) d\'un média vitrine #6872 (préféré à image_url).'],
                     'cta_label' => ['type' => 'string', 'maxLength' => 40, 'description' => "Libellé du bouton d'appel à l'action."],
                     'cta_url' => ['type' => 'string', 'maxLength' => 500, 'description' => 'Cible du bouton (lien interne /public/vitrine/{slug} ou externe).'],
                 ],
@@ -96,7 +97,8 @@ final class ShowcaseSectionSchemaRegistry
                             'type' => 'object',
                             'additionalProperties' => false,
                             'properties' => [
-                                'image_url' => $string(500, 'URL publique de l\'image.'),
+                                'image_url' => $string(500, 'URL publique de l\'image (externe, repli).'),
+                                'image_id' => $string(64, 'Identifiant stable (uuid) d\'un média vitrine #6872.'),
                                 'caption' => $string(200, 'Légende optionnelle.'),
                             ],
                             'required' => ['image_url'],

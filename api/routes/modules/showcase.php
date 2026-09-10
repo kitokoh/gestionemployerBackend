@@ -20,13 +20,17 @@ declare(strict_types=1);
  * PUBLIC (vitrine consultée sans auth) — groupe isolé `throttle:shop-public`
  * (aucun middleware tenant/utilisateur), DTO public dédié (#6867) :
  *   - `GET /public/vitrine/{slug}` (aperçu brouillon via `?token=`, #6871) ;
+ *   - `GET /public/vitrine/{slug}/media/{uuid}` (logo/image d'une vitrine
+ *     publiée, cache headers longs, #6872) ;
  *   - `POST /public/vitrine/{slug}/contact` (formulaire contact, #6875) ;
  *   - `GET /public/vitrine/sitemap.xml` + `robots.txt` (#6873).
  */
 
 use App\Modules\Showcase\Interfaces\Api\V1\Controllers\ShowcaseController;
+use App\Modules\Showcase\Interfaces\Api\V1\Controllers\ShowcaseMediaController;
 use App\Modules\Showcase\Interfaces\Api\V1\Controllers\ShowcasePublicContactController;
 use App\Modules\Showcase\Interfaces\Api\V1\Controllers\ShowcasePublicController;
+use App\Modules\Showcase\Interfaces\Api\V1\Controllers\ShowcasePublicMediaController;
 use App\Modules\Showcase\Interfaces\Api\V1\Controllers\ShowcaseSectionController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +52,12 @@ Route::middleware(['throttle:shop-public'])
             ->name('showcase.public.contact');
 
         // #6867 — vitrine publiée (aperçu brouillon via `?token=` #6871).
+        // #6872 — média public d'une vitrine publiée (cache headers longs).
+        Route::get('/{slug}/media/{uuid}', [ShowcasePublicMediaController::class, 'show'])
+            ->where('slug', '[A-Za-z0-9\-_]{1,160}')
+            ->where('uuid', '[0-9a-fA-F\-]{36}')
+            ->name('showcase.public.media');
+
         Route::get('/{slug}', [ShowcasePublicController::class, 'show'])
             ->where('slug', '[A-Za-z0-9\-_]{1,160}')
             ->name('showcase.public.show');
@@ -61,6 +71,9 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'token.refresh', 'tenant', 't
         Route::get('/', [ShowcaseController::class, 'show']);
         Route::post('/', [ShowcaseController::class, 'store']);
 
+        // V-THEMES #6868 — choix du thème (+ réglages/légal) : PATCH /showcase.
+        Route::patch('/', [ShowcaseController::class, 'update']);
+
         // V-PUBLISH #6871 — workflow draft → published / published → draft +
         // jeton d'aperçu privé.
         Route::post('/publish', [ShowcaseController::class, 'publish']);
@@ -69,6 +82,11 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'token.refresh', 'tenant', 't
 
         // V-RGPD #6875 — variables de marque + bloc légal éditables.
         Route::patch('/settings', [ShowcaseController::class, 'updateSettings']);
+
+        // V-MEDIA #6872 — médias de la vitrine (logo, images de sections).
+        Route::get('/media', [ShowcaseMediaController::class, 'index']);
+        Route::post('/media', [ShowcaseMediaController::class, 'store']);
+        Route::delete('/media/{media}', [ShowcaseMediaController::class, 'destroy'])->whereNumber('media');
 
         // Sections (contrat JSON Schema + CRUD, #6866).
         Route::get('/sections', [ShowcaseSectionController::class, 'index']);

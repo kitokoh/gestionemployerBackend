@@ -11,10 +11,13 @@ use App\Modules\Showcase\Application\Actions\PublishShowcaseAction;
 use App\Modules\Showcase\Application\Actions\RotateShowcasePreviewTokenAction;
 use App\Modules\Showcase\Application\Actions\UnpublishShowcaseAction;
 use App\Modules\Showcase\Application\Actions\UpdateShowcaseSettingsAction;
+use App\Modules\Showcase\Application\Actions\UpdateShowcaseThemeAction;
+use App\Modules\Showcase\Domain\Enums\ShowcaseTheme;
 use App\Modules\Showcase\Domain\Models\CompanyShowcase;
 use App\Modules\Showcase\Interfaces\Api\V1\Resources\ShowcaseResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * BC-27 SHOWCASE — gestion de la vitrine du tenant.
@@ -28,6 +31,8 @@ use Illuminate\Http\Request;
  * d'aperçu privé d'un brouillon).
  * V-RGPD #6875 : `PATCH /showcase/settings` (variables de marque + bloc
  * mentions légales / politique de confidentialité éditables).
+ * V-THEMES #6868 : `PATCH /showcase` étend le PATCH aux réglages/légal et
+ * sélectionne le thème v1 (Industrie/Service/Commerce, allowlist).
  *
  * RBAC : routes groupées `api.manager:principal,rh` + Policy
  * CompanyShowcasePolicy (update/publish réservés principal/rh du tenant) ;
@@ -42,6 +47,7 @@ final class ShowcaseController extends Controller
         private readonly UnpublishShowcaseAction $unpublishShowcase,
         private readonly RotateShowcasePreviewTokenAction $rotatePreviewToken,
         private readonly UpdateShowcaseSettingsAction $updateSettings,
+        private readonly UpdateShowcaseThemeAction $updateTheme,
     ) {}
 
     public function show(Request $request): JsonResponse
@@ -114,6 +120,28 @@ final class ShowcaseController extends Controller
                 'preview_path' => '/public/vitrine/'.$showcase->slug.'?token='.$token,
             ],
         ]);
+    }
+
+    public function update(Request $request): JsonResponse
+    {
+        $showcase = $this->currentShowcaseOrFail();
+        $actor = $this->authorizeUpdate($request, $showcase);
+
+        $payload = $request->validate([
+            'theme' => ['sometimes', 'string', Rule::in(ShowcaseTheme::v1())],
+            'settings' => ['sometimes', 'array'],
+            'legal' => ['sometimes', 'array'],
+        ]);
+
+        if (array_key_exists('theme', $payload)) {
+            $this->updateTheme->execute($showcase, (string) $payload['theme'], $actor->id);
+        }
+
+        if (array_key_exists('settings', $payload) || array_key_exists('legal', $payload)) {
+            $this->updateSettings->execute($showcase, $payload, $actor->id);
+        }
+
+        return (new ShowcaseResource($showcase->refresh()))->response();
     }
 
     public function updateSettings(Request $request): JsonResponse

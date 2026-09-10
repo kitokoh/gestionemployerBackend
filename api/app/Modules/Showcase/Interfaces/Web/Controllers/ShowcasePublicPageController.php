@@ -10,7 +10,10 @@ use App\Http\Controllers\Controller;
 use App\Modules\Showcase\Domain\Enums\CompanyShowcaseStatus;
 use App\Modules\Showcase\Domain\Models\CompanyShowcase;
 use App\Modules\Showcase\Domain\Models\CompanyShowcaseSection;
+use App\Modules\Showcase\Domain\Models\ShowcaseMedia;
+use App\Modules\Showcase\Domain\Support\ShowcaseThemeRegistry;
 use App\Modules\Showcase\Infrastructure\Services\ShowcasePublicCache;
+use App\Modules\Showcase\Infrastructure\Services\ShowcaseThemeRenderer;
 use App\Modules\Showcase\Interfaces\Api\V1\Resources\VitrinePublicResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -40,6 +43,7 @@ final class ShowcasePublicPageController extends Controller
     public function __construct(
         private readonly TenantManager $tenantManager,
         private readonly ShowcasePublicCache $cache,
+        private readonly ShowcaseThemeRenderer $renderer,
     ) {}
 
     public function show(Request $request, string $slug): Response
@@ -58,8 +62,16 @@ final class ShowcasePublicPageController extends Controller
                 ->header('X-Robots-Tag', self::NOINDEX_HEADER);
         }
 
-        $response = response()->view('showcase.vitrine', [
+        $theme = is_string($payload['theme'] ?? null) ? $payload['theme'] : ShowcaseThemeRegistry::DEFAULT;
+        $settings = is_array($payload['settings'] ?? null) ? $payload['settings'] : [];
+        $companyName = is_string($payload['company_name'] ?? null) ? $payload['company_name'] : '';
+
+        $response = response()->view($this->renderer->pageView($theme), [
             'vitrine' => $payload,
+            'theme' => $theme,
+            'variables' => $this->renderer->variables($theme, $settings, $companyName),
+            'sectionViews' => $this->renderer->sectionViews($theme, $this->sectionTypes($payload)),
+            'mediaMap' => $this->mediaMap($payload),
             'contactAction' => url('/api/v1/public/vitrine/'.$slug.'/contact'),
         ]);
 
@@ -68,6 +80,52 @@ final class ShowcasePublicPageController extends Controller
         }
 
         return $response;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return list<string>
+     */
+    private function sectionTypes(array $payload): array
+    {
+        $sections = $payload['sections'] ?? null;
+
+        if (! is_array($sections)) {
+            return [];
+        }
+
+        $types = [];
+
+        foreach ($sections as $section) {
+            if (is_array($section) && is_string($section['type'] ?? null)) {
+                $types[] = $section['type'];
+            }
+        }
+
+        return $types;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, array<string, mixed>>
+     */
+    private function mediaMap(array $payload): array
+    {
+        $media = $payload['media'] ?? null;
+
+        if (! is_array($media)) {
+            return [];
+        }
+
+        $map = [];
+
+        foreach ($media as $item) {
+            if (is_array($item) && is_string($item['id'] ?? null)) {
+                $map[$item['id']] = $item;
+            }
+        }
+
+        return $map;
     }
 
     /**
@@ -117,7 +175,14 @@ final class ShowcasePublicPageController extends Controller
                     ->get()
                     ->all();
 
-                return (new VitrinePublicResource($showcase, $sections, $company->name))->resolve($request);
+                /** @var list<ShowcaseMedia> $media */
+                $media = ShowcaseMedia::query()
+                    ->where('showcase_id', $showcase->id)
+                    ->orderBy('id')
+                    ->get()
+                    ->all();
+
+                return (new VitrinePublicResource($showcase, $sections, $company->name, $media))->resolve($request);
             });
         };
 

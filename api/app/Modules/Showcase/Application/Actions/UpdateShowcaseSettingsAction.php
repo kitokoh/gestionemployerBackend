@@ -25,7 +25,7 @@ use Illuminate\Validation\ValidationException;
 final class UpdateShowcaseSettingsAction
 {
     /** Allowlist des variables scalaires de `settings` exposées au public. */
-    private const ALLOWED_SETTING_KEYS = ['brand_name', 'tagline', 'og_image', 'font_family', 'radius'];
+    private const ALLOWED_SETTING_KEYS = ['brand_name', 'tagline', 'og_image', 'logo_id', 'logo_url', 'font_family', 'radius'];
 
     /** Allowlist des sous-clés de `settings.colors`. */
     private const ALLOWED_COLOR_KEYS = ['primary', 'accent', 'surface', 'on_primary'];

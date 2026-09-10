@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Showcase\Domain\Enums\CompanyShowcaseStatus;
 use App\Modules\Showcase\Domain\Models\CompanyShowcase;
 use App\Modules\Showcase\Domain\Models\CompanyShowcaseSection;
+use App\Modules\Showcase\Domain\Models\ShowcaseMedia;
 use App\Modules\Showcase\Infrastructure\Services\ShowcasePublicCache;
 use App\Modules\Showcase\Interfaces\Api\V1\Resources\VitrinePublicResource;
 use Illuminate\Http\JsonResponse;
@@ -163,7 +164,14 @@ final class ShowcasePublicController extends Controller
                     ->get()
                     ->all();
 
-                $resource = new VitrinePublicResource($showcase, $sections, $company->name);
+                /** @var list<ShowcaseMedia> $media */
+                $media = ShowcaseMedia::query()
+                    ->where('showcase_id', $showcase->id)
+                    ->orderBy('id')
+                    ->get()
+                    ->all();
+
+                $resource = new VitrinePublicResource($showcase, $sections, $company->name, $media);
 
                 return $resource->resolve($request);
             });

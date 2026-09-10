@@ -31,4 +31,11 @@ return [
     'not_found_body' => "Cette vitrine n'existe pas ou n'est pas publiée.",
     'settings_must_be_object' => 'Les réglages doivent être un objet.',
     'legal_must_be_object' => 'Le bloc légal doit être un objet.',
+    'media_invalid_type' => 'Type de fichier non autorisé (PNG, JPEG, WebP ; SVG pour le logo uniquement).',
+    'media_too_large' => 'Fichier trop volumineux (2 Mo max pour le logo, 5 Mo pour une image).',
+    'media_section_not_found' => "La section ciblée n'appartient pas à cette vitrine.",
+    'theme_industrie' => 'Industrie',
+    'theme_service' => 'Service',
+    'theme_commerce' => 'Commerce',
+    'theme_invalid' => 'Thème inconnu.',
 ];

@@ -29,4 +29,11 @@ return [
     'not_found_body' => 'This showcase does not exist or is not published.',
     'settings_must_be_object' => 'Settings must be an object.',
     'legal_must_be_object' => 'The legal block must be an object.',
+    'media_invalid_type' => 'File type not allowed (PNG, JPEG, WebP; SVG for the logo only).',
+    'media_too_large' => 'File too large (2 MB max for the logo, 5 MB for an image).',
+    'media_section_not_found' => 'The targeted section does not belong to this showcase.',
+    'theme_industrie' => 'Industry',
+    'theme_service' => 'Service',
+    'theme_commerce' => 'Commerce',
+    'theme_invalid' => 'Unknown theme.',
 ];

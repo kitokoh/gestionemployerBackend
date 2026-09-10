@@ -29,4 +29,11 @@ return [
     'not_found_body' => 'هذا الموقع غير موجود أو غير منشور.',
     'settings_must_be_object' => 'يجب أن تكون الإعدادات كائنًا.',
     'legal_must_be_object' => 'يجب أن يكون الحقل القانوني كائنًا.',
+    'media_invalid_type' => 'نوع الملف غير مسموح (PNG، JPEG، WebP؛ SVG للشعار فقط).',
+    'media_too_large' => 'الملف كبير جدًا (2 ميغابايت كحد أقصى للشعار، 5 ميغابايت للصورة).',
+    'media_section_not_found' => 'القسم المستهدف لا ينتمي إلى هذا الموقع.',
+    'theme_industrie' => 'الصناعة',
+    'theme_service' => 'الخدمات',
+    'theme_commerce' => 'التجارة',
+    'theme_invalid' => 'سمة غير معروفة.',
 ];

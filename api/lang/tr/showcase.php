@@ -29,4 +29,11 @@ return [
     'not_found_body' => 'Bu vitrin mevcut değil veya yayımlanmamış.',
     'settings_must_be_object' => 'Ayarlar bir nesne olmalıdır.',
     'legal_must_be_object' => 'Yasal blok bir nesne olmalıdır.',
+    'media_invalid_type' => 'Dosya türüne izin verilmiyor (PNG, JPEG, WebP; SVG yalnızca logo için).',
+    'media_too_large' => 'Dosya çok büyük (logo için en fazla 2 MB, görsel için 5 MB).',
+    'media_section_not_found' => 'Hedeflenen bölüm bu vitrine ait değil.',
+    'theme_industrie' => 'Endüstri',
+    'theme_service' => 'Hizmet',
+    'theme_commerce' => 'Ticaret',
+    'theme_invalid' => 'Bilinmeyen tema.',
 ];
