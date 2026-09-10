@@ -38,6 +38,11 @@ class ShowcasePublishWorkflowTest extends TestCase
             'slug' => $slug,
         ]);
 
+        // Gate fail-closed `module.showcase` (#6866) : sans ce feature flag,
+        // toutes les routes privées /showcase/* répondent 403.
+        $company->setFeature('company_showcase', true);
+        $company->save();
+
         return $company;
     }
 

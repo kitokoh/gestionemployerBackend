@@ -150,9 +150,9 @@ class ShowcaseSectionApiTest extends TestCase
         $this->principal($company);
         $this->postJson('/api/v1/showcase')->assertStatus(201);
 
-        // Type inconnu.
+        // Type inconnu (`products` est un type v1 depuis C-VITRINE #6891).
         $this->postJson('/api/v1/showcase/sections', [
-            'type' => 'products', // BC-28 #6891, hors v1
+            'type' => 'not_a_section',
             'content' => [],
         ])->assertStatus(422)
             ->assertJsonValidationErrors('type');
