@@ -76,6 +76,14 @@ jobs:
         working-directory: front/mobile_apps/leopardo_core
         run: flutter gen-l10n
 
+      - name: Regenerate codegen (build_runner — drift / json_serializable)
+        # #6590 : les *.g.dart (drift `edge_database`, json_serializable) ne sont
+        # pas commités — ils sont régénérés avant analyze/build (cf. mobile-apps-ci).
+        working-directory: front/mobile_apps/leopardo_core
+        run: |
+          flutter pub get
+          dart run build_runner build
+
       - name: Analyze
         working-directory: front/mobile_apps/${{ matrix.app }}
         run: flutter analyze

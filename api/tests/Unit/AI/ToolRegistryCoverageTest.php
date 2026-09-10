@@ -9,7 +9,6 @@ use App\AI\Models\AIToolRegistryEntry;
 use App\AI\ToolRegistry;
 use App\AI\WriteActionRunner;
 use Database\Seeders\AIToolRegistrySeeder;
-use stdClass;
 use Tests\Support\CreatesMvpSchema;
 use Tests\TestCase;
 
