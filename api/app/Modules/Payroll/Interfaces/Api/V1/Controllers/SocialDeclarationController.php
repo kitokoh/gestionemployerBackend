@@ -8,16 +8,16 @@ use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Auth\Infrastructure\Services\DataAccessAuditLogger;
 use App\Core\Tenant\Domain\Models\Company;
 use App\Http\Controllers\Controller;
-use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationService;
+use App\Modules\Payroll\Application\Actions\GenerateCnasDzDeclaration;
+use App\Modules\Payroll\Application\Actions\GenerateDasDzDeclaration;
 use App\Modules\Payroll\Domain\Models\PayrollRun;
-use App\Modules\Payroll\Domain\Models\PaySlip;
 use App\Modules\Payroll\Infrastructure\Services\CedeaoCnsDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\CemacCnpsDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\CnpsDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\CnssDeclarationGenerator;
-use App\Modules\Payroll\Infrastructure\Services\DasDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\IpresDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationGenerator;
+use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationService;
 use DateTimeInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,6 +29,8 @@ class SocialDeclarationController extends Controller
     public function __construct(
         private readonly DataAccessAuditLogger $auditLogger,
         private readonly SocialDeclarationService $declarationService,
+        private readonly GenerateCnasDzDeclaration $generateCnasDz,
+        private readonly GenerateDasDzDeclaration $generateDasDz,
     ) {}
 
     public function generateCnasDz(Request $request): JsonResponse
@@ -39,8 +41,6 @@ class SocialDeclarationController extends Controller
             abort(403);
         }
 
-        $this->auditLogger->recordSensitive($request, $actor, 'payroll.cnas_declaration');
-
         $validated = $request->validate([
             'quarter' => 'required|in:Q1,Q2,Q3,Q4',
             'year' => 'required|integer|min:2020|max:2099',
@@ -48,60 +48,25 @@ class SocialDeclarationController extends Controller
 
         $this->auditLogger->recordSensitive($request, $actor, 'payroll.cnas_declaration');
 
-        $employees = $this->declarationService->activeEmployees((string) $actor->company_id);
-
-        $quarterMonths = $this->declarationService->quarterMonths((string) $validated['quarter']);
-
-        $payrollData = $this->declarationService->quarterPayrollData(
-            (string) $actor->company_id,
-            (int) $validated['year'],
-            $quarterMonths,
-            withMonthsCount: true,
-        );
-
-        $company = Company::query()->whereKey($actor->company_id)->first();
-
-        $companyName = $company?->name ?? 'N/A';
-        $companyNis = $this->companyRegistrationNumber($company);
-
-        $declarationRows = $employees->map(function ($emp) use ($payrollData) {
-            $payroll = $payrollData->get($emp->id);
-
-            return [
-                'employee_id' => (int) $emp->id,
-                'num_ss' => (string) ($emp->national_id ?? ''),
-                'last_name' => (string) ($emp->last_name ?? ''),
-                'first_name' => (string) ($emp->first_name ?? ''),
-                'date_naissance' => $this->dateValue($emp->date_of_birth ?? null),
-                'gross_salary' => (float) ($payroll->total_gross ?? 0),
-                'months_worked' => (int) ($payroll->months_worked ?? 0),
-            ];
-        })->filter(fn (array $row) => $row['gross_salary'] > 0);
-
-        $generator = new SocialDeclarationGenerator;
-        $content = $generator->generateCnasDz(
-            $companyName,
-            $companyNis,
-            $validated['quarter'],
-            (int) $validated['year'],
-            $declarationRows->values(),
-        );
+        // Cas d'usage nommable (ADR-0020, lot 3a #6968) - collecte + formatage
+        // dans GenerateCnasDzDeclaration (services Infrastructure existants).
+        $result = $this->generateCnasDz->execute($actor, (string) $validated['quarter'], (int) $validated['year']);
 
         return response()->json([
             'data' => [
                 'format' => 'cnas_dz',
                 'quarter' => $validated['quarter'],
                 'year' => $validated['year'],
-                'employee_count' => $declarationRows->count(),
-                'content' => $content,
-                'filename' => sprintf('CNAS_DZ_%s_%d_%s.txt', $validated['quarter'], $validated['year'], now()->format('Ymd')),
+                'employee_count' => $result['employee_count'],
+                'content' => $result['content'],
+                'filename' => $result['filename'],
             ],
         ]);
     }
 
     /**
-     * #5243 — Déclaration Annuelle des Salaires (DAS) DZ : CSV annuel agrégé
-     * depuis les bulletins validés des runs DZ de l'année (une ligne par
+     * #5243 - Declaration Annuelle des Salaires (DAS) DZ : CSV annuel agrege
+     * depuis les bulletins valides des runs DZ de l'année (une ligne par
      * employé : NIS, nom, mois, brut, CNAS 9 %/26 %, IRG, net + TOTAUX).
      * Manager principal/comptable, audit `payroll.das_declaration`.
      */
@@ -119,35 +84,16 @@ class SocialDeclarationController extends Controller
 
         $this->auditLogger->recordSensitive($request, $actor, 'payroll.das_declaration');
 
-        $year = (int) $validated['year'];
-
-        $slips = PaySlip::query()
-            ->where('company_id', $actor->company_id)
-            ->where('status', 'validated')
-            ->whereBetween('period_start', ["{$year}-01-01", "{$year}-12-31"])
-            ->whereHas('payrollRun', fn ($query) => $query->where('country_code', 'DZ'))
-            ->with(['employee', 'lines'])
-            ->get();
-
-        $company = Company::query()->whereKey($actor->company_id)->first();
-
-        $companyName = $company->name ?? 'N/A';
-        $companyNis = $this->companyRegistrationNumber($company);
-
-        $content = (new DasDeclarationGenerator)->generate(
-            $companyName,
-            $companyNis,
-            $year,
-            $slips,
-        );
+        // Cas d'usage nommable (ADR-0020, lot 3a #6968).
+        $result = $this->generateDasDz->execute($actor, (int) $validated['year']);
 
         return response()->json([
             'data' => [
                 'format' => 'das_dz',
-                'year' => $year,
-                'employee_count' => $slips->groupBy('employee_id')->count(),
-                'content' => $content,
-                'filename' => sprintf('DAS_DZ_%d_%s.txt', $year, now()->format('Ymd')),
+                'year' => $validated['year'],
+                'employee_count' => $result['employee_count'],
+                'content' => $result['content'],
+                'filename' => $result['filename'],
             ],
         ]);
     }
@@ -308,7 +254,7 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEDEAO (#1830) — déclaration CNSS mensuelle Côte d'Ivoire (CSV).
+     * CEDEAO (#1830) - declaration CNSS mensuelle Cote d'Ivoire (CSV).
      * 422 si le run n'est pas un run CI.
      */
     public function generateCnssCiDeclaration(Request $request, PayrollRun $payrollRun): Response
@@ -318,7 +264,7 @@ class SocialDeclarationController extends Controller
             $payrollRun,
             'CI',
             'payroll.cnss_ci_declaration',
-            "la Côte d'Ivoire (CNSS CI)",
+            "la Cote d'Ivoire (CNSS CI)",
         );
 
         $generator = new CnssDeclarationGenerator;
@@ -335,7 +281,7 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEDEAO (#1830) — déclaration IPRES/CSS mensuelle Sénégal (CSV).
+     * CEDEAO (#1830) - declaration IPRES/CSS mensuelle Senegal (CSV).
      * 422 si le run n'est pas un run SN.
      */
     public function generateIpresSnDeclaration(Request $request, PayrollRun $payrollRun): Response
@@ -345,7 +291,7 @@ class SocialDeclarationController extends Controller
             $payrollRun,
             'SN',
             'payroll.ipres_sn_declaration',
-            'le Sénégal (IPRES/CSS)',
+            'le Senegal (IPRES/CSS)',
         );
 
         $generator = new IpresDeclarationGenerator;
@@ -362,8 +308,8 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEMAC/CM (#1823) — déclaration CNPS mensuelle Cameroun (format DAS) :
-     * CSV téléchargeable, une ligne par bulletin validé du run + totaux.
+     * CEMAC/CM (#1823) - declaration CNPS mensuelle Cameroun (format DAS) :
+     * CSV telechargeable, une ligne par bulletin valide du run + totaux.
      */
     public function generateCnpsCmDeclaration(Request $request, PayrollRun $payrollRun): Response
     {
@@ -389,9 +335,9 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEMAC (#2155) — déclaration CNSS mensuelle Gabon (GA, CSV) :
-     * mêmes règles CNSS CEMAC que CM (retraite 2,5 %/5 %, famille 8 %,
-     * AT 3 % — plafond 3 000 000 XAF), sans centimes additionnels.
+     * CEMAC (#2155) - declaration CNSS mensuelle Gabon (GA, CSV) :
+     * memes regles CNSS CEMAC que CM (retraite 2,5 %/5 %, famille 8 %,
+     * AT 3 % - plafond 3 000 000 XAF), sans centimes additionnels.
      */
     public function generateCnssGaDeclaration(Request $request, PayrollRun $payrollRun): Response
     {
@@ -417,8 +363,8 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEMAC (#2155) — déclaration CNSS mensuelle Congo (CG, CSV) :
-     * retraite 4 %/8 %, famille 10 %, AT 3 % — plafond 2 500 000 XAF.
+     * CEMAC (#2155) - declaration CNSS mensuelle Congo (CG, CSV) :
+     * retraite 4 %/8 %, famille 10 %, AT 3 % - plafond 2 500 000 XAF.
      */
     public function generateCnssCgDeclaration(Request $request, PayrollRun $payrollRun): Response
     {
@@ -444,7 +390,7 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEDEAO (#2158) — déclaration CNSS mensuelle Burkina Faso (CSV).
+     * CEDEAO (#2158) - declaration CNSS mensuelle Burkina Faso (CSV).
      * 422 si le run n'est pas un run BF.
      */
     public function generateCnssBfDeclaration(Request $request, PayrollRun $payrollRun): Response
@@ -471,7 +417,7 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * CEDEAO (#2158) — déclaration INPS mensuelle Mali (CSV).
+     * CEDEAO (#2158) - declaration INPS mensuelle Mali (CSV).
      * 422 si le run n'est pas un run ML.
      */
     public function generateInpsMlDeclaration(Request $request, PayrollRun $payrollRun): Response
@@ -498,9 +444,9 @@ class SocialDeclarationController extends Controller
     }
 
     /**
-     * Gardes communes des déclarations par run : isolation tenant (404),
-     * RBAC (403 — isManager() ou rôles précis) et garde pays (422), puis
-     * journalisation d'audit. Retourne l'acteur authentifié (issue #3149).
+     * Gardes communes des declarations par run : isolation tenant (404),
+     * RBAC (403 - isManager() ou roles precis) et garde pays (422), puis
+     * journalisation d'audit. Retourne l'acteur authentifie (issue #3149).
      *
      * @param  list<string>|null  $requiredRoles
      */

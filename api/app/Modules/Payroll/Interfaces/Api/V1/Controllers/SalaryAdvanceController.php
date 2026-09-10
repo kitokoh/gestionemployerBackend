@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Modules\Payroll\Interfaces\Api\V1\Controllers;
 
-use App\Core\Auth\Domain\Models\AuditLog;
 use App\Core\Auth\Domain\Models\Employee;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\SalaryAdvanceResource;
-use App\Jobs\GeneratePaymentDocumentJob;
-use App\Modules\Payroll\Domain\Models\LedgerEntry;
+use App\Modules\Payroll\Application\Actions\ConfirmSalaryAdvanceReceived;
+use App\Modules\Payroll\Application\Actions\DisputeSalaryAdvance;
+use App\Modules\Payroll\Application\Actions\ManagerApproveSalaryAdvance;
+use App\Modules\Payroll\Application\Actions\MarkSalaryAdvancePaid;
+use App\Modules\Payroll\Application\Actions\ResolveSalaryAdvanceDispute;
+use App\Modules\Payroll\Domain\Exceptions\SalaryAdvancePaymentStateException;
 use App\Modules\Payroll\Domain\Models\SalaryAdvance;
-use App\Modules\Payroll\Infrastructure\Services\LedgerService;
 use App\Modules\Payroll\Infrastructure\Services\SalaryAdvanceService;
 use App\Modules\Payroll\Interfaces\Api\V1\Requests\DecideSalaryAdvanceRequest;
 use App\Modules\Payroll\Interfaces\Api\V1\Requests\DisputeSalaryAdvanceRequest;
@@ -27,7 +29,11 @@ class SalaryAdvanceController extends Controller
 {
     public function __construct(
         private readonly SalaryAdvanceService $salaryAdvanceService,
-        private readonly LedgerService $ledgerService,
+        private readonly MarkSalaryAdvancePaid $markPaidAction,
+        private readonly ConfirmSalaryAdvanceReceived $confirmReceivedAction,
+        private readonly DisputeSalaryAdvance $disputeAction,
+        private readonly ResolveSalaryAdvanceDispute $resolveDisputeAction,
+        private readonly ManagerApproveSalaryAdvance $managerApproveAction,
     ) {}
 
     public function index(SalaryAdvanceIndexRequest $request): JsonResponse
@@ -45,7 +51,7 @@ class SalaryAdvanceController extends Controller
             $query->where('employee_id', $actor->id);
         } elseif ($actor->isTeamScoped()) {
             // Issue #6534 (audit) : un manager dept/superviseur ne voit que
-            // les avances de SON équipe (montants, échéanciers) — pattern
+            // les avances de SON equipe (montants, echeanciers) - pattern
             // visibleToManager (PA2-SEC-002/003).
             $query->whereIn('employee_id', Employee::query()->select('id')->visibleToManager($actor));
         } elseif ($request->filled('employee_id')) {
@@ -108,11 +114,11 @@ class SalaryAdvanceController extends Controller
             abort(404);
         }
         if ($actor->id === $salaryAdvance->employee_id) {
-            // self-service conservé.
+            // self-service conserve.
         } elseif (! $actor->isManager()) {
             abort(403);
         } elseif ($actor->isTeamScoped()) {
-            // Issue #6534 : manager team-scoped → uniquement son équipe.
+            // Issue #6534 : manager team-scoped → uniquement son equipe.
             $target = $salaryAdvance->employee;
             if ($target === null || ! $actor->managesTeamMemberOf($target)) {
                 abort(403);
@@ -171,12 +177,15 @@ class SalaryAdvanceController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Plan 60 — Double validation workflow
+    // Plan 60 - Double validation workflow
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
      * PUT /salary-advances/{id}/mark-paid
      * Manager (principal | comptable | rh) marks an advance as paid.
+     * Orchestration dans `MarkSalaryAdvancePaid` (ADR-0020, lot 2 - #6968) :
+     * update conditionnel atomique anti-TOCTOU (#3429/#2997), audit explicite
+     * (PA2-PAY-001/#4677), document de paiement, ledger, notification.
      */
     public function markPaid(Request $request, SalaryAdvance $salaryAdvance): JsonResponse
     {
@@ -198,34 +207,17 @@ class SalaryAdvanceController extends Controller
             'payment_note' => 'nullable|string|max:1000',
         ]);
 
-        // Issue #3429 (classe #2997) : TOCTOU — deux requêtes concurrentes
-        // pouvaient toutes deux passer le check `manager_approved` puis écrire
-        // ledger + document de paiement en double. L'update est désormais
-        // conditionnel ATOMIQUE : seule la première requête matche
-        // `validation_status = 'manager_approved'`, la seconde voit 0 ligne.
-        $oldValues = $salaryAdvance->only([
-            'payment_declared_at', 'payment_declared_by', 'payment_reference',
-            'payment_note', 'validation_status', 'status',
-        ]);
-
-        $updated = SalaryAdvance::query()
-            ->where('id', $salaryAdvance->id)
-            ->where('company_id', $actor->company_id)
-            ->where('validation_status', 'manager_approved')
-            ->update([
-                'payment_declared_at' => now(),
-                'payment_declared_by' => $actor->id,
-                'payment_reference' => $validated['payment_reference'] ?? null,
-                'payment_note' => $validated['payment_note'] ?? null,
-                'validation_status' => 'payment_declared',
-                'status' => 'active', // keep existing status flow
-            ]);
-
-        if ($updated === 0) {
-            // Soit le statut a changé (déjà déclaré → conflit), soit l'avance
-            // n'est plus dans la société de l'acteur (404, pas de fuite
-            // d'existence — le check initial couvre déjà ce cas mais garde
-            // une réponse cohérente si la ligne a été supprimée entre-temps).
+        try {
+            $salaryAdvance = $this->markPaidAction->execute(
+                $salaryAdvance,
+                $actor,
+                $validated,
+                $request->ip(),
+                $request->userAgent(),
+            );
+        } catch (SalaryAdvancePaymentStateException) {
+            // Course perdue (deja declaree) ou ligne supprimee entre-temps :
+            // 404 sans fuite d'existence si absente, 422 sinon (même contrat).
             $stillExists = SalaryAdvance::query()
                 ->where('id', $salaryAdvance->id)
                 ->where('company_id', $actor->company_id)
@@ -238,51 +230,13 @@ class SalaryAdvanceController extends Controller
             return response()->json(['message' => __('payroll.advance_manager_approve_first')], 422);
         }
 
-        $salaryAdvance->refresh();
-
-        // PA2-PAY-001 — l'update conditionnel ci-dessus passe par le query
-        // builder (atomique) mais BYPASSE les événements modèle : le trait
-        // Auditable n'écrit rien pour cette transition. Audit explicite,
-        // même forme que le trait (issue #4677).
-        AuditLog::create([
-            'company_id' => $actor->company_id,
-            'user_id' => $actor->id,
-            'action' => 'updated',
-            'auditable_type' => $salaryAdvance->getMorphClass(),
-            'auditable_id' => $salaryAdvance->id,
-            // PHPStan strict : `only()` renvoie une entrée par clé demandée → toujours truthy.
-            'old_values' => $oldValues,
-            'new_values' => [
-                'payment_declared_at' => $salaryAdvance->payment_declared_at,
-                'payment_declared_by' => $salaryAdvance->payment_declared_by,
-                'payment_reference' => $salaryAdvance->payment_reference,
-                'payment_note' => $salaryAdvance->payment_note,
-                'validation_status' => $salaryAdvance->validation_status,
-                'status' => $salaryAdvance->status,
-            ],
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent() ? mb_substr($request->userAgent(), 0, 500) : null,
-        ]);
-
-        $document = GeneratePaymentDocumentJob::dispatchForSalaryAdvance($salaryAdvance, $actor->id);
-
-        $this->ledgerService->record(
-            employee: $salaryAdvance->employee ?? Employee::query()->find($salaryAdvance->employee_id),
-            entryType: LedgerEntry::TYPE_ADVANCE,
-            amount: -abs((float) $salaryAdvance->amount),
-            description: 'Salary advance paid: '.($salaryAdvance->payment_reference ?? 'no reference'),
-            source: $salaryAdvance,
-            paymentDocumentId: $document->id,
-            createdBy: $actor->id,
-        );
-        $this->salaryAdvanceService->notify($salaryAdvance, 'salary_advance_payment_declared');
-
         return (new SalaryAdvanceResource($salaryAdvance->load(['employee:id,first_name,last_name,email,company_id', 'employee.company:id,currency'])))->response();
     }
 
     /**
      * PUT /salary-advances/{id}/confirm-received
      * Employee confirms they received the advance.
+     * Orchestration dans `ConfirmSalaryAdvanceReceived` (ADR-0020, lot 2 - #6968).
      */
     public function confirmReceived(Request $request, SalaryAdvance $salaryAdvance): JsonResponse
     {
@@ -299,28 +253,15 @@ class SalaryAdvanceController extends Controller
             return response()->json(['message' => __('payroll.payment_declared_before_confirm')], 422);
         }
 
-        $salaryAdvance->update([
-            'employee_confirmed_at' => now(),
-            'validation_status' => 'employee_confirmed',
-        ]);
-        $salaryAdvance = $salaryAdvance->fresh();
-
-        if ($salaryAdvance->payment_declared_by) {
-            $manager = Employee::query()->withoutGlobalScopes()->find($salaryAdvance->payment_declared_by);
-            if ($manager instanceof Employee) {
-                $this->salaryAdvanceService->notifyRecipient($salaryAdvance, $manager, 'salary_advance_received');
-            }
-        }
+        $salaryAdvance = $this->confirmReceivedAction->execute($salaryAdvance);
 
         return (new SalaryAdvanceResource($salaryAdvance->load(['employee:id,first_name,last_name,email,company_id', 'employee.company:id,currency'])))->response();
     }
 
     /**
      * PUT /salary-advances/{id}/dispute
-     * Employee opens a dispute instead of confirming reception (PA2-PAY-015):
-     * the payment was declared by the manager but the employee reports it
-     * was not actually received as described (wrong amount, never handed
-     * over, wrong recipient, etc.).
+     * Employee opens a dispute instead of confirming reception (PA2-PAY-015).
+     * Orchestration dans `DisputeSalaryAdvance` (ADR-0020, lot 2 - #6968).
      */
     public function dispute(DisputeSalaryAdvanceRequest $request, SalaryAdvance $salaryAdvance): JsonResponse
     {
@@ -337,30 +278,16 @@ class SalaryAdvanceController extends Controller
             return response()->json(['message' => __('payroll.payment_declared_before_dispute')], 422);
         }
 
-        $salaryAdvance->update([
-            'dispute_reason' => $request->validated('dispute_reason'),
-            'disputed_at' => now(),
-            'validation_status' => 'disputed',
-        ]);
-        $salaryAdvance = $salaryAdvance->fresh();
-
-        if ($salaryAdvance->payment_declared_by) {
-            $manager = Employee::query()->withoutGlobalScopes()->find($salaryAdvance->payment_declared_by);
-            if ($manager instanceof Employee) {
-                $this->salaryAdvanceService->notifyRecipient($salaryAdvance, $manager, 'salary_advance_disputed');
-            }
-        }
+        $salaryAdvance = $this->disputeAction->execute($salaryAdvance, (string) $request->validated('dispute_reason'));
 
         return (new SalaryAdvanceResource($salaryAdvance->load(['employee:id,first_name,last_name,email,company_id', 'employee.company:id,currency'])))->response();
     }
 
     /**
      * PUT /salary-advances/{id}/resolve-dispute
-     * Manager (principal | comptable | rh) resolves a previously-opened
-     * dispute: either `confirmed` (the payment was actually correct, the
-     * advance moves to `employee_confirmed`) or `reopened` (the dispute was
-     * legitimate, the advance goes back to `payment_declared` so the
-     * manager can correct the payment and the employee can confirm again).
+     * Manager (principal | comptable | rh) resolves a dispute: `confirmed`
+     * (→ employee_confirmed) or `reopened` (→ payment_declared).
+     * Orchestration dans `ResolveSalaryAdvanceDispute` (ADR-0020, lot 2 - #6968).
      */
     public function resolveDispute(ResolveSalaryAdvanceDisputeRequest $request, SalaryAdvance $salaryAdvance): JsonResponse
     {
@@ -377,19 +304,12 @@ class SalaryAdvanceController extends Controller
             return response()->json(['message' => __('payroll.advance_not_disputed')], 422);
         }
 
-        $resolution = $request->validated('resolution');
-        $note = $request->validated('dispute_resolution_note');
-
-        $salaryAdvance->update([
-            'dispute_resolved_at' => now(),
-            'dispute_resolved_by' => $actor->id,
-            'dispute_resolution_note' => $note,
-            'validation_status' => $resolution === 'confirmed' ? 'employee_confirmed' : 'payment_declared',
-            'employee_confirmed_at' => $resolution === 'confirmed' ? now() : null,
-        ]);
-        $salaryAdvance = $salaryAdvance->fresh();
-
-        $this->salaryAdvanceService->notify($salaryAdvance, 'salary_advance_dispute_resolved');
+        $salaryAdvance = $this->resolveDisputeAction->execute(
+            $salaryAdvance,
+            $actor,
+            (string) $request->validated('resolution'),
+            $request->validated('dispute_resolution_note'),
+        );
 
         return (new SalaryAdvanceResource($salaryAdvance->load(['employee:id,first_name,last_name,email,company_id', 'employee.company:id,currency'])))->response();
     }
@@ -398,6 +318,7 @@ class SalaryAdvanceController extends Controller
      * Alias kept for backward compatibility with Plan 60 naming.
      * PUT /salary-advances/{id}/manager-approve
      * Sets validation_status to manager_approved after existing approve flow.
+     * Orchestration dans `ManagerApproveSalaryAdvance` (ADR-0020, lot 2 - #6968).
      */
     public function managerApprove(Request $request, SalaryAdvance $salaryAdvance): JsonResponse
     {
@@ -414,19 +335,7 @@ class SalaryAdvanceController extends Controller
             return response()->json(['message' => __('payroll.only_pending_advances_approvable')], 422);
         }
 
-        // Issue #4677 / #3597 : `status` n'est pas mass-assignable — un
-        // `update()` (fill) l'écarterait silencieusement et le workflow
-        // double validation ne passerait jamais à `approved`. Assignation
-        // explicite (pattern SalaryAdvanceService::create).
-        $salaryAdvance->forceFill([
-            'manager_approved_at' => now(),
-            'manager_approved_by' => $actor->id,
-            'validation_status' => 'manager_approved',
-            'status' => 'approved',
-        ])->save();
-        $salaryAdvance = $salaryAdvance->fresh();
-
-        $this->salaryAdvanceService->notify($salaryAdvance, 'salary_advance_manager_approved');
+        $salaryAdvance = $this->managerApproveAction->execute($salaryAdvance, $actor);
 
         return (new SalaryAdvanceResource($salaryAdvance->load(['employee:id,first_name,last_name,email,company_id', 'employee.company:id,currency'])))->response();
     }
