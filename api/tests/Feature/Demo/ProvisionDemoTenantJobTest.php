@@ -175,4 +175,42 @@ class ProvisionDemoTenantJobTest extends TestCase
         $this->assertSame('principal', $manager->manager_role);
         $this->assertSame('active', $manager->status);
     }
+
+    /**
+     * #6958 (regression, constat DEV 2026-09-09) : `employees_email_unique`
+     * est un index GLOBAL (migration 2026_04_17_000105) - l'employe demo fixe
+     * `alice@demo.local` (seede quand demo_mode_enabled=true) ne peut exister
+     * qu'UNE fois par environnement. Sans garde, le 2e trial guide echouait en
+     * SQLSTATE 23505 pendant le provisioning -> statut final « failed ».
+     */
+    public function test_second_guided_trial_does_not_collide_on_demo_employee(): void
+    {
+        Mail::fake();
+        config(['app.demo_mode_enabled' => true]);
+
+        /** @var ProvisionGuidedTrial $provisioner */
+        $provisioner = app(ProvisionGuidedTrial::class);
+
+        // 1er trial : alice@demo.local est seedee (1 seule ligne possible,
+        // index global).
+        (new ProvisionDemoTenantJob('trial-a-'.uniqid().'@example.com', 'Sandbox Alpha '.uniqid(), 'DZ'))
+            ->handle($provisioner);
+
+        $this->assertSame(
+            1,
+            DB::table('shared_tenants.employees')->where('email', 'alice@demo.local')->count(),
+            'alice@demo.local doit etre seedee une seule fois (index global)',
+        );
+
+        // 2e trial (email different) : ne doit PAS lever 23505 - le seed demo
+        // est saute car alice existe deja, le tenant est provisionne quand meme.
+        (new ProvisionDemoTenantJob('trial-b-'.uniqid().'@example.com', 'Sandbox Beta '.uniqid(), 'DZ'))
+            ->handle($provisioner);
+
+        $this->assertSame(
+            1,
+            DB::table('shared_tenants.employees')->where('email', 'alice@demo.local')->count(),
+            'alice@demo.local ne doit jamais etre dupliquee',
+        );
+    }
 }
