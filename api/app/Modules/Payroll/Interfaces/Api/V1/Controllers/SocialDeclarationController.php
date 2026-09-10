@@ -6,11 +6,10 @@ namespace App\Modules\Payroll\Interfaces\Api\V1\Controllers;
 
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Auth\Infrastructure\Services\DataAccessAuditLogger;
-use App\Core\Tenant\Domain\Models\Company;
 use App\Http\Controllers\Controller;
 use App\Modules\Payroll\Application\Actions\GenerateCnasDzDeclaration;
-use App\Modules\Payroll\Application\Actions\GenerateDasDzDeclaration;
 use App\Modules\Payroll\Application\Actions\GenerateCnssMaDeclaration;
+use App\Modules\Payroll\Application\Actions\GenerateDasDzDeclaration;
 use App\Modules\Payroll\Application\Actions\GenerateDsnFrDeclaration;
 use App\Modules\Payroll\Domain\Models\PayrollRun;
 use App\Modules\Payroll\Infrastructure\Services\CedeaoCnsDeclarationGenerator;
@@ -18,9 +17,6 @@ use App\Modules\Payroll\Infrastructure\Services\CemacCnpsDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\CnpsDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\CnssDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\IpresDeclarationGenerator;
-use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationGenerator;
-use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationService;
-use DateTimeInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,7 +25,6 @@ class SocialDeclarationController extends Controller
 {
     public function __construct(
         private readonly DataAccessAuditLogger $auditLogger,
-        private readonly SocialDeclarationService $declarationService,
         private readonly GenerateCnasDzDeclaration $generateCnasDz,
         private readonly GenerateDasDzDeclaration $generateDasDz,
         private readonly GenerateCnssMaDeclaration $generateCnssMa,
@@ -382,31 +377,5 @@ class SocialDeclarationController extends Controller
         $this->auditLogger->recordSensitive($request, $actor, $auditKey);
 
         return $actor;
-    }
-
-    private function companyRegistrationNumber(?Company $company): string
-    {
-        if ($company === null) {
-            return '';
-        }
-
-        $metadata = $company->metadata ?? [];
-
-        return (string) (
-            $metadata['tax_id']
-            ?? $metadata['nis']
-            ?? $metadata['affiliate_number']
-            ?? $metadata['siret']
-            ?? ''
-        );
-    }
-
-    private function dateValue(mixed $value): string
-    {
-        if ($value instanceof DateTimeInterface) {
-            return $value->format('Y-m-d');
-        }
-
-        return $value === null ? '' : (string) $value;
     }
 }

@@ -33,7 +33,7 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write   # publication du canal dev (Release GitHub non signée, P06 §3.4)
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -86,13 +86,27 @@ jobs:
           lfs: false
 
       - name: Setup Flutter (stable)
-        uses: subosito/flutter-action@1a449c444387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
           cache: true
 
+      - name: Regenerate codegen (build_runner — drift / json_serializable)
+        # #6590 : les *.g.dart (drift `edge_database`, json_serializable) ne sont
+        # pas commités — ils sont régénérés avant analyze/build (cf. mobile-apps-ci).
+        working-directory: front/mobile_apps/leopardo_core
+        run: |
+          flutter pub get
+          dart run build_runner build
+
       - name: Build ${{ matrix.os.name }} (release)
         shell: bash
+        # Fix MSVC 14.51 (runner windows-2025) : local_auth_windows (dépendance de
+        # leopardo_core) utilise <experimental/coroutine> retiré par la STL récente
+        # (erreur STL1011). Le macro officiel MSVC supprime l'erreur — parade amont
+        # documentée, à retirer quand le plugin sera compatible (suivi #7056).
+        env:
+          CXXFLAGS: "-D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS"
         run: |
           set -euo pipefail
           cd "front/mobile_apps/${{ inputs.app }}"
@@ -113,10 +127,57 @@ jobs:
             du -sh "${ARTIFACT}/${{ inputs.app }}.app"
           fi
 
+      - name: Package + checksums (zip + SHA-256)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYEOF'
+          import hashlib, pathlib, shutil, zipfile
+          app = "${{ inputs.app }}"
+          osname = "${{ matrix.os.name }}"
+          build = "${{ matrix.build }}"
+          base = pathlib.Path(f"front/mobile_apps/{app}/build")
+          if build == "windows":
+              src = base / "windows/x64/runner/Release"
+              target_name = f"{app}.exe"
+          else:
+              src = base / "macos/Build/Products/Release"
+              target_name = f"{app}.app"
+          assert (src / target_name).exists(), f"artefact introuvable: {src / target_name}"
+          out = pathlib.Path("dist"); shutil.rmtree(out, ignore_errors=True); out.mkdir()
+          zip_path = out / f"leopardo-desktop-{app}-{osname}.zip"
+          with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+              z.write(src / target_name, arcname=target_name)
+              if build == "windows":
+                  for child in src.iterdir():
+                      if child.name != target_name and child.is_file():
+                          z.write(child, arcname=child.name)
+          digest = hashlib.sha256(zip_path.read_bytes()).hexdigest()
+          (out / f"leopardo-desktop-{app}-{osname}.sha256").write_text(f"{digest}  {zip_path.name}\n")
+          print(f"{zip_path} sha256={digest}")
+          PYEOF
+
+      - name: Publish dev release (NON SIGNÉ — usage interne, P06 §3.4)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="desktop-${{ inputs.app }}-dev"
+          NOTES="Canal dev desktop — build NON SIGNÉ, usage interne/pilote.
+          App: ${{ inputs.app }} | Plateforme: ${{ matrix.os.name }} | Run: ${{ github.run_id }}
+          Volet API: ${{ inputs.environment }} | Commit: ${{ github.sha }}
+          Aucune distribution publique (protocole P06 / #3257)."
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release upload "${TAG}" dist/* --clobber
+          else
+            gh release create "${TAG}" dist/* --title "Desktop dev — ${{ inputs.app }}" --notes "${NOTES}" --prerelease
+          fi
+
       - name: Upload artifact (canal pilote interne — aucun lien public)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: leopardo-desktop-${{ inputs.app }}-${{ matrix.os.name }}-${{ github.run_id }}
-          path: ${{ matrix.artifact_path }}
+          path: dist/
           if-no-files-found: error
           retention-days: 14

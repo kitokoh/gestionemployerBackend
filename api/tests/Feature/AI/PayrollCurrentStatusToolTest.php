@@ -11,8 +11,8 @@ use App\AI\IntentEngine;
 use App\AI\ToolRegistry;
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Tenant\Domain\Models\Company;
-use App\Modules\Payroll\Domain\Models\PaySlip;
 use App\Modules\Payroll\Domain\Models\PayrollRun;
+use App\Modules\Payroll\Domain\Models\PaySlip;
 use Database\Seeders\AIToolRegistrySeeder;
 use Illuminate\Support\Carbon;
 use Tests\Support\CreatesMvpSchema;
@@ -67,7 +67,10 @@ class PayrollCurrentStatusToolTest extends TestCase
         return is_array($decoded) ? $decoded : [];
     }
 
-    private function run(Company $company, array $overrides = []): PayrollRun
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function makeRun(Company $company, array $overrides = []): PayrollRun
     {
         /** @var PayrollRun $run */
         $run = PayrollRun::query()->create(array_merge([
@@ -109,7 +112,7 @@ class PayrollCurrentStatusToolTest extends TestCase
         $employeeB = Employee::factory()->create(['company_id' => $company->id]);
 
         // Run clôturé (juillet) : 3 bulletins dont 2 validés.
-        $closedRun = $this->run($company, [
+        $closedRun = $this->makeRun($company, [
             'period_start' => '2026-07-01',
             'period_end' => '2026-07-31',
             'status' => PayrollRun::STATUS_VALIDATED,
@@ -121,7 +124,7 @@ class PayrollCurrentStatusToolTest extends TestCase
         $this->slip($closedRun, $company, $employeeB->id, 'draft');
 
         // Run en cours (août) : 5 salariés, 3 bulletins dont 1 validé.
-        $currentRun = $this->run($company, ['employee_count' => 5]);
+        $currentRun = $this->makeRun($company, ['employee_count' => 5]);
         $this->slip($currentRun, $company, $principal->id, 'validated');
         $this->slip($currentRun, $company, $employeeA->id, 'draft');
         $this->slip($currentRun, $company, $employeeB->id, 'draft');
@@ -164,7 +167,7 @@ class PayrollCurrentStatusToolTest extends TestCase
         /** @var Employee $principal */
         $principal = Employee::factory()->manager()->create(['company_id' => $company->id]);
 
-        $closedRun = $this->run($company, [
+        $closedRun = $this->makeRun($company, [
             'status' => PayrollRun::STATUS_PAID,
             'employee_count' => 2,
             'paid_at' => Carbon::parse('2026-08-02 09:00:00'),
@@ -206,7 +209,7 @@ class PayrollCurrentStatusToolTest extends TestCase
         /** @var Employee $principal */
         $principal = Employee::factory()->manager()->create(['company_id' => $company->id]);
 
-        $this->run($company, ['status' => PayrollRun::STATUS_CANCELLED, 'employee_count' => 4]);
+        $this->makeRun($company, ['status' => PayrollRun::STATUS_CANCELLED, 'employee_count' => 4]);
 
         $result = $this->executeTool((string) $company->id, $principal->id);
 
@@ -241,9 +244,9 @@ class PayrollCurrentStatusToolTest extends TestCase
         /** @var Employee $managerA */
         $managerA = Employee::factory()->manager()->create(['company_id' => $companyA->id]);
 
-        $this->run($companyA, ['employee_count' => 2]);
-        $this->run($companyB, ['employee_count' => 9]);
-        $this->run($companyB, ['status' => PayrollRun::STATUS_VALIDATED, 'employee_count' => 7]);
+        $this->makeRun($companyA, ['employee_count' => 2]);
+        $this->makeRun($companyB, ['employee_count' => 9]);
+        $this->makeRun($companyB, ['status' => PayrollRun::STATUS_VALIDATED, 'employee_count' => 7]);
 
         $result = $this->executeTool((string) $companyA->id, $managerA->id);
 

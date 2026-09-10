@@ -950,8 +950,8 @@ class IntentEngine
             'id' => $run->id,
             'status' => $run->status,
             'period' => [
-                'start' => $run->period_start?->toDateString(),
-                'end' => $run->period_end?->toDateString(),
+                'start' => $run->period_start->toDateString(),
+                'end' => $run->period_end->toDateString(),
             ],
             'employee_count' => $run->employee_count,
             'slips_count' => $slipsCount,

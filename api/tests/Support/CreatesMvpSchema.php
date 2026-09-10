@@ -1370,6 +1370,29 @@ trait CreatesMvpSchema
             $this->setPostgresSearchPath('shared_tenants,public');
         }
 
+        if (! Schema::hasTable($this->moduleTable('catalog_inquiries'))) {
+            Schema::create($this->moduleTable('catalog_inquiries'), function (Blueprint $table): void {
+                $table->bigIncrements('id');
+                $table->uuid('company_id')->index();
+                $table->string('product_slug', 160);
+                $table->string('product_name', 150);
+                $table->unsignedBigInteger('quantity')->nullable();
+                $table->string('company_name', 150);
+                $table->string('email', 255);
+                $table->text('message')->nullable();
+                $table->text('notes')->nullable();
+                $table->string('status', 20)->default('new');
+                $table->timestamp('consent_at')->nullable();
+                $table->date('retention_until')->nullable();
+                $table->string('ip_hash', 64)->nullable();
+                $table->timestamps();
+
+                $table->index(['company_id', 'status'], 'catalog_inquiries_company_status_idx');
+                $table->index(['company_id', 'created_at'], 'catalog_inquiries_company_created_idx');
+                $table->index(['product_slug'], 'catalog_inquiries_product_slug_idx');
+            });
+        }
+
         if (! Schema::hasTable($this->moduleTable('subscriptions'))) {
             Schema::create($this->moduleTable('subscriptions'), function (Blueprint $table): void {
                 $table->bigIncrements('id');

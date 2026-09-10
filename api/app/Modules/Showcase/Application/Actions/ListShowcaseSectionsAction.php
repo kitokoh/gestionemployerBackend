@@ -22,10 +22,12 @@ final class ListShowcaseSectionsAction
      */
     public function execute(CompanyShowcase $showcase): array
     {
-        return CompanyShowcaseSection::query()
-            ->where('showcase_id', $showcase->id)
-            ->ordered()
-            ->get()
-            ->all();
+        return array_values(
+            CompanyShowcaseSection::query()
+                ->where('showcase_id', $showcase->id)
+                ->ordered()
+                ->get()
+                ->all()
+        );
     }
 }
