@@ -10,10 +10,26 @@ Index de la documentation technique et stratégique du projet.
 
 | Doc | Contenu |
 |---|---|
-| [`QUICKSTART.md`](QUICKSTART.md) | Setup local en 5 minutes |
-| [`DEMARRAGE_RAPIDE.md`](DEMARRAGE_RAPIDE.md) | Guide de démarrage détaillé |
+| [`QUICKSTART.md`](QUICKSTART.md) | Setup local en 5 minutes (doc canonique) |
+| [`DEMARRAGE_RAPIDE.md`](DEMARRAGE_RAPIDE.md) | ⚠️ Obsolète/archivé — voir QUICKSTART.md |
 | [`../DEVELOPMENT.md`](../DEVELOPMENT.md) | Conventions de développement |
 | [`MONOREPO_TOOLING.md`](MONOREPO_TOOLING.md) | Commandes melos, npm --prefix, Makefile backend |
+
+---
+
+## 📋 Protocoles, gardes & référentiels (ajout 2026-09-09)
+
+| Doc | Contenu |
+|---|---|
+| [`PROTOCOLES/`](PROTOCOLES/) | Corpus de protocoles ratifié P01-P07 (validation marché, onboarding, vitrine, capitalisation, design, desktop, architecture) |
+| [`GOUVERNANCE/REGISTRE_GARDES.md`](GOUVERNANCE/REGISTRE_GARDES.md) | Catalogue des gardes CI (scripts `dev-hub/tools/*` + workflows) |
+| [`GOUVERNANCE/PROTOCOLE_LOTS_MULTI_AGENTS.md`](GOUVERNANCE/PROTOCOLE_LOTS_MULTI_AGENTS.md) | Lots d'issues multi-agents & merge sous saturation CI |
+| [`GOUVERNANCE/RETEX_FLUX.md`](GOUVERNANCE/RETEX_FLUX.md) | Flux constat → issue [LECON] → leçon (P04) |
+| [`GESTION_PROJET/BIBLIOTHEQUE_ERREURS.md`](GESTION_PROJET/BIBLIOTHEQUE_ERREURS.md) | Pièges connus : piège → symptôme → garde → référence |
+| [`REFERENTIEL_PRODUIT/TERMES.md`](REFERENTIEL_PRODUIT/TERMES.md) · [`MESSAGE.md`](REFERENTIEL_PRODUIT/MESSAGE.md) · [`METRIQUES_VITRINE.md`](REFERENTIEL_PRODUIT/METRIQUES_VITRINE.md) | Lexique public, message canonique, métriques datées |
+| [`desktop/`](desktop/) | Documentation desktop (tranches verticales, P06) |
+| [`../dev-hub/tools/`](../dev-hub/tools/) | Outils de garde & vérification (voir REGISTRE_GARDES.md) |
+| [`ops/ETAT_DEV_PROD_2026-09-09.md`](ops/ETAT_DEV_PROD_2026-09-09.md) | État des volets dev/prod vérifié le 2026-09-09 |
 
 ---
 
@@ -99,8 +115,9 @@ Index de la documentation technique et stratégique du projet.
 | Doc | Contenu |
 |---|---|
 | [`REFERENTIEL_PRODUIT/`](REFERENTIEL_PRODUIT/) | Référentiel produit |
-| [`../PILOTAGE.md`](../PILOTAGE.md) | Pilotage projet (filières actives, source de vérité programme) |
+| [`../PILOTAGE.md`](../PILOTAGE.md) | ⚠️ Archivé (#6698) — la gestion de projet vit dans GitHub Issues/Projects |
 | [`GESTION_PROJET/`](GESTION_PROJET/) | Runbooks, audits d'écarts, supports d'exécution, réponse au cahier des charges |
+| [`PROTOCOLES/`](PROTOCOLES/) | Cadre de protocoles opérationnels P01-P07 (validation marché, onboarding, vitrine, issues/expérience, design, desktop, architecture dev/prod) — révisé chaque fin de mois |
 | [`api/README.md`](api/README.md) | Documentation API |
 
 ---
@@ -151,7 +168,7 @@ Index de la documentation technique et stratégique du projet.
 | [`qa/`](qa/) | Sessions QA (constats, triage, audit 360°) — source de vérité de l'état courant |
 | [`ops/`](ops/) | Opérations & domaines (état précis de l'infrastructure déployée) |
 | [`client/`](client/) | Documentation espace client / portail |
-| [`design/`](design/) | Design system et assets de conception |
+| [`design/`](design/) | Point d'entrée design (sources canoniques) + assets de conception |
 | [`contributing/`](contributing/) | Guides de contribution complémentaires |
 | [`notes/`](notes/) | Notes techniques et archives ponctuelles |
 | [`notes/`](notes/) | Notes et archives de contexte (non-source-de-vérité) |
@@ -160,7 +177,7 @@ Index de la documentation technique et stratégique du projet.
 > Ne pas les modifier. **Depuis le 2026-07-26, la gestion de projet active se fait exclusivement
 > via GitHub Issues et GitHub Projects** (voir `AGENTS.md`, section « NOUVELLE MÉTHODE DE GESTION
 > DE PROJET ») — ne pas chercher de travail dans `PLAN_ACTION2/` ni y créer de nouveaux tickets.
-> Consulter `PILOTAGE.md` pour les filières actives.
+> La gestion de projet active se fait exclusivement via **GitHub Issues / GitHub Projects** (PILOTAGE.md archivé, #6698).
 
 ---
 

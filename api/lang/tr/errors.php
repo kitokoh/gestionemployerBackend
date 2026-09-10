@@ -284,4 +284,5 @@ return [
     'TWO_FACTOR_TOO_MANY_ATTEMPTS' => 'Çok fazla deneme. Kod geçersiz kılındı, lütfen tekrar giriş yapın.',
     'PAYROLL_RUN_PERIOD_ALREADY_EXISTS' => 'Bu dönem için zaten bir maaş bordrosu çalışması mevcut.',
     'STT_UNAVAILABLE' => 'Sesli yazıya dönüştürme geçici olarak kullanılamıyor (hizmet yapılandırılmamış).',
+    'AI_ACTION_REJECTED' => 'İşlem kullanıcı tarafından reddedildi.',
 ];

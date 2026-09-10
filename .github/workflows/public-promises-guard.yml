@@ -1,0 +1,22 @@
+name: Public copy promises guard
+
+on:
+  pull_request:
+    paths:
+      - 'front/web/**'
+      - 'README.md'
+      - 'dev-hub/tools/check-public-promises.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  promises-guard:
+    name: Anti-over-promise (MESSAGE registry)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Scan public copy for forbidden promises
+        shell: bash
+        run: bash dev-hub/tools/check-public-promises.sh
