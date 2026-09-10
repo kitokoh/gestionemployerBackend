@@ -679,6 +679,12 @@
       "to": "BC-03",
       "baseline": true,
       "note": "BC-27 → BC-03 — policies Showcase importent App\\Core\\Auth\\Domain\\Models\\Employee (RBAC, #6865)"
+    },
+    {
+      "from": "BC-28",
+      "to": "BC-02",
+      "baseline": false,
+      "note": "BC-28 → BC-02 — résolution du contexte tenant par slug/public et commande de purge (CatalogPublicController, PurgeExpiredCatalogInquiries) : pattern boutique publique BC-25 (#6226), contrat partagé Core TenantManager"
     }
   ]
 }

@@ -45,7 +45,7 @@ class PayrollCrudApiTest extends TestCase
 
     private function createPayroll(): Payroll
     {
-        return (new \App\Modules\Payroll\Infrastructure\Services\PayrollService())->create($this->manager, [
+        return (new \App\Modules\Payroll\Infrastructure\Services\PayrollService)->create($this->manager, [
             'employee_id' => $this->employee->id,
             'period_month' => 7,
             'period_year' => 2026,
@@ -67,6 +67,19 @@ class PayrollCrudApiTest extends TestCase
         $this->getJson('/api/v1/payrolls?period_year=2026&period_month=7')
             ->assertOk()
             ->assertJsonCount(1, 'data');
+    }
+
+    /**
+     * Issue #7010 (RBAC) : l'index /payrolls est un endpoint de gestion
+     * réservé aux managers. Un employé (non-manager) reçoit un 403 explicite
+     * — pas de 200-liste-vide — son self-service passant par /me/pay-slips,
+     * /me/balance et /me/payment-documents.
+     */
+    public function test_index_forbidden_for_employee_role(): void
+    {
+        Sanctum::actingAs($this->employee);
+
+        $this->getJson('/api/v1/payrolls')->assertForbidden();
     }
 
     public function test_store_rejects_invalid_payload(): void
@@ -104,7 +117,7 @@ class PayrollCrudApiTest extends TestCase
         $this->deleteJson("/api/v1/payrolls/{$payroll->id}")->assertStatus(422);
 
         // Une fiche non validée se supprime (période différente).
-        $draft = (new \App\Modules\Payroll\Infrastructure\Services\PayrollService())->create($this->manager, [
+        $draft = (new \App\Modules\Payroll\Infrastructure\Services\PayrollService)->create($this->manager, [
             'employee_id' => $this->employee->id,
             'period_month' => 8,
             'period_year' => 2026,
@@ -128,7 +141,7 @@ class PayrollCrudApiTest extends TestCase
         $deptManager = Employee::factory()->managerDept()->create(['company_id' => $this->manager->company_id]);
         Sanctum::actingAs($deptManager);
 
-        $payroll = (new \App\Modules\Payroll\Infrastructure\Services\PayrollService())->create($this->manager, [
+        $payroll = (new \App\Modules\Payroll\Infrastructure\Services\PayrollService)->create($this->manager, [
             'employee_id' => $this->employee->id,
             'period_month' => 6,
             'period_year' => 2026,
