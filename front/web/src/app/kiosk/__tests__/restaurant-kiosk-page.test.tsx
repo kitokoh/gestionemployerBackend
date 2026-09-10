@@ -52,7 +52,7 @@ describe('RestaurantKioskPage (RESTO-807)', () => {
     window.localStorage.setItem('preferred_locale', 'fr');
     window.history.pushState({}, '', '/kiosk?token=rshop_test');
     mockedApiFetch.mockImplementation(async (endpoint: string) => {
-      if (endpoint === '/public/restaurant/menu') return jsonResponse(menu);
+      if (endpoint === '/public/restaurant/kiosk/menu') return jsonResponse(menu);
       if (endpoint === '/public/restaurant/branches') return jsonResponse(branches);
       throw new Error(`Unexpected endpoint: ${endpoint}`);
     });
@@ -95,9 +95,9 @@ describe('RestaurantKioskPage (RESTO-807)', () => {
     const payment = { data: { id: 1, status: 'confirmed' } };
 
     mockedApiFetch.mockImplementation(async (endpoint: string, options?: RequestInit) => {
-      if (endpoint === '/public/restaurant/menu') return jsonResponse(menu);
+      if (endpoint === '/public/restaurant/kiosk/menu') return jsonResponse(menu);
       if (endpoint === '/public/restaurant/branches') return jsonResponse(branches);
-      if (endpoint === '/public/restaurant/orders' && options?.method === 'POST') return jsonResponse(order);
+      if (endpoint === '/public/restaurant/kiosk/orders' && options?.method === 'POST') return jsonResponse(order);
       if (endpoint.endsWith('/pay') && options?.method === 'POST') return jsonResponse(payment);
       throw new Error(`Unexpected endpoint: ${endpoint}`);
     });
