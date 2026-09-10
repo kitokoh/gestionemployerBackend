@@ -77,6 +77,22 @@ production.
 | — | **Issue : garde « une PR UI = captures »** (checklist PR : si `front/**` UI, captures exigées dans le body) | Règle 5 automatisée |
 | — | **Issue : registre des dérives design** (issue label `design` + moisson mensuelle) | Traçabilité règle 6 |
 
+### Plan de non-régression visuelle (issue #7105)
+
+Objectif : rendre une dérive visuelle **détectable avant production**, surface par surface —
+en complément des gardes couleur existantes (aucun temps ne remplace les autres).
+
+| Temps | Livrable | Portée & chemins exacts | Exécution | Dépend de |
+|---|---|---|---|---|
+| **T1 — Diff d'images Playwright** | `toHaveScreenshot` (Playwright) sur les parcours clés vitrine web + admin | `front/web/e2e/**` et `front/admin-dashboard/e2e/**` : landing vitrine, login, dashboard admin, fiche publique (BC-27/28 quand dispo). Références versionnées, masques sur zones dynamiques | Job CI sur PR (workflows e2e existants) | — |
+| **T2 — Golden tests d'images Flutter** | Méthodologie + premiers golden sur les widgets partagés du core | `front/mobile_apps/leopardo_core/lib/core/widgets/**` (glass_card, leopardo_badge, empty_state…) ; goldens par plateforme. Méthodologie : `docs/testing/GOLDEN_IMAGES_FLUTTER.md` — ⚠️ distinct du golden **backend** `docs/testing/GOLDEN_TESTS.md` | `flutter test` (job mobile) ; mise à jour volontaire via `--update-goldens`, diff revu comme du code | — |
+| **T3 — Garde de synchronisation des tokens** | Script comparant les tokens réels des surfaces à la source canonique (exécute L.07) | Valeurs hex de `front/mobile_apps/leopardo_core/lib/core/theme/app_colors.dart` ↔ `front/web/tailwind.config.ts` ↔ `front/admin-dashboard/tailwind.config.js` ↔ `docs/specifications/DESIGN_SYSTEM_TOKENS.md` | Script `dev-hub/tools/check-design-token-sync.sh` + job CI **non bloquant** sur les PR touchant ces fichiers | — |
+
+Règles :
+- toute image de référence T1/T2 est versionnée et revue comme du code (mise à jour = PR dédiée montrant le diff) ;
+- un écart constaté en recette (P01) ou à l'audit mensuel devient une issue `design`/`lecon` (règle 6), jamais une correction silencieuse ;
+- T1 et T3 sont des implémentations dédiées (issues filles de #7105) ; le présent plan en fixe le contrat.
+
 ## 6. Rôles
 
 | Rôle | Responsabilités |
@@ -103,3 +119,4 @@ production.
 | Version | Date | Changement |
 |---|---|---|
 | v0.1 | 2026-09-09 | Création — consolidation des lois/tokens existants en protocole d'harmonisation |
+| v0.2 | 2026-09-09 | §5 : plan de non-régression visuelle T1-T3 (issue #7105) — diff Playwright, golden Flutter, garde tokens |
