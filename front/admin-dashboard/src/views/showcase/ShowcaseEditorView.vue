@@ -12,7 +12,7 @@
       <div class="flex items-center gap-3">
         <span
           class="px-3 py-1 rounded-full text-sm font-bold"
-          :class="isPublished ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'"
+          :class="[isPublished ? 'bg-emerald-100' : 'bg-slate-200', isPublished ? 'text-emerald-800' : 'text-slate-700']"
         >
           {{ isPublished ? $t('showcase.published') : $t('showcase.draft') }}
         </span>
@@ -106,7 +106,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h2 class="text-xl font-black text-slate-900 dark:text-white">{{ $t('showcase.sections') }}</h2>
           <div class="flex items-center gap-2">
-            <select v-model="newType" class="form-input" aria-label="Section type">
+            <select v-model="newType" class="form-input" :aria-label="$t('showcase.section_type')">
               <option v-for="type in sectionTypes" :key="type" :value="type">{{ type }}</option>
             </select>
             <button type="button" class="btn-primary" :disabled="busy" @click="addSection">

@@ -6046,6 +6046,7 @@
     "delete": "Supprimer",
     "section_saved": "Section enregistrée.",
     "section_deleted": "Section supprimée.",
-    "invalid_json": "Contenu JSON invalide — corrigez avant d’enregistrer."
+    "invalid_json": "Contenu JSON invalide — corrigez avant d’enregistrer.",
+    "section_type": "Type de section"
   }
 }

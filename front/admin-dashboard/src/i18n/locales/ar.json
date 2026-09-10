@@ -6173,6 +6173,7 @@
     "delete": "حذف",
     "section_saved": "تم حفظ القسم.",
     "section_deleted": "تم حذف القسم.",
-    "invalid_json": "محتوى JSON غير صالح — صححه قبل الحفظ."
+    "invalid_json": "محتوى JSON غير صالح — صححه قبل الحفظ.",
+    "section_type": "نوع القسم"
   }
 }

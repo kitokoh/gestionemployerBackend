@@ -6040,6 +6040,7 @@
     "delete": "Delete",
     "section_saved": "Section saved.",
     "section_deleted": "Section deleted.",
-    "invalid_json": "Invalid JSON content — fix it before saving."
+    "invalid_json": "Invalid JSON content — fix it before saving.",
+    "section_type": "Section type"
   }
 }
