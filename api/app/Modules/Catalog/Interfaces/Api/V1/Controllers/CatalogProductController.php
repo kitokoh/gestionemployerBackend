@@ -8,6 +8,7 @@ use App\Core\Auth\Domain\Models\Employee;
 use App\Http\Controllers\Controller;
 use App\Modules\Catalog\Domain\Enums\CatalogProductStatus;
 use App\Modules\Catalog\Domain\Models\CatalogProduct;
+use App\Modules\Catalog\Domain\Support\CatalogPublicCache;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\StoreCatalogProductRequest;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\UpdateCatalogProductRequest;
 use Illuminate\Http\JsonResponse;
@@ -84,6 +85,8 @@ class CatalogProductController extends Controller
             'meta' => $request->input('meta'),
         ]);
 
+        CatalogPublicCache::forgetCompany((string) $actor->company_id);
+
         return response()->json(['data' => $this->payload($product->refresh())], 201);
     }
 
@@ -112,6 +115,7 @@ class CatalogProductController extends Controller
 
         $this->authorize('update', $product);
 
+        $oldSlug = (string) $product->slug;
         $product->update([
             'name' => $request->input('name'),
             'slug' => $this->uniqueSlug(
@@ -128,7 +132,14 @@ class CatalogProductController extends Controller
             'meta' => $request->input('meta'),
         ]);
 
-        return response()->json(['data' => $this->payload($product->refresh())]);
+        $newSlug = (string) $product->refresh()->slug;
+        CatalogPublicCache::forgetProduct((string) $actor->company_id, $oldSlug);
+
+        if ($newSlug !== $oldSlug) {
+            CatalogPublicCache::forgetProduct((string) $actor->company_id, $newSlug);
+        }
+
+        return response()->json(['data' => $this->payload($product)]);
     }
 
     public function destroy(Request $request, CatalogProduct $product): JsonResponse
@@ -142,6 +153,7 @@ class CatalogProductController extends Controller
 
         $this->authorize('delete', $product);
 
+        CatalogPublicCache::forgetProduct((string) $actor->company_id, (string) $product->slug);
         $product->delete();
 
         return response()->json(['data' => null], 200);
@@ -189,6 +201,7 @@ class CatalogProductController extends Controller
 
         $this->authorize('publish', $product);
 
+        CatalogPublicCache::forgetProduct((string) $actor->company_id, (string) $product->slug);
         $product->update(['status' => $status->value]);
 
         return response()->json(['data' => $this->payload($product->refresh())]);
