@@ -78,6 +78,9 @@ class ShowcaseSectionApiTest extends TestCase
         });
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function heroContent(): array
     {
         return ['heading' => 'Acme Industries'];
@@ -127,7 +130,9 @@ class ShowcaseSectionApiTest extends TestCase
             ->assertJsonPath('data.content.heading', 'Acme Industries SAS');
 
         // Réordonnancement (footer en premier).
-        $ids = collect($this->json('GET', '/api/v1/showcase/sections')->json('data'))->pluck('id')->reverse()->values()->all();
+        /** @var array<int, array<string, mixed>> $sections */
+        $sections = $this->json('GET', '/api/v1/showcase/sections')->json('data');
+        $ids = collect($sections)->pluck('id')->reverse()->values()->all();
 
         $this->postJson('/api/v1/showcase/sections/reorder', ['ids' => $ids])
             ->assertOk()
@@ -145,9 +150,9 @@ class ShowcaseSectionApiTest extends TestCase
         $this->principal($company);
         $this->postJson('/api/v1/showcase')->assertStatus(201);
 
-        // Type inconnu.
+        // Type inconnu (`products` est un type v1 depuis C-VITRINE #6891).
         $this->postJson('/api/v1/showcase/sections', [
-            'type' => 'products', // BC-28 #6891, hors v1
+            'type' => 'not_a_section',
             'content' => [],
         ])->assertStatus(422)
             ->assertJsonValidationErrors('type');

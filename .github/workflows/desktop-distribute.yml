@@ -114,12 +114,15 @@ jobs:
         working-directory: front/mobile_apps/${{ inputs.app }}
         run: flutter pub get
 
-      # Les localisations partagées de leopardo_core sont GÉNÉRÉES (non versionnées
-      # dans le build) : sans cette étape, la compilation windows/macos échoue sur
-      # `../leopardo_core/lib/l10n/generated/app_localizations.dart` introuvable.
-      - name: Regenerate shared localizations
+      # Codegen + localisations partagés de leopardo_core, GÉNÉRÉS (non versionnés) :
+      # - *.g.dart (drift, json_serializable) — #6590 ;
+      # - app_localizations.dart (sans quoi la compilation windows/macos échoue).
+      - name: Regenerate shared codegen + localizations (leopardo_core)
         working-directory: front/mobile_apps/leopardo_core
-        run: flutter gen-l10n
+        run: |
+          flutter pub get
+          dart run build_runner build
+          flutter gen-l10n
 
       - name: Build (${{ matrix.build }}, release)
         shell: bash
