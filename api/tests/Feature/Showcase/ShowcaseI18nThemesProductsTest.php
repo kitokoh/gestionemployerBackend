@@ -58,6 +58,7 @@ class ShowcaseI18nThemesProductsTest extends TestCase
     }
 
     /**
+     * @param  array<string, mixed>  $content
      * @param  array<string, mixed>|null  $contentI18n
      */
     private function publishedShowcase(Company $company, string $type = 'hero', array $content = ['heading' => 'Acme'], ?array $contentI18n = null, string $theme = 'industrie'): CompanyShowcase
