@@ -36,11 +36,11 @@ jobs:
         id: compare
         shell: bash
         env:
-          HEALTH_URL: ${{ vars.PROD_API_BASE_URL }}/health
+          HEALTH_URL: ${{ vars.DEV_API_BASE_URL }}/health
         run: |
           set -euo pipefail
           if [[ -z "${HEALTH_URL}" ]]; then
-            echo "::error::vars.PROD_API_BASE_URL non défini — rattrapage impossible (#6834)."
+            echo "::error::vars.DEV_API_BASE_URL non défini — rattrapage impossible (#6834)."
             exit 1
           fi
           # Tier dev : health `version` = SHA Render tronqué (7 car., pas d'APP_VERSION).
