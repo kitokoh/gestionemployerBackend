@@ -26,6 +26,14 @@ use App\Modules\Catalog\Interfaces\Api\V1\Controllers\CatalogPublicController;
 use App\Modules\Catalog\Interfaces\Api\V1\Controllers\CatalogPublicInquiryController;
 use Illuminate\Support\Facades\Route;
 
+// SEO (#6888) : sitemap des produits publies, TOUTES societes — hors groupe
+// tenant (pas de slug a resoudre), declare avant le groupe `catalog.public`.
+Route::middleware(['throttle:shop-public'])
+    ->prefix('public/catalog')
+    ->group(function (): void {
+        Route::get('/sitemap.xml', [CatalogPublicController::class, 'sitemap']);
+    });
+
 Route::middleware(['throttle:shop-public', 'catalog.public'])
     ->prefix('public/catalog')
     ->group(function (): void {

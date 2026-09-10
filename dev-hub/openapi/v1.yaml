@@ -2223,6 +2223,17 @@ paths:
         required: true
         schema:
           type: string
+      - name: lang
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [fr, en, ar, tr]
+      - name: token
+        in: query
+        required: false
+        schema:
+          type: string
       responses:
         '200':
           description: Vitrine publique (VitrinePublicResource)
@@ -2232,6 +2243,34 @@ paths:
                 type: object
         '404':
           description: Slug inconnu, societe suspendue ou vitrine non publiee
+  /public/vitrine/sitemap.xml:
+    get:
+      tags:
+      - Showcase
+      summary: Sitemap des vitrines publiees (BC-27 V-SEO #6873)
+      description: Liste XML des vitrines PUBLIEES uniquement (jamais de brouillon), avec alternates hreflang fr/en/ar/tr. Cache court (15 min).
+      security: []
+      responses:
+        '200':
+          description: Sitemap XML
+          content:
+            application/xml:
+              schema:
+                type: string
+  /public/vitrine/robots.txt:
+    get:
+      tags:
+      - Showcase
+      summary: robots.txt public de la vitrine (BC-27 V-SEO #6873)
+      description: Indexation autorisee sur /public/vitrine/, exclusion des apercus (?token=), pointeur sitemap.
+      security: []
+      responses:
+        '200':
+          description: robots.txt
+          content:
+            text/plain:
+              schema:
+                type: string
   /showcase:
     get:
       tags:
@@ -2257,6 +2296,77 @@ paths:
           description: Vitrine deja existante
         '403':
           description: Role insuffisant ou feature flag desactive
+  /showcase/publish:
+    post:
+      tags:
+      - Showcase
+      summary: Publie la vitrine du tenant (BC-27 V-PUBLISH #6871)
+      description: Passe la vitrine en published (published_at pose, jeton d'apercu revoque, cache public purge, audit). 422 si aucune section.
+      responses:
+        '200':
+          description: Vitrine publiee (ShowcaseResource)
+        '403':
+          description: Role insuffisant ou feature flag desactive
+        '404':
+          description: Aucune vitrine pour ce tenant
+        '422':
+          description: Aucune section a publier
+  /showcase/unpublish:
+    post:
+      tags:
+      - Showcase
+      summary: Depublie la vitrine du tenant (BC-27 V-PUBLISH #6871)
+      description: Repasse la vitrine en draft, published_at remis a null, cache public purge, audit.
+      responses:
+        '200':
+          description: Vitrine depubliee (ShowcaseResource)
+        '403':
+          description: Role insuffisant ou feature flag desactive
+        '404':
+          description: Aucune vitrine pour ce tenant
+  /showcase/preview-token:
+    post:
+      tags:
+      - Showcase
+      summary: Genere un jeton d'apercu prive (BC-27 V-PUBLISH #6871)
+      description: Jeton de 64 caracteres permettant de consulter un brouillon via GET /public/vitrine/{slug}?token=... (reponse X-Robots-Tag noindex, jamais indexable). Regenerer invalide l'ancien jeton.
+      responses:
+        '200':
+          description: Jeton d'apercu
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      preview_token:
+                        type: string
+                      preview_path:
+                        type: string
+                      expires:
+                        type: string
+                        nullable: true
+        '403':
+          description: Role insuffisant ou feature flag desactive
+        '404':
+          description: Aucune vitrine pour ce tenant
+  /showcase/settings:
+    put:
+      tags:
+      - Showcase
+      summary: Reglages de marque, theme et bloc legal (BC-27 V-THEMES #6868 / V-RGPD #6875)
+      description: Met a jour le theme v1 (industrie|service|commerce), les variables de marque (allowlist) et le bloc legal. Les cles hors allowlist sont ignorees. Cache public purge, audit.
+      responses:
+        '200':
+          description: Vitrine mise a jour (ShowcaseResource)
+        '403':
+          description: Role insuffisant ou feature flag desactive
+        '404':
+          description: Aucune vitrine pour ce tenant
+        '422':
+          description: Theme inconnu ou payload invalide
   /showcase/sections:
     get:
       tags:
@@ -27360,6 +27470,20 @@ paths:
         '404':
           $ref: '#/components/responses/Error404'
 
+  /public/catalog/sitemap.xml:
+    get:
+      tags:
+      - Catalog
+      summary: Sitemap des produits publies (BC-28 C-SEO #6888)
+      description: Liste XML des produits PUBLIES de toutes les societes actives (jamais de brouillon), cache court. Route hors groupe tenant.
+      security: []
+      responses:
+        '200':
+          description: Sitemap XML
+          content:
+            application/xml:
+              schema:
+                type: string
   /public/catalog/{companySlug}:
     get:
       tags:

@@ -1,5 +1,15 @@
 name: Desktop - Build & Distribute (pilote)
 
+# Chaîne desktop Leopardo — protocole P06, tranches verticales (registry docs/desktop/README.md).
+# Build du client desktop par BC vertical, à la demande :
+#   - Windows (.exe) / macOS (.app), release ;
+#   - garde API_BASE_URL (#4524) : jamais de build sans volet API explicite ;
+#   - packaging zip + SHA-256 ;
+#   - canal dev : Release GitHub `desktop-<app>-dev` (NON SIGNÉE, marquée pré-release) ;
+#   - artefact de run (14 j) pour les pilotes.
+# Aucune distribution publique (P06 / #3257) : la signature/notarisation est une décision PM
+# distincte, par tranche.
+
 on:
   workflow_dispatch:
     inputs:
@@ -39,32 +49,47 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 concurrency:
-  group: desktop-distribute-${{ github.ref }}
+  group: desktop-distribute-${{ github.ref }}-${{ inputs.app }}
   cancel-in-progress: false
 
 jobs:
+  # Matrice calculée depuis l'input `platform` (évite de lancer les 2 OS quand un seul est visé).
+  prepare:
+    name: Prepare matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - name: Build matrix from platform input
+        id: set
+        shell: bash
+        run: |
+          set -euo pipefail
+          PLATFORM="${{ inputs.platform }}"
+          case "${PLATFORM}" in
+            windows) JSON='{"include":[{"os":"windows-latest","build":"windows","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/windows/x64/runner/Release","extra":""}]}' ;;
+            macos)   JSON='{"include":[{"os":"macos-latest","build":"macos","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/macos/Build/Products/Release","extra":""}]}' ;;
+            both)    JSON='{"include":[{"os":"windows-latest","build":"windows","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/windows/x64/runner/Release","extra":""},{"os":"macos-latest","build":"macos","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/macos/Build/Products/Release","extra":""}]}' ;;
+            *)       echo "::error::platform inconnu: ${PLATFORM}"; exit 1 ;;
+          esac
+          echo "matrix=${JSON}" >> "$GITHUB_OUTPUT"
+          echo "${JSON}"
+
   build-and-package:
+    needs: prepare
     timeout-minutes: 120
-    name: Desktop build (${{ matrix.os.name }})
-    runs-on: ${{ matrix.os.runner }}
+    name: Desktop build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - os:
-              name: windows
-              runner: windows-latest
-            build: windows
-            artifact_path: front/mobile_apps/leopardo_accounting/build/windows/x64/runner/Release/
-            extra_args: ""
-          - os:
-              name: macos
-              runner: macos-latest
-            build: macos
-            artifact_path: front/mobile_apps/leopardo_accounting/build/macos/Build/Products/Release/
-            extra_args: "--no-codesign"   # pilote interne : pas de notarisation (P06 §4)
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          lfs: false
+
       # Garde #4524 : jamais de build sans URL d'API explicite (fail-open supprimé).
       - name: Guard API_BASE_URL (#4524)
         shell: bash
@@ -80,21 +105,29 @@ jobs:
           echo "API_BASE_URL=${API_URL}" >> "$GITHUB_ENV"
           echo "Cible API (volet ${{ inputs.environment }}) : ${API_URL}"
 
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          lfs: false
-
-      - name: Setup Flutter (stable)
+      - name: Setup Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
-          cache: true
 
-      - name: Build ${{ matrix.os.name }} (release)
+      - name: Install dependencies (app)
+        working-directory: front/mobile_apps/${{ inputs.app }}
+        run: flutter pub get
+
+      # Codegen + localisations partagés de leopardo_core, GÉNÉRÉS (non versionnés) :
+      # - *.g.dart (drift, json_serializable) — #6590 ;
+      # - app_localizations.dart (sans quoi la compilation windows/macos échoue).
+      - name: Regenerate shared codegen + localizations (leopardo_core)
+        working-directory: front/mobile_apps/leopardo_core
+        run: |
+          flutter pub get
+          dart run build_runner build
+          flutter gen-l10n
+
+      - name: Build (${{ matrix.build }}, release)
         shell: bash
-        # Fix MSVC 14.51 (runner windows-2025) : local_auth_windows (dépendance de
-        # leopardo_core) utilise <experimental/coroutine> retiré par la STL récente
+        # Fix MSVC récent (runners windows-2025) : local_auth_windows (dépendance de
+        # leopardo_core) utilise <experimental/coroutine>, retiré par la STL actuelle
         # (erreur STL1011). Le macro officiel MSVC supprime l'erreur — parade amont
         # documentée, à retirer quand le plugin sera compatible (suivi #7056).
         env:
@@ -102,7 +135,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "front/mobile_apps/${{ inputs.app }}"
-          flutter build ${{ matrix.build }} --release ${{ matrix.extra_args }} \
+          flutter build ${{ matrix.build }} --release ${{ matrix.extra }} \
             --dart-define=API_BASE_URL="${API_BASE_URL}"
 
       - name: Verify artifact
@@ -110,13 +143,11 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${{ matrix.build }}" == "windows" ]]; then
-            ARTIFACT="front/mobile_apps/${{ inputs.app }}/build/windows/x64/runner/Release"
-            test -f "${ARTIFACT}/${{ inputs.app }}.exe"
-            du -h "${ARTIFACT}/${{ inputs.app }}.exe"
+            test -f "${{ matrix.artifact }}/${{ inputs.app }}.exe"
+            du -h "${{ matrix.artifact }}/${{ inputs.app }}.exe"
           else
-            ARTIFACT="front/mobile_apps/${{ inputs.app }}/build/macos/Build/Products/Release"
-            test -d "${ARTIFACT}/${{ inputs.app }}.app"
-            du -sh "${ARTIFACT}/${{ inputs.app }}.app"
+            test -d "${{ matrix.artifact }}/${{ inputs.app }}.app"
+            du -sh "${{ matrix.artifact }}/${{ inputs.app }}.app"
           fi
 
       - name: Package + checksums (zip + SHA-256)
@@ -126,7 +157,7 @@ jobs:
           python3 - <<'PYEOF'
           import hashlib, pathlib, shutil, zipfile
           app = "${{ inputs.app }}"
-          osname = "${{ matrix.os.name }}"
+          osname = "${{ matrix.build }}"
           build = "${{ matrix.build }}"
           base = pathlib.Path(f"front/mobile_apps/{app}/build")
           if build == "windows":
@@ -157,7 +188,7 @@ jobs:
           set -euo pipefail
           TAG="desktop-${{ inputs.app }}-dev"
           NOTES="Canal dev desktop — build NON SIGNÉ, usage interne/pilote.
-          App: ${{ inputs.app }} | Plateforme: ${{ matrix.os.name }} | Run: ${{ github.run_id }}
+          App: ${{ inputs.app }} | Plateforme: ${{ matrix.build }} | Run: ${{ github.run_id }}
           Volet API: ${{ inputs.environment }} | Commit: ${{ github.sha }}
           Aucune distribution publique (protocole P06 / #3257)."
           if gh release view "${TAG}" >/dev/null 2>&1; then
@@ -169,7 +200,7 @@ jobs:
       - name: Upload artifact (canal pilote interne — aucun lien public)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: leopardo-desktop-${{ inputs.app }}-${{ matrix.os.name }}-${{ github.run_id }}
+          name: leopardo-desktop-${{ inputs.app }}-${{ matrix.build }}-${{ github.run_id }}
           path: dist/
           if-no-files-found: error
           retention-days: 14
