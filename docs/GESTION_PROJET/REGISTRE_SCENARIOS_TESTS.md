@@ -240,3 +240,29 @@ plus s'afficher vide a l'arrivee.
 Scenarios admin a verifier apres deploiement : refus d'un compte tenant, absence du
 selecteur de demo hors DEV, affichage d'un indicateur (et non d'une page vide) au
 premier rendu de chaque vue principale.
+## Mise a jour 2026-09-10 — honnetete de la copie publique & propagation i18n
+
+Contexte : audit de la presentation publique (vitrine Next.js + site GitHub Pages)
+et de la veracite des termes employes. La correction a entraine :
+
+- `shared/i18n/locales/{fr,tr}.json` : prix public Operations corrige (99 € -> 79 €,
+  prix canonique ADR-0014 / `PlanSeeder`), puis chaine de sync rejouee — les
+  catalogues **admin** (`front/admin-dashboard/src/i18n/locales/*`) et **mobile**
+  (`front/mobile_apps/leopardo_core/lib/l10n/*.arb`) ont donc ete regeneres
+  mecaniquement, sans changement fonctionnel.
+- Surface **web admin** : aucun scenario n'est invalide (catalogues uniquement).
+  Le prix affiche reste celui de la page pricing ; le controle de non-regression
+  porte sur l'egalite des libelles entre catalogue genere et source.
+- Surface **mobile** : aucun comportement modifie ; seule la valeur traduite du
+  meme bloc est propagee aux ARB.
+- Surface **vitrine** (hors perimetre admin/mobile) : suppression des chiffres
+  non mesures (« 99.9% », « 50K+ utilisateurs », « SOC2 », « 4.9 App Store »),
+  remplacement des revendications de conformite par leurs formulations etayees,
+  ajout des mentions « exemple illustratif » manquantes (equipe `/about`,
+  detail des etudes de cas), alignement des metriques sur le registre
+  `docs/REFERENTIEL_PRODUIT/METRIQUES_VITRINE.md`.
+- `dev-hub/tools/check-public-promises.sh` : 7 motifs supplementaires (conformite
+  RGPD affirmative, conformite garantie, SOC2/ISO 27001, « always compliant »).
+
+Aucun parcours critique n'est modifie : le lint, le build et les suites vitrine
+restent les gates applicables.
