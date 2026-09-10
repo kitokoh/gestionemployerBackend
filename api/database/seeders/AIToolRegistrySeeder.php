@@ -185,6 +185,18 @@ class AIToolRegistrySeeder extends Seeder
                     ],
                     'required' => ['schedule_id', 'employee_id'],
                 ]),
+                'name' => 'notify_team',
+                'description' => 'Send a short message to a team (whole company for principal/RH, or one department) — confirmation required before send, rate-limited.',
+                'parameters' => json_encode([
+                    'type' => 'object',
+                    'properties' => [
+                        'title' => ['type' => 'string', 'description' => 'Message title (max 200)'],
+                        'message' => ['type' => 'string', 'description' => 'Message body (max 5000)'],
+                        'audience_type' => ['type' => 'string', 'enum' => ['company', 'department'], 'description' => "Target audience: 'company' (principal/RH only) or 'department' (default)"],
+                        'department_id' => ['type' => 'integer', 'description' => 'Target department ID — required when audience_type=department'],
+                    ],
+                    'required' => ['title', 'message'],
+                ]),
                 'required_permissions' => '["schedules.assign"]',
                 'required_role' => 'manager',
                 'module' => 'rh',
@@ -233,6 +245,21 @@ class AIToolRegistrySeeder extends Seeder
                         'month' => ['type' => 'integer'],
                         'year' => ['type' => 'integer'],
                     ],
+                ]),
+                'required_permissions' => '["payroll.view"]',
+                'required_role' => 'manager',
+                'module' => 'payroll',
+            ],
+            // B2 (#6855) — outil lecture BC-07 PAYROLL déclaré au contrat A3
+            // (#6850) : `parameters` aligné sur l'inputSchema de la définition
+            // du catalogue Payroll (PayrollReadToolCatalog) ; handler dans
+            // IntentEngine.
+            [
+                'name' => 'payroll_current_status',
+                'description' => 'Aggregated payroll status of the tenant: last closed run (validated/paid) and current run (draft/calculating/processing/calculated/error) with progress (generated/validated payslips vs run headcount). No amounts, no personal data.',
+                'parameters' => json_encode([
+                    'type' => 'object',
+                    'properties' => [],
                 ]),
                 'required_permissions' => '["payroll.view"]',
                 'required_role' => 'manager',

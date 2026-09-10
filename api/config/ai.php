@@ -108,6 +108,10 @@ return [
         // B3b (#6857) — affectation d'un shift (schedule) à un employé,
         // parité ScheduleController::assignEmployees (BC-05 WORKFORCE).
         'shift_assign',
+        // B3c (#6858) — envoi d'un message à une équipe (annonce tenant,
+        // BC-13 COMMS), parité AnnouncementController, exécution après
+        // confirmation (flux A4, contrat A3 #6850).
+        'notify_team',
     ],
 
     // BC-23-D05 (issue #6237) — matrice de permissions par outil AI
@@ -138,6 +142,10 @@ return [
         'team_overview' => ['role' => 'manager', 'permissions' => ['employees.view']],
         'team_absences_recent' => ['role' => 'manager', 'permissions' => ['absences.view']],
         'employee_leave_balance' => ['role' => 'employee', 'permissions' => ['leave.view']],
+        // B2 (#6855) — outil lecture BC-07 PAYROLL (contrat A3, #6850) :
+        // lecture seule du statut agrégé du run de paie, permission =
+        // policy lecture payroll existante (même portée que get_payroll_summary).
+        'payroll_current_status' => ['role' => 'manager', 'permissions' => ['payroll.view']],
         'create_absence' => ['role' => 'employee', 'permissions' => ['absences.create']],
         'approve_absence' => ['role' => 'manager', 'permissions' => ['absences.approve']],
         // B3a (#6856) — outil écriture BC-06 LEAVE (contrat A3, #6850) :
@@ -149,10 +157,18 @@ return [
         // ScheduleController::assignEmployees (api.manager + isManager +
         // visibleToManager pour les managers d'équipe).
         'shift_assign' => ['role' => 'manager', 'permissions' => ['schedules.assign']],
+        // B3c (#6858) — outil envoi BC-13 COMMS (contrat A3, #6850) : message
+        // à une équipe via le système d'annonces (parité AnnouncementController,
+        // api.manager + authorizeAudience — principal/RH pour company).
+        'notify_team' => ['role' => 'manager', 'permissions' => ['announcements.create']],
     ],
 
     // BC-23-D05 (issue #6237) — permissions accordées par rôle (résolution du
     // demandeur). Listes explicites et versionnées (pas d'héritage implicite).
+    'notify_team_rate' => [
+        'max_per_hour' => 10,
+    ],
+
     'role_permissions' => [
         'employee' => [
             'employees.view',

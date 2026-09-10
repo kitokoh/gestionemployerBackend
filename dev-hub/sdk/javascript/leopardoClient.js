@@ -3910,6 +3910,11 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("GET", "/public/catalog/{companySlug}/products/{productSlug}", options);
     },
 
+    /** Vitrine publique d'un tenant (BC-27 #6867) */
+    getPublicVitrineBySlug(options = {}) {
+      return request("GET", "/public/vitrine/{slug}", options);
+    },
+
     /** Envoyer une notification push de test a un employe */
     postPushNotificationsSend(options = {}) {
       return request("POST", "/push-notifications/send", options);
@@ -4208,6 +4213,41 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
     /** Affecter un horaire/regle entreprise a des employes */
     postSchedulesByScheduleAssignEmployees(options = {}) {
       return request("POST", "/schedules/{schedule}/assign-employees", options);
+    },
+
+    /** Vitrine du tenant courant (gestion) */
+    getShowcase(options = {}) {
+      return request("GET", "/showcase", options);
+    },
+
+    /** Creation 1-clic de la vitrine (US1) */
+    postShowcase(options = {}) {
+      return request("POST", "/showcase", options);
+    },
+
+    /** Liste ordonnee des sections de la vitrine (BC-27 #6866) */
+    getShowcaseSections(options = {}) {
+      return request("GET", "/showcase/sections", options);
+    },
+
+    /** Ajout d'une section (content valide par JSON Schema du type) */
+    postShowcaseSections(options = {}) {
+      return request("POST", "/showcase/sections", options);
+    },
+
+    /** Suppression d'une section */
+    deleteShowcaseSectionsBySection(options = {}) {
+      return request("DELETE", "/showcase/sections/{section}", options);
+    },
+
+    /** Mise a jour d'une section (PATCH partiel type et/ou content) */
+    patchShowcaseSectionsBySection(options = {}) {
+      return request("PATCH", "/showcase/sections/{section}", options);
+    },
+
+    /** Reordonnancement complet des sections (ids = ordre cible) */
+    postShowcaseSectionsReorder(options = {}) {
+      return request("POST", "/showcase/sections/reorder", options);
     },
 
     /** Lister les sites */
