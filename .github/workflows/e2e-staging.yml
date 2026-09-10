@@ -31,9 +31,9 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  DEFAULT_STAGING_URL: ${{ vars.PROD_API_BASE_URL }}
-  DEFAULT_ADMIN_STAGING_URL: ${{ vars.PROD_ADMIN_URL }}
-  DEFAULT_WEB_STAGING_URL: ${{ vars.PROD_WEB_URL }}
+  DEFAULT_STAGING_URL: ${{ vars.DEV_API_BASE_URL }}
+  DEFAULT_ADMIN_STAGING_URL: ${{ vars.DEV_ADMIN_URL }}
+  DEFAULT_WEB_STAGING_URL: ${{ vars.DEV_WEB_URL }}
 
 concurrency:
   # Issue #2131 : groupe par SHA du déploiement déclencheur (et non par ref) —
@@ -64,9 +64,9 @@ jobs:
       # doivent être positionnées en variables du repo, sinon E2E échoue
       # explicitement au lieu de tester un hôte mort.
       - name: Guard production URLs (fail-closed, #4720)
-        if: ${{ !vars.PROD_API_BASE_URL || !vars.PROD_ADMIN_URL || !vars.PROD_WEB_URL }}
+        if: ${{ !vars.DEV_API_BASE_URL || !vars.DEV_ADMIN_URL || !vars.DEV_WEB_URL }}
         run: |
-          echo "::error::PROD_API_BASE_URL / PROD_ADMIN_URL / PROD_WEB_URL must be set (silent fallbacks removed, issue #4720)."
+          echo "::error::DEV_API_BASE_URL / DEV_ADMIN_URL / DEV_WEB_URL must be set (silent fallbacks removed, issue #4720)."
           exit 1
       # Audit §4.2 / Plan P3: previously gated on the parent "Deploy - Leopardo RH"
       # workflow_run's overall conclusion, which also depends on the

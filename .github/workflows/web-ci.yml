@@ -85,8 +85,9 @@ jobs:
         working-directory: front/admin-dashboard
         env:
           # #4715 : la garde vite.config.js lève une erreur si VITE_API_URL
-          # est absent en production. PROD_API_BASE_URL = URL Render live.
-          VITE_API_URL: ${{ vars.PROD_API_BASE_URL }}
+          # est absent. DEV_API_BASE_URL = URL du tier dev/continu Render
+          # (instance publique de référence — registre docs/ops/DOMAINS.md).
+          VITE_API_URL: ${{ vars.DEV_API_BASE_URL }}
         run: npm run build
 
       - name: Upload build artifact
