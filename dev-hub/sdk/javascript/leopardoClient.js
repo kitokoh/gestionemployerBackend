@@ -1470,6 +1470,86 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("PUT", "/career-events/{careerEvent}/reject", options);
     },
 
+    /** Lister les categories du catalogue (membres du tenant) */
+    getCatalogCategories(options = {}) {
+      return request("GET", "/catalog/categories", options);
+    },
+
+    /** Creer une categorie (gestion principal/rh) */
+    postCatalogCategories(options = {}) {
+      return request("POST", "/catalog/categories", options);
+    },
+
+    /** Supprimer une categorie (gestion principal/rh) */
+    deleteCatalogCategoriesByCategory(options = {}) {
+      return request("DELETE", "/catalog/categories/{category}", options);
+    },
+
+    /** Detail d'une categorie (membres du tenant) */
+    getCatalogCategoriesByCategory(options = {}) {
+      return request("GET", "/catalog/categories/{category}", options);
+    },
+
+    /** Mettre a jour une categorie (gestion principal/rh) */
+    putCatalogCategoriesByCategory(options = {}) {
+      return request("PUT", "/catalog/categories/{category}", options);
+    },
+
+    /** Lister les demandes de devis B2B du tenant (back-office) */
+    getCatalogInquiries(options = {}) {
+      return request("GET", "/catalog/inquiries", options);
+    },
+
+    /** Effacer une demande de devis (droit RGPD, canal tenant) */
+    deleteCatalogInquiriesByInquiry(options = {}) {
+      return request("DELETE", "/catalog/inquiries/{inquiry}", options);
+    },
+
+    /** Transition de statut d'une demande de devis (back-office) */
+    patchCatalogInquiriesByInquiryStatus(options = {}) {
+      return request("PATCH", "/catalog/inquiries/{inquiry}/status", options);
+    },
+
+    /** Exporter les demandes de devis B2B en CSV (back-office) */
+    getCatalogInquiriesExport(options = {}) {
+      return request("GET", "/catalog/inquiries/export", options);
+    },
+
+    /** Lister les produits du catalogue (membres du tenant) */
+    getCatalogProducts(options = {}) {
+      return request("GET", "/catalog/products", options);
+    },
+
+    /** Creer un produit (gestion principal/rh) */
+    postCatalogProducts(options = {}) {
+      return request("POST", "/catalog/products", options);
+    },
+
+    /** Supprimer un produit (gestion principal/rh) */
+    deleteCatalogProductsByProduct(options = {}) {
+      return request("DELETE", "/catalog/products/{product}", options);
+    },
+
+    /** Detail d'un produit (membres du tenant) */
+    getCatalogProductsByProduct(options = {}) {
+      return request("GET", "/catalog/products/{product}", options);
+    },
+
+    /** Mettre a jour un produit (gestion principal/rh) */
+    putCatalogProductsByProduct(options = {}) {
+      return request("PUT", "/catalog/products/{product}", options);
+    },
+
+    /** Publier un produit (statut published) */
+    postCatalogProductsByProductPublish(options = {}) {
+      return request("POST", "/catalog/products/{product}/publish", options);
+    },
+
+    /** Depublier un produit (statut draft) */
+    postCatalogProductsByProductUnpublish(options = {}) {
+      return request("POST", "/catalog/products/{product}/unpublish", options);
+    },
+
     /** Persister un evenement UX client tenant-scope */
     postClientEvents(options = {}) {
       return request("POST", "/client-events", options);
@@ -3815,9 +3895,19 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("POST", "/public/careers/{companySlug}/jobs/{jobPosting}/apply", options);
     },
 
-    /** Vitrine publique d'un tenant (BC-27 #6867) */
-    getPublicVitrineBySlug(options = {}) {
-      return request("GET", "/public/vitrine/{slug}", options);
+    /** Catalogue public d'un tenant (categories + produits publies, sans auth) */
+    getPublicCatalogByCompanySlug(options = {}) {
+      return request("GET", "/public/catalog/{companySlug}", options);
+    },
+
+    /** Demander un devis B2B (formulaire public, sans auth) */
+    postPublicCatalogByCompanySlugInquiries(options = {}) {
+      return request("POST", "/public/catalog/{companySlug}/inquiries", options);
+    },
+
+    /** Fiche publique d'un produit publie (sans auth) */
+    getPublicCatalogByCompanySlugProductsByProductSlug(options = {}) {
+      return request("GET", "/public/catalog/{companySlug}/products/{productSlug}", options);
     },
 
     /** Envoyer une notification push de test a un employe */
@@ -4118,41 +4208,6 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
     /** Affecter un horaire/regle entreprise a des employes */
     postSchedulesByScheduleAssignEmployees(options = {}) {
       return request("POST", "/schedules/{schedule}/assign-employees", options);
-    },
-
-    /** Vitrine du tenant courant (gestion) */
-    getShowcase(options = {}) {
-      return request("GET", "/showcase", options);
-    },
-
-    /** Creation 1-clic de la vitrine (US1) */
-    postShowcase(options = {}) {
-      return request("POST", "/showcase", options);
-    },
-
-    /** Liste ordonnee des sections de la vitrine (BC-27 #6866) */
-    getShowcaseSections(options = {}) {
-      return request("GET", "/showcase/sections", options);
-    },
-
-    /** Ajout d'une section (content valide par JSON Schema du type) */
-    postShowcaseSections(options = {}) {
-      return request("POST", "/showcase/sections", options);
-    },
-
-    /** Suppression d'une section */
-    deleteShowcaseSectionsBySection(options = {}) {
-      return request("DELETE", "/showcase/sections/{section}", options);
-    },
-
-    /** Mise a jour d'une section (PATCH partiel type et/ou content) */
-    patchShowcaseSectionsBySection(options = {}) {
-      return request("PATCH", "/showcase/sections/{section}", options);
-    },
-
-    /** Reordonnancement complet des sections (ids = ordre cible) */
-    postShowcaseSectionsReorder(options = {}) {
-      return request("POST", "/showcase/sections/reorder", options);
     },
 
     /** Lister les sites */
