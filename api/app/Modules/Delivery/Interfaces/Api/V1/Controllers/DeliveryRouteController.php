@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Delivery\Interfaces\Api\V1\Controllers;
 
-use App\Modules\Delivery\Application\Services\DeliveryRouteService;
+use App\Modules\Delivery\Infrastructure\Services\DeliveryRouteService;
 use App\Modules\Delivery\Domain\Models\DeliveryRoute;
 use App\Modules\Delivery\Interfaces\Api\V1\Requests\DeliveryRouteAssignRequest;
 use App\Modules\Delivery\Interfaces\Api\V1\Requests\DeliveryRouteStoreRequest;

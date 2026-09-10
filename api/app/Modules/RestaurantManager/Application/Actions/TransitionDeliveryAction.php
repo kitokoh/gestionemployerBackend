@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\RestaurantManager\Application\Actions;
 
 use App\Core\Auth\Domain\Models\Employee;
-use App\Modules\RestaurantManager\Application\Services\DeliveryStateMachine;
+use App\Modules\RestaurantManager\Infrastructure\Services\DeliveryStateMachine;
 use App\Modules\RestaurantManager\Domain\Enums\DeliveryStatus;
 use App\Modules\RestaurantManager\Domain\Enums\OrderStatus;
 use App\Modules\RestaurantManager\Domain\Models\RestaurantDelivery;

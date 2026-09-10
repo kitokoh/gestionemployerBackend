@@ -6,9 +6,9 @@ namespace Tests\Feature\Delivery;
 
 use App\Core\Tenant\Domain\Models\Company;
 use App\Core\Tenant\TenantManager;
-use App\Modules\Delivery\Application\Jobs\CloseDeliveryRouteJob;
-use App\Modules\Delivery\Application\Jobs\ExportDeliveryReportJob;
-use App\Modules\Delivery\Application\Services\DeliveryReportService;
+use App\Modules\Delivery\Infrastructure\Jobs\CloseDeliveryRouteJob;
+use App\Modules\Delivery\Infrastructure\Jobs\ExportDeliveryReportJob;
+use App\Modules\Delivery\Infrastructure\Services\DeliveryReportService;
 use App\Modules\Delivery\Domain\Models\Delivery;
 use App\Modules\Delivery\Domain\Models\DeliveryDeadLetter;
 use App\Modules\Delivery\Domain\Models\DeliveryRoute;

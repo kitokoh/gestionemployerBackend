@@ -7,7 +7,7 @@ namespace Tests\Feature\EduManager;
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Tenant\Domain\Exceptions\TenantContextMissingException;
 use App\Core\Tenant\Domain\Models\Company;
-use App\Modules\EduManager\Application\Services\GradeService;
+use App\Modules\EduManager\Infrastructure\Services\GradeService;
 use App\Modules\EduManager\Domain\Models\EduAssessment;
 use App\Modules\EduManager\Domain\Models\EduGrade;
 use App\Modules\EduManager\Domain\Models\EduGradeVersion;

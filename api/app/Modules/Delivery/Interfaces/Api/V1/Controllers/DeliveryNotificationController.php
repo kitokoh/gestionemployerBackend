@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Delivery\Interfaces\Api\V1\Controllers;
 
 use App\Core\Auth\Domain\Models\Employee;
-use App\Modules\Delivery\Application\Services\DeliveryNotificationService;
+use App\Modules\Delivery\Infrastructure\Services\DeliveryNotificationService;
 use App\Modules\Delivery\Domain\Models\DeliveryNotification;
 use App\Modules\Delivery\Domain\Support\DeliveryRoleResolver;
 use App\Modules\Delivery\Interfaces\Api\V1\Resources\DeliveryNotificationResource;

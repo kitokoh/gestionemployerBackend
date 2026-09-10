@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Delivery\Console\Commands;
 
-use App\Modules\Delivery\Application\Jobs\CloseDeliveryRouteJob;
+use App\Modules\Delivery\Infrastructure\Jobs\CloseDeliveryRouteJob;
 use App\Modules\Delivery\Domain\Models\DeliveryRoute;
 use Illuminate\Console\Command;
 

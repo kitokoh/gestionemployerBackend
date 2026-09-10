@@ -6,7 +6,7 @@ namespace Tests\Feature\EduManager;
 
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Tenant\Domain\Models\Company;
-use App\Modules\EduManager\Application\Services\ReportCardService;
+use App\Modules\EduManager\Infrastructure\Services\ReportCardService;
 use App\Modules\EduManager\Domain\Models\EduGuardian;
 use App\Modules\EduManager\Domain\Models\EduReportCard;
 use App\Modules\EduManager\Domain\Models\EduStudent;

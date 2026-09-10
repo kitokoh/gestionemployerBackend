@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Delivery\Application\Actions;
 
 use App\Core\Auth\Domain\Models\Employee;
-use App\Modules\Delivery\Application\Services\DeliveryEventService;
+use App\Modules\Delivery\Infrastructure\Services\DeliveryEventService;
 use App\Modules\Delivery\Domain\Models\DeliveryRoute;
 use App\Modules\Delivery\Domain\Models\DeliveryStop;
 use App\Modules\Delivery\Domain\Support\DeliveryRoleResolver;

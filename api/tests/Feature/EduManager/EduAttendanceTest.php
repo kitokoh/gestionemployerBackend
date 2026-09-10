@@ -6,7 +6,7 @@ namespace Tests\Feature\EduManager;
 
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Tenant\Domain\Models\Company;
-use App\Modules\EduManager\Application\Services\AttendanceService;
+use App\Modules\EduManager\Infrastructure\Services\AttendanceService;
 use App\Modules\EduManager\Domain\Models\EduAttendanceCorrection;
 use App\Modules\EduManager\Domain\Models\EduAttendanceRecord;
 use App\Modules\EduManager\Domain\Models\EduStudent;

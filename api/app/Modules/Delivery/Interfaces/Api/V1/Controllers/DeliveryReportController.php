@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Delivery\Interfaces\Api\V1\Controllers;
 
-use App\Modules\Delivery\Application\Services\DeliveryReportService;
+use App\Modules\Delivery\Infrastructure\Services\DeliveryReportService;
 use App\Modules\Delivery\Domain\Models\Delivery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

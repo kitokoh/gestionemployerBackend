@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Delivery\Providers;
 
-use App\Modules\Delivery\Application\Services\DeliveryNotificationService;
+use App\Modules\Delivery\Infrastructure\Services\DeliveryNotificationService;
 use App\Modules\Delivery\Domain\Contracts\DeliveryAccountingContract;
 use App\Modules\Delivery\Domain\Contracts\DeliveryRepositoryInterface;
 use App\Modules\Delivery\Domain\Contracts\RecipientMessageContract;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\RestaurantManager\Application\Services;
+namespace App\Modules\RestaurantManager\Infrastructure\Services;
 
 use App\Modules\RestaurantManager\Domain\Enums\DeliveryStatus;
 

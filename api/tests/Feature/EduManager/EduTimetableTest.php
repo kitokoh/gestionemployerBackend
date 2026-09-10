@@ -6,7 +6,7 @@ namespace Tests\Feature\EduManager;
 
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Tenant\Domain\Models\Company;
-use App\Modules\EduManager\Application\Services\TimetableService;
+use App\Modules\EduManager\Infrastructure\Services\TimetableService;
 use App\Modules\EduManager\Domain\Exceptions\TimetableConflictException;
 use App\Modules\EduManager\Domain\Models\EduTimetableSlot;
 use App\Modules\EduManager\Domain\Policies\EduTimetableSlotPolicy;
