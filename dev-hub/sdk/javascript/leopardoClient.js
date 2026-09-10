@@ -3915,6 +3915,16 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("GET", "/public/vitrine/{slug}", options);
     },
 
+    /** robots.txt public de la vitrine (BC-27 V-SEO #6873) */
+    getPublicVitrineRobotsTxt(options = {}) {
+      return request("GET", "/public/vitrine/robots.txt", options);
+    },
+
+    /** Sitemap des vitrines publiees (BC-27 V-SEO #6873) */
+    getPublicVitrineSitemapXml(options = {}) {
+      return request("GET", "/public/vitrine/sitemap.xml", options);
+    },
+
     /** Envoyer une notification push de test a un employe */
     postPushNotificationsSend(options = {}) {
       return request("POST", "/push-notifications/send", options);
@@ -4225,6 +4235,16 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("POST", "/showcase", options);
     },
 
+    /** Genere un jeton d'apercu prive (BC-27 V-PUBLISH #6871) */
+    postShowcasePreviewToken(options = {}) {
+      return request("POST", "/showcase/preview-token", options);
+    },
+
+    /** Publie la vitrine du tenant (BC-27 V-PUBLISH #6871) */
+    postShowcasePublish(options = {}) {
+      return request("POST", "/showcase/publish", options);
+    },
+
     /** Liste ordonnee des sections de la vitrine (BC-27 #6866) */
     getShowcaseSections(options = {}) {
       return request("GET", "/showcase/sections", options);
@@ -4248,6 +4268,16 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
     /** Reordonnancement complet des sections (ids = ordre cible) */
     postShowcaseSectionsReorder(options = {}) {
       return request("POST", "/showcase/sections/reorder", options);
+    },
+
+    /** Reglages de marque, theme et bloc legal (BC-27 V-THEMES #6868 / V-RGPD #6875) */
+    putShowcaseSettings(options = {}) {
+      return request("PUT", "/showcase/settings", options);
+    },
+
+    /** Depublie la vitrine du tenant (BC-27 V-PUBLISH #6871) */
+    postShowcaseUnpublish(options = {}) {
+      return request("POST", "/showcase/unpublish", options);
     },
 
     /** Lister les sites */

@@ -19,6 +19,7 @@ enum ShowcaseSectionType: string
     case Features = 'features';
     case Gallery = 'gallery';
     case Testimonials = 'testimonials';
+    case Products = 'products';
     case Contact = 'contact';
     case Footer = 'footer';
 
