@@ -6179,6 +6179,7 @@
     "delete": "Sil",
     "section_saved": "Bölüm kaydedildi.",
     "section_deleted": "Bölüm silindi.",
-    "invalid_json": "Geçersiz JSON içeriği — kaydetmeden önce düzeltin."
+    "invalid_json": "Geçersiz JSON içeriği — kaydetmeden önce düzeltin.",
+    "section_type": "Bölüm türü"
   }
 }
