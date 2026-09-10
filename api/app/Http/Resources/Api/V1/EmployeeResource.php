@@ -94,14 +94,17 @@ class EmployeeResource extends JsonResource
             'postal_code' => $this->employeeAttribute('postal_code'),
             'emergency_contact_name' => $this->employeeAttribute('emergency_contact_name'),
             'emergency_contact_phone' => $this->employeeAttribute('emergency_contact_phone'),
-            // #6546 (audit-secu M3) — extra_data : masquage RGPD des clés
-            // sensibles (NID, identifiant fiscal, groupe sanguin) appliqué
-            // comme pour les salaires (#5262) : seuls l'employé lui-même,
-            // les managers principal/rh/comptable et le manager d'équipe
-            // scopé (pour ses collaborateurs) voient ces clés. Les clés
-            // non sensibles (department, job_title, work_location, …)
-            // restent exposées pour les écrans équipe mobiles/web.
-            'extra_data' => $this->maskedExtraData($canViewSalary),
+            // #6546 (audit-secu M3) — extra_data : les clés sensibles (NID,
+            // identifiant fiscal, groupe sanguin) ne sont JAMAIS exposées par
+            // cette ressource, quel que soit le viewer (principal/rh inclus,
+            // employé lui-même inclus — test EmployeeExtraDataMaskingTest) :
+            // minimisation RGPD, l'identité/la santé ne circulent pas dans
+            // les payloads API. Les clés non sensibles (department,
+            // job_title, work_location, …) restent exposées pour les écrans
+            // équipe mobiles/web. Correctif 2026-09-08 (#7028) : la version
+            // précédente débloquait ces clés pour les rôles autorisés
+            // (régression vs contrat #6546).
+            'extra_data' => $this->maskedExtraData(),
             'language' => $resolvedLanguage,
             'is_rtl' => Language::isRtl($resolvedLanguage),
             'capabilities' => $this->capabilities(),
@@ -147,7 +150,7 @@ class EmployeeResource extends JsonResource
     /**
      * #6546 — clés d'extra_data considérées sensibles (RGPD) : pièce
      * d'identité, identifiant fiscal et donnée de santé. Masquées pour
-     * tout viewer non autorisé, comme les salaires (#5262).
+     * TOUT viewer (décision #7028 : jamais exposées par l'API).
      *
      * @var list<string>
      */
@@ -156,16 +159,12 @@ class EmployeeResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    private function maskedExtraData(bool $canViewSensitive): array
+    private function maskedExtraData(): array
     {
         $extraData = $this->employeeAttribute('extra_data');
 
         if (! is_array($extraData)) {
             return $extraData ?? [];
-        }
-
-        if ($canViewSensitive) {
-            return $extraData;
         }
 
         $masked = [];
