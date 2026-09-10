@@ -91,6 +91,14 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Regenerate codegen (build_runner — drift / json_serializable)
+        # #6590 : les *.g.dart (drift `edge_database`, json_serializable) ne sont
+        # pas commités — ils sont régénérés avant analyze/build (cf. mobile-apps-ci).
+        working-directory: front/mobile_apps/leopardo_core
+        run: |
+          flutter pub get
+          dart run build_runner build
+
       - name: Build ${{ matrix.os.name }} (release)
         shell: bash
         # Fix MSVC 14.51 (runner windows-2025) : local_auth_windows (dépendance de
