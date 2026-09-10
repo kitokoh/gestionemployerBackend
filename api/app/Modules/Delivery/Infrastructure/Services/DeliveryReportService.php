@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Delivery\Application\Services;
+namespace App\Modules\Delivery\Infrastructure\Services;
 
 use App\Modules\Delivery\Domain\Models\Delivery;
 use App\Modules\Delivery\Domain\Models\DeliveryCodSettlement;
