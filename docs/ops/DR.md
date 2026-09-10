@@ -1,7 +1,7 @@
 # DR — Reprise d'activité (Disaster Recovery) — Leopardo RH
 
 **Version** : 1.0 · **Date** : 2026-08-22 · **Module** : `platform` (issue #5283)
-**Statut** : 🟢 opérationnel — procédure de restauration **testée** (exercice consigné §6)
+**Statut** : 🟡 procédure de restauration **testée** (exercice consigné §6) — mais backups **non opérationnels** tant que les secrets de destination manquent (§3.1, garde #6836 : échec bruyant, aucune sauvegarde réelle)
 
 > Ce document est le **contrat DR** de la plateforme : ce qui est sauvegardé,
 > à quelle fréquence, dans quel délai on revient (RPO/RTO), et comment on
@@ -51,7 +51,16 @@ durable est la migration du stockage vers le disque `s3` (déjà présent dans
   le dump devient `*.dump.age`
 - **Secrets requis** : `DATABASE_URL`, `BACKUP_S3_BUCKET`, `AWS_ACCESS_KEY_ID`,
   `AWS_SECRET_ACCESS_KEY`, (optionnel) `BACKUP_AGE_RECIPIENT` — si manquants,
-  le job sort en `::notice::` (jamais de faux backup)
+  le job **échoue** (`::error::` + `exit 1`, garde #6836) en listant les
+  secrets absents : plus de no-op silencieux ni de faux vert (convention
+  anti-faux-vert #6831). Le job reste rouge tant que la config manque : c'est
+  le signal voulu, pas une panne à masquer.
+
+  > **État (2026-09-09)** : tant que les secrets de destination
+  > (`BACKUP_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) ne sont
+  > pas posés, le job quotidien échoue **et aucun dump n'existe** — le RPO
+  > ≤ 24 h (§2) n'est donc **pas tenu**. Ne pas lire ce document comme une
+  > garantie de sauvegarde en place : le rouge quotidien est l'alerte #6836.
 - **Rétention** : objectif 30 j (quotidien) / 13 mois (mensuel) / 5 ans
   (annuel) via lifecycle du bucket — **à vérifier** : `aws s3api
   get-bucket-lifecycle-configuration --bucket $BACKUP_S3_BUCKET`
@@ -254,7 +263,7 @@ L'exercice a exposé un **bug du drill en conditions réelles** :
 
 | Symptôme | Action |
 |---|---|
-| Job `daily-backup` skip (secrets manquants) | `::notice::` → configurer les secrets ; fallback manuel hebdo (runbook §3) |
+| Job `daily-backup` en échec (secrets manquants) | `::error::` + `exit 1` (garde #6836) → configurer les secrets ; fallback manuel hebdo (runbook §3) |
 | `pg_dump` échoue | Incident **P1** — escalade DBA, retry, diagnostic `last-drill.log` |
 | Drill détecte un mismatch | Incident **P2** — analyser `last-drill.log`, comparer source/cible, re-run |
 | Base scratch inaccessible | Re-créer une Neon branch dédiée `leopardo-drill` |
