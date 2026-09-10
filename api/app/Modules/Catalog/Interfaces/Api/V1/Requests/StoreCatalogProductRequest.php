@@ -6,6 +6,7 @@ namespace App\Modules\Catalog\Interfaces\Api\V1\Requests;
 
 use App\Core\Auth\Domain\Models\Employee;
 use App\Modules\Catalog\Domain\Enums\CatalogProductStatus;
+use App\Modules\Catalog\Domain\Support\CatalogPricePolicy;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -54,8 +55,8 @@ class StoreCatalogProductRequest extends FormRequest
             ],
             'description' => ['nullable', 'string', 'max:10000'],
             'price_minor' => ['required', 'integer', 'min:0', 'max:9223372036854775807'],
-            'currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
-            'unit' => ['nullable', 'string', 'max:20'],
+            'currency' => ['nullable', 'string', 'size:3', 'regex:/^[A-Z]{3}$/', Rule::in(CatalogPricePolicy::allowedCurrencies())],
+            'unit' => ['nullable', 'string', 'max:20', Rule::in(CatalogPricePolicy::allowedUnits())],
             'status' => ['nullable', Rule::in($statuses)],
             'meta' => ['nullable', 'array'],
         ];

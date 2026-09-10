@@ -219,6 +219,15 @@ class IntentEngine
                 $this->stringArgument($arguments, 'schedule_id', '?'),
                 $this->stringArgument($arguments, 'employee_id', '?'),
             ),
+            // B3c (#6858) — message à une équipe (parité annonces).
+            'notify_team' => sprintf(
+                'Envoyer « %s » à %s',
+                mb_strimwidth($this->stringArgument($arguments, 'title', '?'), 0, 60, '…'),
+                $this->stringArgument($arguments, 'audience_type', '') === 'company'
+                    ? 'toute l\'entreprise'
+                    : 'l\'équipe du département #'.$this->stringArgument($arguments, 'department_id', '?'),
+            ),
+
             default => "Confirmer l'action {$toolName}",
         };
     }
