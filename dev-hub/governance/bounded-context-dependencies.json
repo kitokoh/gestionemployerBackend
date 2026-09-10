@@ -691,6 +691,12 @@
       "to": "BC-02",
       "baseline": false,
       "note": "BC-28 → BC-02 — résolution du contexte tenant par slug/public et commande de purge (CatalogPublicController, PurgeExpiredCatalogInquiries) : pattern boutique publique BC-25 (#6226), contrat partagé Core TenantManager"
+    },
+    {
+      "from": "BC-27",
+      "to": "BC-02",
+      "baseline": false,
+      "note": "BC-27 → BC-02 — Actions/Controllers Showcase importent App\\Core\\Tenant\\Domain\\Models\\Company (scope tenant vitrine) + App\\Core\\Tenant\\TenantManager (résolution tenant route publique, #6866/#6867)"
     }
   ]
 }
