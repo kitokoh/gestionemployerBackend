@@ -17,6 +17,9 @@
       "leopardo_accounting":   { "current": "1.0.0+1", "min_api": "4.20.0" },
       "leopardo_platform_admin": { "current": "1.0.0+1", "min_api": "4.20.0" }
     },
+    "desktop_apps": {
+      "leopardo_accounting": { "current": "1.0.0+1", "min_api": "4.20.0" }
+    },
     "kiosk": { "current": "1.0.0", "min_api": "4.20.0" },
     "web_portal": { "current": "16", "min_api": "4.20.0" }
   }

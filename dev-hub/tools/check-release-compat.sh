@@ -95,9 +95,26 @@ floor_v = tuple(int(x) for x in str(m.get("api_min_supported", "0")).split(".")[
 if api_v and floor_v and api_v < floor_v:
     err(f"api_min_supported '{m.get('api_min_supported')}' > api '{m.get('api')}' — plancher incohérent")
 
-# 6. autres composants : min_api obligatoire
+# 6. desktop_apps (P06) : chaque entrée = app melos + scaffolds windows/macos + version pubspec
+for app, spec in ((m.get("components") or {}).get("desktop_apps") or {}).items():
+    if not isinstance(spec, dict) or "min_api" not in spec:
+        err(f"desktop '{app}' : plancher min_api manquant")
+        continue
+    pubspec = api_dir.parent / "front" / "mobile_apps" / app / "pubspec.yaml"
+    if not pubspec.exists():
+        err(f"desktop '{app}' : app introuvable (front/mobile_apps/{app}/pubspec.yaml)")
+        continue
+    text = pubspec.read_text(encoding="utf-8")
+    vm = re.search(r"^version:\s*(\S+)", text, re.MULTILINE)
+    if not vm or vm.group(1) != spec.get("current"):
+        err(f"desktop '{app}' : current '{spec.get('current')}' ≠ pubspec '{vm.group(1) if vm else '?'}'")
+    for plat in ("windows", "macos"):
+        if not (api_dir.parent / "front" / "mobile_apps" / app / plat).is_dir():
+            err(f"desktop '{app}' : dossier '{plat}/' absent — scaffold manquant (flutter create)")
+
+# 7. autres composants : min_api obligatoire
 for comp, spec in (m.get("components") or {}).items():
-    if comp == "mobile_apps":
+    if comp in ("mobile_apps", "desktop_apps"):
         continue
     if not isinstance(spec, dict) or "min_api" not in spec:
         err(f"composant '{comp}' : plancher min_api manquant")
