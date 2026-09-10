@@ -9,7 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Catalog\Domain\Enums\CatalogProductStatus;
 use App\Modules\Catalog\Domain\Models\CatalogCategory;
 use App\Modules\Catalog\Domain\Models\CatalogProduct;
-use App\Modules\Catalog\Domain\Support\CatalogPublicCache;
+use App\Modules\Catalog\Infrastructure\Services\CatalogPublicCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
