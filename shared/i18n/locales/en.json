@@ -4878,5 +4878,37 @@
   "fuelPumpistSubmit": "Submit reading",
   "crmAccounts": "CRM accounts",
   "crmContacts": "CRM contacts",
-  "crmLeads": "CRM leads"
+  "crmLeads": "CRM leads",
+  "fuel": {
+    "pump": {
+      "title": "Pump attendant reading",
+      "subtitle": "Capture meter readings per station",
+      "loadError": "Unable to load network data",
+      "noShift": "No active shift",
+      "retry": "Retry",
+      "emptyStations": "No station available",
+      "selectStation": "Select a station",
+      "selectPump": "Select a pump",
+      "selectMeter": "Select a meter",
+      "back": "Back",
+      "shift": "Shift",
+      "reading": "Meter reading",
+      "unitHint": "Value in litres",
+      "capturedAt": "Reading date and time",
+      "offlineHint": "Offline: the reading will sync automatically.",
+      "submit": "Save reading",
+      "submitting": "Saving…",
+      "saved": "Reading saved",
+      "delta": "Delta",
+      "noDelta": "No delta computed yet.",
+      "anomaly": "Report an issue",
+      "anomalyTitle": "Issue title",
+      "anomalySeverity": "Severity",
+      "anomalySaved": "Issue reported",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    }
+  }
 }

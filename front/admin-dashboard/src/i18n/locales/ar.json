@@ -1109,7 +1109,8 @@
     "demo_panel_title": "الوصول التجريبي — اختر حسابًا",
     "demo_panel_hint": "بيئة تجريبية: اختر حسابًا لتسجيل الدخول فورًا. معطّل في الإنتاج.",
     "demo_badge_platform": "المنصة",
-    "demo_access": "استخدام حساب تجريبي"
+    "demo_access": "استخدام حساب تجريبي",
+    "demo_super_admin_label": "المسؤول الأعلى"
   },
   "settingsShareProfileOrScan": "شارك ملفك الشخصي أو امسح شركة.",
   "attendanceStatusInProgress": "جارٍ",
@@ -2709,7 +2710,37 @@
     "stationsCaption": "محطات الأسطول",
     "incidentsCaption": "الحوادث المبلغ عنها",
     "reconciliationsCaption": "تقارير المطابقة",
-    "apiUnavailable": "لم يتم تسليم واجهة FuelStation (مرجع المحطات، الحوادث، التسويات) بعد — ستعمل الصفحة مع دفعة BC-15 (#6373)."
+    "apiUnavailable": "لم يتم تسليم واجهة FuelStation (مرجع المحطات، الحوادث، التسويات) بعد — ستعمل الصفحة مع دفعة BC-15 (#6373).",
+    "pump": {
+      "title": "قراءة العدّاد",
+      "subtitle": "تسجيل قراءات العدّادات حسب المحطة",
+      "loadError": "تعذّر تحميل بيانات الشبكة",
+      "noShift": "لا توجد وردية نشطة",
+      "retry": "إعادة المحاولة",
+      "emptyStations": "لا توجد محطة متاحة",
+      "selectStation": "اختر محطة",
+      "selectPump": "اختر مضخة",
+      "selectMeter": "اختر عدّادًا",
+      "back": "رجوع",
+      "shift": "الوردية",
+      "reading": "قراءة العدّاد",
+      "unitHint": "القيمة باللتر",
+      "capturedAt": "تاريخ ووقت القراءة",
+      "offlineHint": "غير متصل: ستتم مزامنة القراءة تلقائيًا.",
+      "submit": "حفظ القراءة",
+      "submitting": "جارٍ الحفظ…",
+      "saved": "تم حفظ القراءة",
+      "delta": "الفرق",
+      "noDelta": "لم يتم حساب أي فرق بعد.",
+      "anomaly": "الإبلاغ عن عطل",
+      "anomalyTitle": "عنوان العطل",
+      "anomalySeverity": "الخطورة",
+      "anomalySaved": "تم الإبلاغ عن العطل",
+      "low": "منخفضة",
+      "medium": "متوسطة",
+      "high": "عالية",
+      "critical": "حرجة"
+    }
   },
   "adminPalette": {
     "appLoading": "جارٍ تحميل لوحة الإدارة…",

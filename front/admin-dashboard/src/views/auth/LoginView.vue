@@ -171,7 +171,7 @@
 
               <!-- Accès démo (dev/staging uniquement — masqué en production). -->
               <div
-                v-if="demoPersonas.length > 0"
+                v-if="hasDemoPersonas"
                 class="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3"
               >
                 <div class="flex items-center gap-2">
@@ -305,6 +305,10 @@ const fieldErrors = computed(() => {
  */
 const demoPersonas = ref([])
 
+// `v-if` sur un booléen nommé : évite une expression inline dans le template
+// (garde i18n « no new hardcoded strings » — PA2-I18N-014).
+const hasDemoPersonas = computed(() => demoPersonas.value.length > 0)
+
 function buildDemoPersonas(responseBody) {
   // axios: responseBody = corps JSON ; le endpoint renvoie { data: {...} } ou {...}.
   const root = responseBody?.data ?? responseBody ?? {}
@@ -313,7 +317,7 @@ function buildDemoPersonas(responseBody) {
   const superAdmin = root.super_admin
   if (typeof superAdmin?.email === 'string' && typeof superAdmin?.password === 'string') {
     personas.push({
-      label: superAdmin.label || 'Super Administrateur',
+      label: superAdmin.label || t('auth.demo_super_admin_label'),
       email: superAdmin.email,
       password: superAdmin.password,
       badge: t('auth.demo_badge_platform', 'Plateforme'),
