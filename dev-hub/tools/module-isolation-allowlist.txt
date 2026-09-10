@@ -64,5 +64,3 @@ Modules/Recruitment -> Modules/HR
 # App\Contracts\Communication\...Interface.
 Modules/EduManager -> Modules/Notification
 Modules/TravelAgency -> Modules/Notification
-Modules/FuelStation -> Modules/HR
-Modules/RestaurantManager -> Modules/Notification
