@@ -43,17 +43,7 @@ api/app/Modules/CRM/Application/Services/CrmEmailService.php:17:use Illuminate\S
 api/app/Modules/CRM/Application/Services/CrmOverdueReminderService.php:11:use Illuminate\Support\Facades\DB;
 api/app/Modules/CRM/Application/Services/SegmentService.php:13:use Illuminate\Support\Facades\Auth;
 api/app/Modules/CRM/Application/Services/SegmentService.php:14:use Illuminate\Support\Facades\DB;
-api/app/Modules/Delivery/Application/Jobs/CloseDeliveryRouteJob.php:16:use Illuminate\Support\Facades\Log;
-api/app/Modules/Delivery/Application/Jobs/ExportDeliveryReportJob.php:17:use Illuminate\Support\Facades\Log;
-api/app/Modules/Delivery/Application/Jobs/ExportDeliveryReportJob.php:18:use Illuminate\Support\Facades\Storage;
-api/app/Modules/Delivery/Application/Services/DeliveryCodSettlementService.php:10:use Illuminate\Support\Facades\DB;
-api/app/Modules/Delivery/Application/Services/DeliveryEventService.php:13:use Illuminate\Support\Facades\DB;
-api/app/Modules/Delivery/Application/Services/DeliveryRouteService.php:11:use Illuminate\Support\Facades\DB;
 api/app/Modules/EdgeSync/Application/Actions/PushEdgeRecords.php:10:use Illuminate\Support\Facades\DB;
-api/app/Modules/EduManager/Application/Services/AdmissionService.php:12:use Illuminate\Support\Facades\DB;
-api/app/Modules/EduManager/Application/Services/AttendanceService.php:12:use Illuminate\Support\Facades\DB;
-api/app/Modules/EduManager/Application/Services/GradeService.php:14:use Illuminate\Support\Facades\DB;
-api/app/Modules/EduManager/Application/Services/ReportCardService.php:12:use Illuminate\Support\Facades\DB;
 api/app/Modules/Growth/Application/Actions/ApplyAsPartner.php:10:use Illuminate\Support\Facades\DB;
 api/app/Modules/HR/Domain/Models/UserInvitation.php:11:use Illuminate\Support\Facades\DB;
 api/app/Modules/Marketing/Application/Actions/ConnectSocialAccount.php:10:use Illuminate\Support\Facades\DB;
