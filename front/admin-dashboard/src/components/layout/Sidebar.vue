@@ -300,6 +300,12 @@ const navigation = computed(() => [
     icon: SparklesIcon
   },
   {
+    name: 'showcase',
+    title: t('navigation.showcase', 'Site vitrine'),
+    path: '/showcase',
+    icon: GlobeAltIcon
+  },
+  {
     name: 'webhooks',
     title: t('navigation.webhooks', 'Webhooks'),
     path: '/webhooks',

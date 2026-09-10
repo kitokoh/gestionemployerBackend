@@ -28,8 +28,11 @@
 1. Déclencher le build : GitHub Actions → workflow **Desktop - Build & Distribute (pilote)** →
    `Run workflow` → app `leopardo_accounting`, plateforme `windows` et/ou `macos`,
    environnement `dev` (ou `pilot` si un volet pilote dédié existe).
-2. Récupérer l'artefact `leopardo-desktop-leopardo_accounting-<os>-<run>` (onglet Summary du run).
-3. Vérifier l'empreinte : comparer le SHA-256 de l'artefact reçu avec celui affiché dans le run
+2. Récupérer l'artefact, au choix :
+   - **artefact de run** `leopardo-desktop-leopardo_accounting-<os>-<run>` (onglet Summary, rétention 14 j) ;
+   - **canal dev** : Release GitHub `desktop-leopardo_accounting-dev` (zip + `.sha256`, marquée
+     **non signée / pré-release**, usage interne uniquement — jamais un canal public).
+3. Vérifier l'empreinte : comparer le SHA-256 du zip reçu avec le fichier `.sha256` publié
    (toute divergence = ne pas installer, signaler immédiatement).
 
 ## 3. Configuration du volet API (avant première installation)

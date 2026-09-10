@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Providers;
 
+use App\Modules\Catalog\Infrastructure\Services\CatalogPublishedProductsProvider;
 use App\Modules\Catalog\Interfaces\Console\Commands\PurgeExpiredCatalogInquiries;
+use App\Shared\Contracts\Catalog\PublishedProductsProvider;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -24,8 +26,10 @@ class CatalogServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Rien à binder au socle domaine — les contrats Infrastructure
-        // seront enregistrés au fil des lots API (C-API #6881, C-PUBLIC #6882).
+        // Contrat partagé de lecture des produits publiés (C-VITRINE #6891) :
+        // consommé par BC-27 SHOWCASE pour la section `products` SANS import
+        // croisé de module (isolation #5584).
+        $this->app->bind(PublishedProductsProvider::class, CatalogPublishedProductsProvider::class);
     }
 
     public function boot(): void

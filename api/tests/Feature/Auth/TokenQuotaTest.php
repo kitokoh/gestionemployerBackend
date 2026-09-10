@@ -42,8 +42,10 @@ class TokenQuotaTest extends TestCase
 
     private function createInvitation(string $email, string $token = 'quota-token-123'): string
     {
+        /** @var Company $company */
         $company = Company::factory()->create(['country' => 'DZ', 'currency' => 'DZD']);
 
+        /** @var Employee $employee */
         $employee = Employee::factory()->create([
             'company_id' => $company->id,
             'email' => $email,

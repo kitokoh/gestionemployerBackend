@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace App\Modules\Showcase\Infrastructure\Services;
 
+use App\Modules\Showcase\Domain\Support\ShowcaseLocales;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Cache public des vitrines (BC-27 SHOWCASE, #6867).
+ * Cache public des vitrines (BC-27 SHOWCASE, #6867 — étendu V-I18N #6874).
  *
- * - Lecture publique mise en cache Redis (TTL borné, clé = slug tenant →
- *   jamais de contenu d'un tenant sous le slug d'un autre, spec §8) ;
+ * - Lecture publique mise en cache Redis (TTL borné) ; la clé inclut la
+ *   **locale** (le contenu de section varie par langue — `content_i18n`) :
+ *   jamais de contenu d'une langue servi pour une autre ;
  * - invalidation à chaque mutation d'une vitrine publiée (sections,
- *   publication/dépublication — #6871) via {@see forget()}.
+ *   publication/dépublication, réglages) via {@see forget()} qui purge
+ *   toutes les locales de la vitrine (+ clé historique non locale) ;
+ * - les réponses d'aperçu (`?token=`) ne sont jamais mises en cache.
  *
  * Le cache stocke le DTO public (tableau JSON-safe), jamais de modèles
  * Eloquent.
@@ -21,11 +25,11 @@ final class ShowcasePublicCache
 {
     public const TTL_SECONDS = 900; // 15 min
 
-    public const KEY_PREFIX = 'showcase:public:vitrine:';
+    private const KEY_PREFIX = 'showcase:public:';
 
-    public static function key(string $slug): string
+    public static function key(string $slug, string $locale = ShowcaseLocales::DEFAULT): string
     {
-        return self::KEY_PREFIX.$slug;
+        return self::KEY_PREFIX.$slug.':'.$locale;
     }
 
     /**
@@ -34,13 +38,20 @@ final class ShowcasePublicCache
      * @param  \Closure(): T  $resolver
      * @return T
      */
-    public function remember(string $slug, \Closure $resolver): mixed
+    public function remember(string $slug, string $locale, \Closure $resolver): mixed
     {
-        return Cache::remember(self::key($slug), now()->addSeconds(self::TTL_SECONDS), $resolver);
+        return Cache::remember(self::key($slug, $locale), now()->addSeconds(self::TTL_SECONDS), $resolver);
     }
 
+    /**
+     * Purge toutes les locales d'une vitrine (+ clé historique sans locale).
+     */
     public function forget(string $slug): void
     {
-        Cache::forget(self::key($slug));
+        Cache::forget(self::KEY_PREFIX.$slug);
+
+        foreach (ShowcaseLocales::supported() as $locale) {
+            Cache::forget(self::key($slug, $locale));
+        }
     }
 }
