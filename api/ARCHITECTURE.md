@@ -112,7 +112,11 @@ restent libres. `Modules/CRM` existe et est complet (`CrmServiceProvider`) ; la 
 | `Core/Auth` | ✅ routes/api.php | ✅ complet | — (AppServiceProvider) |
 | `Core/Tenant` | — | ✅ migré (TenantManager canonique) | — |
 | `Modules/HR` | ✅ routes/modules/rh.php + hr_extended.php | ✅ complet | `HRServiceProvider` |
+<<<<<<< HEAD
 | `Modules/Payroll` | ✅ routes/modules/payroll_engine.php | 🔶 Application en construction (ADR-0020) : 1 Service (régularisation) + **6 Actions lots 1-1b** (`Validate/Lock/Unlock/CreatePayrollRegularization`, `CalculatePayrollRun`, `CancelPayrollRun` — cycle de paie, 2026-09-08) + lot 2 avances en PR ; reste lots 3-6 (cartographie `PAYROLL_APPLICATION_CARTOGRAPHIE.md`) ; Domain/Infrastructure/Interfaces complets | `PayrollServiceProvider` |
+=======
+| `Modules/Payroll` | ✅ routes/modules/payroll_engine.php | 🔶 Application en construction (ADR-0020, #6896) : 1 Service (régularisation) + **4 Actions lot 1** (`ValidatePayrollRun`, `LockPayrollRun`, `UnlockPayrollRun`, `CreatePayrollRegularization` — cycle de paie, 2026-09-06) + **3 Actions lot 4** (`CreatePaymentBatch`, `ConfirmPaymentItemReception`, `MarkPaymentBatchPaid` — paiements, 2026-09-08) ; reste à extraire : calculate/cancel + lots 2, 3, 5, 6 (cartographie `PAYROLL_APPLICATION_CARTOGRAPHIE.md`) ; Domain/Infrastructure/Interfaces complets | `PayrollServiceProvider` |
+>>>>>>> origin/main
 | `Modules/Attendance` | ✅ routes/modules/rh.php | ✅ complet | `AttendanceServiceProvider` |
 | `Modules/Planning` | ✅ routes/modules/planning.php | ✅ Application peuplée (Actions cycle de vie absence — Create/Update/Approve/Reject/Cancel, 2026-09-06 #6895 ; tranche 2 #6908 : Actions schedules/projects/tasks/politiques congés/accruals) ; reste propriétaire canonique des modèles Absence/Expense | `PlanningServiceProvider` |
 | `Modules/Absence` | ✅ routes/modules/absence.php | 🔶 Interfaces + Providers uniquement (derogation documentee, PA2-ARCH-002) | `AbsenceServiceProvider` |

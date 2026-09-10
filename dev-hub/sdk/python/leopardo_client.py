@@ -3148,6 +3148,10 @@ class LeopardoClient:
         """Fiche publique d'un produit publie (sans auth)"""
         return self.request("GET", "/public/catalog/{companySlug}/products/{productSlug}", **kwargs)
 
+    def get_public_vitrine_by_slug(self, **kwargs):
+        """Vitrine publique d'un tenant (BC-27 #6867)"""
+        return self.request("GET", "/public/vitrine/{slug}", **kwargs)
+
     def post_push_notifications_send(self, **kwargs):
         """Envoyer une notification push de test a un employe"""
         return self.request("POST", "/push-notifications/send", **kwargs)
@@ -3387,6 +3391,34 @@ class LeopardoClient:
     def post_schedules_by_schedule_assign_employees(self, **kwargs):
         """Affecter un horaire/regle entreprise a des employes"""
         return self.request("POST", "/schedules/{schedule}/assign-employees", **kwargs)
+
+    def get_showcase(self, **kwargs):
+        """Vitrine du tenant courant (gestion)"""
+        return self.request("GET", "/showcase", **kwargs)
+
+    def post_showcase(self, **kwargs):
+        """Creation 1-clic de la vitrine (US1)"""
+        return self.request("POST", "/showcase", **kwargs)
+
+    def get_showcase_sections(self, **kwargs):
+        """Liste ordonnee des sections de la vitrine (BC-27 #6866)"""
+        return self.request("GET", "/showcase/sections", **kwargs)
+
+    def post_showcase_sections(self, **kwargs):
+        """Ajout d'une section (content valide par JSON Schema du type)"""
+        return self.request("POST", "/showcase/sections", **kwargs)
+
+    def delete_showcase_sections_by_section(self, **kwargs):
+        """Suppression d'une section"""
+        return self.request("DELETE", "/showcase/sections/{section}", **kwargs)
+
+    def patch_showcase_sections_by_section(self, **kwargs):
+        """Mise a jour d'une section (PATCH partiel type et/ou content)"""
+        return self.request("PATCH", "/showcase/sections/{section}", **kwargs)
+
+    def post_showcase_sections_reorder(self, **kwargs):
+        """Reordonnancement complet des sections (ids = ordre cible)"""
+        return self.request("POST", "/showcase/sections/reorder", **kwargs)
 
     def get_sites(self, **kwargs):
         """Lister les sites"""

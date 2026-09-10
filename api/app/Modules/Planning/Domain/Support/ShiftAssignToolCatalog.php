@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Planning\Domain\Support;
 
+use App\AI\Support\AIToolCatalog;
 use App\AI\Support\AIToolDefinition;
 use App\AI\Support\AIToolSensitivity;
 
@@ -27,7 +28,7 @@ use App\AI\Support\AIToolSensitivity;
  * AIToolDefinitionRegistry ; l'hôte BC-23 (ToolRegistry) enrichit l'entrée
  * `ai_tool_registry` homonyme sans changer son comportement (tranche A3).
  */
-final class ShiftAssignToolCatalog
+final class ShiftAssignToolCatalog implements AIToolCatalog
 {
     /**
      * @return list<AIToolDefinition>

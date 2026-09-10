@@ -214,7 +214,17 @@ class ProvisionGuidedTrial
         // 3. Fake Employee — réservé aux environnements démo explicites
         // (DEMO_MODE_ENABLED=true) : jamais de compte `alice@demo.local`/
         // `password` sur le chemin de trial public (Constitution §V).
-        if (config('app.demo_mode_enabled')) {
+        // #6958 : `employees_email_unique` est GLOBAL (migration
+        // 2026_04_17_000105, email unique toutes sociétés confondues du
+        // schéma partagé) → un email fixe `alice@demo.local` ne peut être
+        // seedé qu'UNE fois par environnement. Sans garde, le 2e trial guidé
+        // (et tous les suivants) échouait en SQLSTATE 23505 pendant le
+        // provisioning → statut `failed` (#6958, constaté DEV 2026-09-09 :
+        // 12 jobs échoués identiques). Alice n'est référencée par aucun autre
+        // code : si elle existe déjà, on saute le seed (département/horaire du
+        // nouveau tenant restent créés — seuls alice + sa trace sont omis).
+        if (config('app.demo_mode_enabled')
+            && ! DB::table('shared_tenants.employees')->where('email', 'alice@demo.local')->exists()) {
             $empId = DB::table('shared_tenants.employees')->insertGetId([
                 'company_id' => $companyId,
                 'matricule' => 'EMP-001',
