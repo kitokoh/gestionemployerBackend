@@ -3110,6 +3110,31 @@ trait CreatesMvpSchema
             });
         }
 
+        // ── BC-27 SHOWCASE (#6872 V-MEDIA) — company_showcase_media ─────────
+        if (! Schema::hasTable($this->moduleTable('company_showcase_media'))) {
+            Schema::create($this->moduleTable('company_showcase_media'), function (Blueprint $table): void {
+                $table->id();
+                $table->uuid('company_id');
+                $table->unsignedBigInteger('showcase_id')->nullable();
+                $table->unsignedBigInteger('section_id')->nullable();
+                $table->uuid('uuid')->unique('company_showcase_media_uuid_unique');
+                $table->string('kind', 20)->default('image');
+                $table->string('disk', 30)->default('public');
+                $table->string('path', 500);
+                $table->string('original_name', 255);
+                $table->string('mime_type', 120);
+                $table->unsignedInteger('size');
+                $table->unsignedInteger('width')->nullable();
+                $table->unsignedInteger('height')->nullable();
+                $table->string('checksum', 64)->nullable();
+                $table->timestamps();
+
+                $table->index('company_id', 'company_showcase_media_company_index');
+                $table->index(['showcase_id', 'kind'], 'company_showcase_media_showcase_kind_index');
+                $table->index('section_id', 'company_showcase_media_section_index');
+            });
+        }
+
     }
 
     private function createVerticalParityTables(): void
