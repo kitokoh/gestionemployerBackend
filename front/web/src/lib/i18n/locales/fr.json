@@ -4878,5 +4878,37 @@
   "fuelPumpistSubmit": "Enregistrer le relevé",
   "crmAccounts": "Comptes CRM",
   "crmContacts": "Contacts CRM",
-  "crmLeads": "Leads CRM"
+  "crmLeads": "Leads CRM",
+  "fuel": {
+    "pump": {
+      "title": "Relevé pompiste",
+      "subtitle": "Saisie des index compteurs par station",
+      "loadError": "Impossible de charger les données du réseau",
+      "noShift": "Aucun shift actif",
+      "retry": "Réessayer",
+      "emptyStations": "Aucune station disponible",
+      "selectStation": "Choisir une station",
+      "selectPump": "Choisir une pompe",
+      "selectMeter": "Choisir un compteur",
+      "back": "Retour",
+      "shift": "Shift",
+      "reading": "Relevé du compteur",
+      "unitHint": "Valeur en litres",
+      "capturedAt": "Date et heure du relevé",
+      "offlineHint": "Hors ligne : le relevé sera synchronisé automatiquement.",
+      "submit": "Enregistrer le relevé",
+      "submitting": "Enregistrement…",
+      "saved": "Relevé enregistré",
+      "delta": "Delta",
+      "noDelta": "Aucun écart calculé pour l'instant.",
+      "anomaly": "Signaler une anomalie",
+      "anomalyTitle": "Titre de l'anomalie",
+      "anomalySeverity": "Gravité",
+      "anomalySaved": "Anomalie signalée",
+      "low": "Faible",
+      "medium": "Moyenne",
+      "high": "Élevée",
+      "critical": "Critique"
+    }
+  }
 }

@@ -22,8 +22,17 @@
   masque les vraies erreurs et bloque les déploiements réels.
 - Côté repo, le garde `front/web/vercel.json` existe déjà :
   - `ignoreCommand` (fix #1724) : saute le build quand `front/web/` n'a pas
-    changé (fallback `HEAD^` si `$VERCEL_GIT_PREVIOUS_SHA` est absent) ;
+    changé (SHA précédent `$VERCEL_GIT_PREVIOUS_SHA`, fallback `HEAD~1`) ;
   - `git.deploymentEnabled` : `main` et `staging` = true, `develop` = false.
+
+> ⚠️ **Piège corrigé (2026-09-10)** — le projet Vercel a pour
+> `rootDirectory: front/web`. La commande `ignoreCommand` s'exécute donc
+> **depuis `front/web/`**, et un pathspec `-- front/web` y devient
+> `front/web/front/web` : il ne matche rien, `git diff --quiet` renvoie 0 et
+> **tous** les builds étaient sautés (web public gelé du 19/08 au 10/09, 100 %
+> des déploiements `CANCELED`, CI verte). La commande doit donc toujours
+> résoudre la racine du dépôt (`git rev-parse --show-toplevel`) et lancer le
+> diff depuis là. Ne jamais réintroduire un pathspec relatif au cwd.
 
 ## Procédure de diagnostic / réparation (dashboard Vercel)
 
