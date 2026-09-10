@@ -1,0 +1,44 @@
+# Allowlist des hex hors palette — front/web & front/admin-dashboard (issue #7062)
+# Règle : toute nouvelle couleur DOIT d'abord aller dans COULEURS.md (L.07).
+# Une tolérance ici est un constat de dette design, pas une permission durable :
+# chaque entrée indique pourquoi elle existe et où elle vit.
+# Format : #hex — raison (fichier(s) concerné(s))
+
+# Échelle Teal par défaut (globals.css web) — vars CSS du thème teal, non couvertes
+# par COULEURS.md (palette domaines). Si le teal devient un token produit, le
+# déclarer dans COULEURS.md (L.07) puis retirer ces lignes.
+#f0fdfa — teal-50 par défaut Tailwind (front/web/src/app/globals.css)
+#ccfbf1 — teal-100 par défaut (globals.css)
+#99f6e4 — teal-200 par défaut (globals.css)
+#5eead4 — teal-300 par défaut (globals.css)
+#2dd4bf — teal-400 par défaut (globals.css)
+#14b8a6 — teal-500 par défaut (globals.css + front/admin-dashboard/src/style.css)
+#0d9488 — teal-600 par défaut (globals.css)
+#0f766e — teal-700 par défaut (globals.css)
+#115e59 — teal-800 par défaut (globals.css)
+#134e4a — teal-900 par défaut (globals.css)
+#042f2e — teal-950 par défaut (globals.css)
+
+# Nuances utilitaires ponctuelles hors palette domaines (globals.css web)
+#047857 — emerald-700 (globals.css, var utilitaire)
+#b45309 — amber-700 (globals.css)
+#1d4ed8 — blue-700 (globals.css)
+#5b21b6 — violet-700 (globals.css)
+
+# Palette « branding » (page démo branding) et dark mode provisoire — à migrer
+# vers les tokens tenant quand le module branding sera tokenisé (P05).
+#db2777 — pink-600, démo branding (front/web/src/app/(landing)/branding/page.tsx)
+#06b6d4 — cyan-500, vars dark provisoires (front/web/src/components/DarkModeProvider.tsx)
+#475569 — slate-600, vars dark provisoires (DarkModeProvider.tsx)
+#cbd5e1 — slate-300, vars claires (front/admin-dashboard/src/App.vue)
+#0891b2 — cyan-600 (front/admin-dashboard/src/style.css)
+
+# Couleurs de marques tierces (boutons de paiement) — hors palette produit
+#4285f4 — Google bleu (checkout)
+#34a853 — Google vert (checkout)
+#fbbc05 — Google jaune (checkout)
+#ea4335 — Google rouge (checkout)
+
+# Fixtures de tests — couleurs arbitraires de parsing (jamais rendues)
+#ff0000 — fixture test (front/web/src/lib/__tests__/careers-api.test.ts)
+#00ff00 — fixture test (careers-api.test.ts)

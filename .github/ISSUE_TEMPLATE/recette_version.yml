@@ -1,0 +1,61 @@
+name: "🧪 Recette de version (Porte Marché)"
+description: Ouvrir une recette de version avant toute mise sur le marché — protocole P01 (docs/PROTOCOLES/P01_VALIDATION_MARCHE.md §5). Une issue par version.
+title: "Recette vX.Y.Z — <pays/périmètre>"
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Protocole P01 — Validation & mise sur le marché (§5).** Cette issue est la
+        recette officielle de la version. Elle ne peut être close que par un verdict de
+        Porte Marché et un sign-off du fondateur (@kitokoh). Gabarit source :
+        `docs/PROTOCOLES/P01_VALIDATION_MARCHE.md` §5.
+  - type: input
+    id: version
+    attributes:
+      label: Version / SHA du tag
+      description: Tag exact et SHA du commit (celui du rapport de porte).
+      placeholder: "vX.Y.Z @ <sha>"
+    validations:
+      required: true
+  - type: input
+    id: perimetre
+    attributes:
+      label: Périmètre & pays couverts
+      placeholder: "Cœur RH-pointage-paie + verticale X — DZ"
+    validations:
+      required: true
+  - type: input
+    id: acteurs
+    attributes:
+      label: Testeur pilote / relecteur métier
+      placeholder: "Pilote 2 — SARL Y (paie : expert-comptable pays)"
+    validations:
+      required: false
+  - type: textarea
+    id: journal
+    attributes:
+      label: Journal des parcours (G1-G8)
+      description: "Tableau P01 §5 — G1 trial guidé, G2 trial self-service/OTP, G3 checkout, G4 création employé, G5 pointage mobile/kiosk, G6 paie pays → bulletin → export, G7 i18n fr+ar (RTL), G8 isolation cross-tenant. Une ligne par session (date, parcours, résultat chiffré, écart #issue, exécuté par)."
+      placeholder: |
+        | Date | Parcours | Résultat | Écart | Exécuté par |
+        |---|---|---|---|---|
+    validations:
+      required: true
+  - type: dropdown
+    id: verdict
+    attributes:
+      label: Verdict de la recette
+      options:
+        - "Zéro anomalie bloquante — recette signée"
+        - "Anomalies non bloquantes tracées en issues — Go conditionnel"
+        - "Anomalie bloquante — No-Go (re-certification requise, R7)"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        **Clôture** : rapport daté déposé (ex. `docs/validation/`), re-certification si
+        corrections (R7), puis sign-off fondateur : *Go / Go conditionnel / No-Go* — date
+        et motif. Références : `docs/PROTOCOLES/P01_VALIDATION_MARCHE.md`,
+        `docs/GESTION_PROJET/GABARIT_RELEASE.md`.

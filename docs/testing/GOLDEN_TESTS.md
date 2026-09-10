@@ -1,5 +1,10 @@
 # Golden Tests — Paie & Comptabilité (MAT-007)
 
+> **Périmètre (précisé le 2026-09-09)** : ce document couvre les **golden tests
+> backend** (calculs Payroll/Accounting). Il ne couvre **pas** les golden tests
+> d'images Flutter (widgets) — ceux-ci n'existent pas encore ; leur mise en place
+> est suivie dans le protocole P05 §5 (issue #7105). Ne pas confondre les deux.
+
 - **Statut :** ratifié — méthodologie des tests golden du monorepo
 - **Date :** 2026-08-28
 - **Garde CI :** `dev-hub/tools/check-golden-tests-required.sh` (toute
