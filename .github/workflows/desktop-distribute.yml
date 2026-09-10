@@ -68,8 +68,8 @@ jobs:
           PLATFORM="${{ inputs.platform }}"
           case "${PLATFORM}" in
             windows) JSON='{"include":[{"os":"windows-latest","build":"windows","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/windows/x64/runner/Release","extra":""}]}' ;;
-            macos)   JSON='{"include":[{"os":"macos-latest","build":"macos","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/macos/Build/Products/Release","extra":"--no-codesign"}]}' ;;
-            both)    JSON='{"include":[{"os":"windows-latest","build":"windows","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/windows/x64/runner/Release","extra":""},{"os":"macos-latest","build":"macos","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/macos/Build/Products/Release","extra":"--no-codesign"}]}' ;;
+            macos)   JSON='{"include":[{"os":"macos-latest","build":"macos","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/macos/Build/Products/Release","extra":""}]}' ;;
+            both)    JSON='{"include":[{"os":"windows-latest","build":"windows","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/windows/x64/runner/Release","extra":""},{"os":"macos-latest","build":"macos","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/macos/Build/Products/Release","extra":""}]}' ;;
             *)       echo "::error::platform inconnu: ${PLATFORM}"; exit 1 ;;
           esac
           echo "matrix=${JSON}" >> "$GITHUB_OUTPUT"
@@ -109,6 +109,17 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
+
+      - name: Install dependencies (app)
+        working-directory: front/mobile_apps/${{ inputs.app }}
+        run: flutter pub get
+
+      # Les localisations partagées de leopardo_core sont GÉNÉRÉES (non versionnées
+      # dans le build) : sans cette étape, la compilation windows/macos échoue sur
+      # `../leopardo_core/lib/l10n/generated/app_localizations.dart` introuvable.
+      - name: Regenerate shared localizations
+        working-directory: front/mobile_apps/leopardo_core
+        run: flutter gen-l10n
 
       - name: Build (${{ matrix.build }}, release)
         shell: bash
