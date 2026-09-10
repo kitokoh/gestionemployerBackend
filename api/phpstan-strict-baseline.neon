@@ -2080,37 +2080,37 @@ parameters:
 			message: '#^Access to an undefined property App\\Modules\\EduManager\\Domain\\Models\\EduAdmission\:\:\$applicant_name\.$#'
 			identifier: property.notFound
 			count: 2
-			path: app/Modules/EduManager/Application/Services/AdmissionService.php
+			path: app/Modules/EduManager/Infrastructure/Services/AdmissionService.php
 
 		-
 			message: '#^Access to an undefined property App\\Modules\\EduManager\\Domain\\Models\\EduAdmission\:\:\$contact_reference\.$#'
 			identifier: property.notFound
 			count: 1
-			path: app/Modules/EduManager/Application/Services/AdmissionService.php
+			path: app/Modules/EduManager/Infrastructure/Services/AdmissionService.php
 
 		-
 			message: '#^PHPDoc tag @var for variable \$classesQuery contains generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
 			identifier: missingType.generics
 			count: 1
-			path: app/Modules/EduManager/Application/Services/AttendanceService.php
+			path: app/Modules/EduManager/Infrastructure/Services/AttendanceService.php
 
 		-
 			message: '#^Access to an undefined property App\\Modules\\EduManager\\Domain\\Models\\EduAssessment\:\:\$status\.$#'
 			identifier: property.notFound
 			count: 2
-			path: app/Modules/EduManager/Application/Services/GradeService.php
+			path: app/Modules/EduManager/Infrastructure/Services/GradeService.php
 
 		-
 			message: '#^PHPDoc tag @var for variable \$classesQuery contains generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
 			identifier: missingType.generics
 			count: 1
-			path: app/Modules/EduManager/Application/Services/GradeService.php
+			path: app/Modules/EduManager/Infrastructure/Services/GradeService.php
 
 		-
 			message: '#^Right side of && is always true\.$#'
 			identifier: booleanAnd.rightAlwaysTrue
 			count: 1
-			path: app/Modules/EduManager/Application/Services/TimetableService.php
+			path: app/Modules/EduManager/Infrastructure/Services/TimetableService.php
 
 		-
 			message: '#^Method App\\Modules\\EduManager\\Domain\\Models\\EduAdmission\:\:academicYear\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'

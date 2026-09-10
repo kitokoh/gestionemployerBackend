@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Delivery\Application\Jobs;
+namespace App\Modules\Delivery\Infrastructure\Jobs;
 
 use App\Contracts\Queue\TenantScopedJob;
 use App\Jobs\Middleware\EnsureTenantContext;
-use App\Modules\Delivery\Application\Services\DeliveryRouteService;
 use App\Modules\Delivery\Domain\Models\DeliveryDeadLetter;
+use App\Modules\Delivery\Infrastructure\Services\DeliveryRouteService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
