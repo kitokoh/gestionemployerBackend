@@ -19,7 +19,6 @@ use App\Modules\Payroll\Infrastructure\Services\CnpsDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\CnssDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\IpresDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationGenerator;
-use App\Modules\Payroll\Infrastructure\Services\SocialDeclarationService;
 use DateTimeInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,7 +28,6 @@ class SocialDeclarationController extends Controller
 {
     public function __construct(
         private readonly DataAccessAuditLogger $auditLogger,
-        private readonly SocialDeclarationService $declarationService,
         private readonly GenerateCnasDzDeclaration $generateCnasDz,
         private readonly GenerateDasDzDeclaration $generateDasDz,
         private readonly GenerateCnssMaDeclaration $generateCnssMa,
@@ -384,29 +382,5 @@ class SocialDeclarationController extends Controller
         return $actor;
     }
 
-    private function companyRegistrationNumber(?Company $company): string
-    {
-        if ($company === null) {
-            return '';
-        }
 
-        $metadata = $company->metadata ?? [];
-
-        return (string) (
-            $metadata['tax_id']
-            ?? $metadata['nis']
-            ?? $metadata['affiliate_number']
-            ?? $metadata['siret']
-            ?? ''
-        );
-    }
-
-    private function dateValue(mixed $value): string
-    {
-        if ($value instanceof DateTimeInterface) {
-            return $value->format('Y-m-d');
-        }
-
-        return $value === null ? '' : (string) $value;
-    }
 }

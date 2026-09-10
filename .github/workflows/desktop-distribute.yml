@@ -86,7 +86,7 @@ jobs:
           lfs: false
 
       - name: Setup Flutter (stable)
-        uses: subosito/flutter-action@1a449c444387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
           cache: true
