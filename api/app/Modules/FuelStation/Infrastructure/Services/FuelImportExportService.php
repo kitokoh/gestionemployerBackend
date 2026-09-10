@@ -6,7 +6,6 @@ namespace App\Modules\FuelStation\Infrastructure\Services;
 
 use App\Core\Auth\Domain\Models\Employee;
 use App\Modules\FuelStation\Domain\Models\FuelSale;
-use App\Modules\HR\Domain\Models\ExportHistory;
 use App\Support\CsvCellSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;

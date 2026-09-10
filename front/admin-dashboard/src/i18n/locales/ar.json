@@ -4760,7 +4760,8 @@
     "travelAgency": "وكالة السفر",
     "surveyStats": "استبيانات الحلول",
     "solutionSurveys": "استبيانات الحلول",
-    "travel": "وكالة السفر"
+    "travel": "وكالة السفر",
+    "showcase": "موقع الشركة"
   },
   "companydetailCoreModuleAlwaysActive": "الوحدة الأساسية نشطة دائمًا",
   "smartAttendanceSessionsTitle": "جلسات الحضور الذكي",
@@ -6142,5 +6143,37 @@
   "fuelPumpistSubmit": "حفظ القراءة",
   "crmAccounts": "حسابات إدارة العلاقات",
   "crmContacts": "جهات اتصال إدارة العلاقات",
-  "crmLeads": "عملاء إدارة العلاقات المحتملون"
+  "crmLeads": "عملاء إدارة العلاقات المحتملون",
+  "showcase": {
+    "title": "موقع الشركة",
+    "subtitle": "أنشئ وانشر الموقع العام لشركتك بنقرة واحدة.",
+    "published": "منشور",
+    "draft": "مسودة",
+    "publish": "نشر",
+    "unpublish": "إلغاء النشر",
+    "empty": "لا يوجد موقع بعد. أنشئه لبناء موقعك العام.",
+    "create": "إنشاء موقعي",
+    "created": "تم إنشاء الموقع.",
+    "preview_link": "رابط المعاينة الخاص",
+    "generate_preview": "إنشاء رابط المعاينة",
+    "preview_generated": "تم إنشاء رابط المعاينة.",
+    "open_preview": "فتح المعاينة",
+    "settings": "المظهر والبيانات القانونية",
+    "settings_saved": "تم حفظ الإعدادات.",
+    "theme": "السمة",
+    "brand_name": "اسم العلامة",
+    "tagline": "الشعار",
+    "legal_notice": "الإشعار القانوني",
+    "legal_privacy": "سياسة الخصوصية",
+    "save_settings": "حفظ الإعدادات",
+    "sections": "أقسام الصفحة",
+    "add_section": "إضافة قسم",
+    "no_sections": "لا يوجد قسم — أضف واحداً للبدء.",
+    "save": "حفظ",
+    "delete": "حذف",
+    "section_saved": "تم حفظ القسم.",
+    "section_deleted": "تم حذف القسم.",
+    "invalid_json": "محتوى JSON غير صالح — صححه قبل الحفظ.",
+    "section_type": "نوع القسم"
+  }
 }
