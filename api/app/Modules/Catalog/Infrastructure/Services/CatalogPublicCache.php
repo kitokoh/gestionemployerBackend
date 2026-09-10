@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Catalog\Domain\Support;
+namespace App\Modules\Catalog\Infrastructure\Services;
 
 use Illuminate\Support\Facades\Cache;
 
