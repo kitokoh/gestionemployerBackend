@@ -117,6 +117,9 @@ Index de la documentation technique et stratégique du projet.
 | [`REFERENTIEL_PRODUIT/`](REFERENTIEL_PRODUIT/) | Référentiel produit |
 | [`../PILOTAGE.md`](../PILOTAGE.md) | ⚠️ Archivé (#6698) — la gestion de projet vit dans GitHub Issues/Projects |
 | [`GESTION_PROJET/`](GESTION_PROJET/) | Runbooks, audits d'écarts, supports d'exécution, réponse au cahier des charges |
+| [`GOUVERNANCE/`](GOUVERNANCE/) | Protocoles de gouvernance historique (branches BC/CRM, freeze 60 j) |
+| [`pilotes/`](pilotes/) | Carnets de pilotes clients (douleurs, suivis hebdo) et rétros |
+| [`plan/`](plan/) | Plans d'exécution en cours (ex. `PLAN_100PCT.md`) |
 | [`PROTOCOLES/`](PROTOCOLES/) | Cadre de protocoles opérationnels P01-P07 (validation marché, onboarding, vitrine, issues/expérience, design, desktop, architecture dev/prod) — révisé chaque fin de mois |
 | [`api/README.md`](api/README.md) | Documentation API |
 
@@ -148,10 +151,27 @@ Index de la documentation technique et stratégique du projet.
 
 ---
 
+## 🧩 Domaines métier & guides
+
+| Doc | Contenu |
+|---|---|
+| [`HR/`](HR/) | Guide utilisateur RH + matrice RBAC |
+| [`accounting/`](accounting/) | Comptabilité : plan comptable, benchmark, guide utilisateur, suivi d'EPIC |
+| [`attendance/`](attendance/) | Pointage : cartographie, runbook IA, point d'entrée agent |
+| [`expense/`](expense/) | Notes de frais et intégration comptable |
+| [`restaurant/`](restaurant/) | Verticale Restaurant (études kiosk, conception) |
+| [`travel/`](travel/) | Verticale Travel (guide d'intégration partenaires) |
+| [`contracts/`](contracts/) | Contrats inter-BC documentés (ex. fuel ↔ accounting) |
+| [`user-guide/`](user-guide/) | Guides utilisateurs transverses (onboarding Google, pointage) |
+| [`i18n/`](i18n/) | Suivi des lots d'internationalisation |
+
+---
+
 ## 📝 Historique & Archive
 
 | Doc | Contenu |
 |---|---|
+| [`archive/`](archive/) | Archives du projet (historique agents, phases livrées, plans clos) |
 | [`PROMPTS_EXECUTION/`](PROMPTS_EXECUTION/) | Archive des prompts d'exécution AI (v2 legacy, v3 actif) |
 | [`archive/PLAN_ACTION/`](archive/PLAN_ACTION/) | Plans d'action historiques (01-72), tous livrés |
 | [`archive/PLAN_ACTION2/`](archive/PLAN_ACTION2/) | Backlog atomique PA2 historique (00-27), remplacé par les GitHub Issues |
