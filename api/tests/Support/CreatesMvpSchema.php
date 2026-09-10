@@ -3049,6 +3049,23 @@ trait CreatesMvpSchema
             });
         }
 
+        // ── BC-27 SHOWCASE (#6866) — company_showcase_sections ──────────────────────
+        if (! Schema::hasTable($this->moduleTable('company_showcase_sections'))) {
+            Schema::create($this->moduleTable('company_showcase_sections'), function (Blueprint $table): void {
+                $table->id();
+                $table->uuid('company_id');
+                $table->unsignedBigInteger('showcase_id');
+                $table->string('type', 40);
+                $table->json('content')->nullable();
+                $table->unsignedInteger('sort_order')->default(0);
+                $table->unsignedSmallInteger('schema_version')->default(1);
+                $table->timestamps();
+
+                $table->index('company_id', 'company_showcase_sections_company_index');
+                $table->index(['showcase_id', 'sort_order'], 'company_showcase_sections_showcase_order_index');
+            });
+        }
+
     }
 
     private function createVerticalParityTables(): void
