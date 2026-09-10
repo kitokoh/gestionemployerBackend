@@ -1,8 +1,8 @@
 <?php
 
 use App\Core\Auth\Domain\Models\Employee;
-use App\Core\Tenant\Domain\Models\SuperAdmin;
 use App\Core\Auth\Domain\Models\User;
+use App\Core\Tenant\Domain\Models\SuperAdmin;
 
 return [
 
@@ -136,7 +136,6 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
-
     /*
     |--------------------------------------------------------------------------
     | Schema sweep on missing user_lookup (audit #6563)
@@ -152,5 +151,22 @@ return [
     */
 
     'schema_sweep_enabled' => env('AUTH_SCHEMA_SWEEP_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Quota de tokens Sanctum actifs par utilisateur (issue #7009)
+    |--------------------------------------------------------------------------
+    |
+    | Chaque POST /auth/login (ou succès de challenge 2FA) crée un token
+    | Sanctum. Sans purge, les comptes démo accumulent des centaines de
+    | tokens valides (constaté DEV : 631 tokens sur le compte principal), ce
+    | qui élargit la surface d'attaque et rend la liste /api/v1/api-tokens
+    | inutilisable. Au login, seuls les `max_active_tokens_per_user` tokens
+    | les plus récents sont conservés ; les plus anciens sont purgés.
+    | Surcharge : AUTH_MAX_ACTIVE_TOKENS_PER_USER (0 = pas de purge).
+    |
+    */
+
+    'max_active_tokens_per_user' => (int) env('AUTH_MAX_ACTIVE_TOKENS_PER_USER', 10),
 
 ];
