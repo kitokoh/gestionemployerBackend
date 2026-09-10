@@ -48,6 +48,7 @@ REGISTRY=(
   $'api-staging.leopardo-rh.com\ttarget'
   $'demo.leopardo.app\ttarget'
   $'client-a.leopardo-rh.com\ttarget'
+  $'mail.leopardo-rh.com\ttarget'
 )
 
 errors=0

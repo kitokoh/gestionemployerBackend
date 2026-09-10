@@ -1,5 +1,11 @@
 # SCENARIOS DE TEST API POUR GITHUB ACTIONS    
 
+Note 2026-09-08 (BC-27 SHOWCASE, issues #6866/#6867, PR #7029) : nouvelle surface API vitrine tenant + publique isolee —
+- Privee (gestion tenant : auth sanctum + flag `companies.features.company_showcase` fail-closed + RBAC `api.manager:principal,rh`, policy CompanyShowcasePolicy) : `POST /api/v1/showcase` (creation 1-clic idempotente de la vitrine du tenant, slug = slug tenant, 201/200) et `GET /api/v1/showcase` (etat courant) ; sections `GET/POST /api/v1/showcase/sections`, `PATCH/DELETE /api/v1/showcase/sections/{id}`, `POST /api/v1/showcase/sections/reorder` (ids = ensemble exact des sections existantes sinon 422, transaction) — chaque `content` valide contre le JSON Schema versionne par type (hero, features, gallery, testimonials, contact, footer ; schema_version 1) via ShowcaseSectionSchemaValidator (types, requis, `additionalProperties:false` → cles inconnues 422, bornes maxLength/maxItems/minItems).
+- Publique isolee (aucun auth tenant, throttle `shop-public`, DTO allowlist VitrinePublicResource — jamais id/company_id/timestamps) : `GET /api/v1/public/vitrine/{slug}` (slug regex `[A-Za-z0-9\-_]{1,160}`), 404 si vitrine non publiee.
+- Isolation tenant fail-closed (BelongsToCompany) : id d'une section d'une autre societe → 404 (jamais 403) ; cache public invalide a chaque mutation d'une vitrine publiee.
+- Couverture : `api/tests/Feature/Showcase/ShowcaseApiTest.php` (creation 1-clic, idempotence, RBAC), `ShowcaseSectionApiTest.php` (CRUD, RBAC, 422 schema, isolation, flag off → 403, DELETE 204), `ShowcasePublicApiTest.php` (shape publique, non-fuite, 404 draft/inexistant, cache), `CompanyShowcaseDomainTest.php` + `api/tests/Unit/Showcase/ShowcaseSectionSchemaTest.php` (schema valide/invalide par type).
+
 Note 2026-09-01 (issue #6662, PR #6663) : nouvelle surface publique « solutions sectorielles » —
 - `GET /api/v1/solutions` : catalogue des solutions (allowlist serveur, fail-closed).
 - `GET /api/v1/solutions/{code}/survey` : questions + catalogue de packages.

@@ -82,4 +82,41 @@ final class AIToolDefinitionRegistry
     {
         self::$definitions = [];
     }
+
+    /**
+     * A3 (#6850, tranche garde) — violations de contrat des définitions
+     * ENREGISTRÉES au boot (appelé par le test de garde sur un boot réel ;
+     * les constructeurs garantissent déjà nom/description/version) :
+     * - `bc` au format BC-XX (registre des bounded contexts) et non vide ;
+     * - `permission` non vide (policy/gate requise — jamais d'outil sans
+     *   permission déclarée) ;
+     * - `description` de taille raisonnable pour le prompt LLM (≤ 600) ;
+     * - schémas d'entrée/sortie sérialisables JSON (pas de ressource).
+     *
+     * @return list<string>
+     */
+    public static function violations(): array
+    {
+        $violations = [];
+
+        foreach (self::$definitions as $name => $definition) {
+            if ($definition->bc === '' || preg_match('/^BC-\d{2,3}$/', $definition->bc) !== 1) {
+                $violations[] = "outil {$name} : bc invalide ou absent (attendu BC-XX).";
+            }
+            if ($definition->permission === null || trim($definition->permission) === '') {
+                $violations[] = "outil {$name} : permission obligatoire (policy/gate).";
+            }
+            if (mb_strlen($definition->description) > AIToolDefinition::MAX_DESCRIPTION_LENGTH) {
+                $violations[] = "outil {$name} : description > 600 caractères (prompt LLM).";
+            }
+            foreach (['inputSchema', 'outputSchema'] as $field) {
+                $schema = $field === 'inputSchema' ? $definition->inputSchema : $definition->outputSchema;
+                if (json_encode($schema) === false) {
+                    $violations[] = "outil {$name} : {$field} non sérialisable JSON.";
+                }
+            }
+        }
+
+        return $violations;
+    }
 }

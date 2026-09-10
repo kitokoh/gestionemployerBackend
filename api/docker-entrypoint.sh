@@ -419,10 +419,23 @@ fi
 # avec le polling Redis — LPOP 3 s × 8 queues ≈ 230k req/jour → Redis refuse
 # toute connexion. Le driver Postgres poll via SELECT FOR UPDATE SKIP LOCKED,
 # sans quota). `block_for => null` reste compatible si on revient à Redis.
-echo "Starting background queue worker (web container)..."
-php artisan queue:work \
-    --queue=webhooks,audit,notifications,emails,pdf,payroll,documents,default \
-    --tries=3 --timeout=300 --sleep=5 --max-jobs=500 --max-time=3600 \
-    >/dev/null 2>&1 &
+# Issue #7041 : `queue:work --max-time=3600` s'arrête proprement après 1 h — sans
+# supervisor, le worker du conteneur web ne repartait JAMAIS (tier dev figé ~1 h
+# après chaque boot, jobs pending sans signal). Boucle de respawn bornée : le
+# worker est relancé après chaque sortie (max-time OU crash), avec un délai pour
+# éviter un spin sur erreur fatale persistante. Le worker dédié prod
+# (`render.prod.yaml`, leopardo-queue-worker) passe par `exec "$@"` ci-dessous
+# et n'est PAS concerné par cette boucle.
+echo "Starting background queue worker (web container, respawn loop)..."
+(
+    while true; do
+        php artisan queue:work \
+            --queue=webhooks,audit,notifications,emails,pdf,payroll,documents,default \
+            --tries=3 --timeout=300 --sleep=5 --max-jobs=500 --max-time=3600 \
+            >/dev/null 2>&1
+        echo "[entrypoint] queue worker exited ($?), respawn in 2s..." >&2
+        sleep 2
+    done
+) &
 
 exec frankenphp run --config /etc/caddy/Caddyfile --adapter caddyfile
