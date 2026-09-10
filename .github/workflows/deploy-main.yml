@@ -33,8 +33,8 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  DEFAULT_API_BASE_URL: ${{ vars.PROD_API_BASE_URL }}
-  DEFAULT_API_HEALTHCHECK_URL: ${{ vars.PROD_API_BASE_URL }}/health
+  DEFAULT_API_BASE_URL: ${{ vars.DEV_API_BASE_URL }}
+  DEFAULT_API_HEALTHCHECK_URL: ${{ vars.DEV_API_BASE_URL }}/health
 
 # #1835 / #3904 / #4359 : un seul run de déploiement par SHA; le push main
 # est désormais l’unique déclencheur automatique. Le groupe par SHA protège
@@ -70,14 +70,14 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Guard PROD_API_BASE_URL (#4524)
+      - name: Guard DEV_API_BASE_URL (#4524)
         shell: bash
         run: |
-          if [[ -z "${{ vars.PROD_API_BASE_URL }}" ]]; then
-            echo "::error::PROD_API_BASE_URL must be set (fail-open fallback removed, issue #4524)."
+          if [[ -z "${{ vars.DEV_API_BASE_URL }}" ]]; then
+            echo "::error::DEV_API_BASE_URL must be set (fail-open fallback removed, issue #4524)."
             exit 1
           fi
-          echo "PROD_API_BASE_URL=${{ vars.PROD_API_BASE_URL }}"
+          echo "DEV_API_BASE_URL=${{ vars.DEV_API_BASE_URL }}"
 
       - name: Resolve deployment source
         id: context
@@ -390,14 +390,15 @@ jobs:
 
           # #6834/#6973 : ce workflow déploie UNIQUEMENT le service Render du tier
           # dev/continu (gestionemployerbackend). Le healthcheck doit cibler CETTE
-          # instance — vars.PROD_API_BASE_URL désigne l'URL dev (dette de nommage
-          # #6839) — et jamais un healthcheck partagé via secret qui peut pointer
+          # instance — vars.DEV_API_BASE_URL désigne explicitement le tier
+          # dev/continu depuis le renommage #6839 — et jamais un healthcheck
+          # partagé via secret qui peut pointer
           # ailleurs (ex. la prod) : cause du gate vert avec dev figé sur un vieux
           # SHA (constat #6973 : deploy-main « success » pendant ~24 h, SHA live
           # inchangé, web DEV en 500).
           URL="${DEFAULT_API_HEALTHCHECK_URL}"
           if [[ -z "${URL}" ]]; then
-            echo "::error::URL de santé dev absente (vars.PROD_API_BASE_URL non défini) — deploy non vérifiable (#6834)."
+            echo "::error::URL de santé dev absente (vars.DEV_API_BASE_URL non défini) — deploy non vérifiable (#6834)."
             exit 1
           fi
 

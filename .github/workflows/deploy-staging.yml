@@ -136,17 +136,26 @@ jobs:
           RENDER_STAGING_DEPLOY_HOOK_URL: ${{ secrets.RENDER_STAGING_DEPLOY_HOOK_URL }}
         run: |
           set -euo pipefail
-          # Issue #1485 : un vrai environnement staging n'existe pas encore
-          # (pas d'app Render séparée, pas de branche staging). On REFUSE
-          # toujours de cibler l'URL de production, mais on saute proprement
-          # (même convention que database-backup.yml : "saute proprement si
-          # les secrets ne sont pas configurés") au lieu de faire échouer
-          # main à chaque push. Configurer un staging réel (app Render +
-          # vars.STAGING_API_URL + secrets.RENDER_STAGING_DEPLOY_HOOK_URL)
-          # réactive ce job sans autre changement.
+          # Issue #6839 : le no-op silencieux est interdit. Un vrai
+          # environnement staging n'existe toujours pas (pas d'app Render
+          # séparée, pas de branche staging) et ce job ne doit PAS prétendre
+          # déployer. Convention fail-loud identique à database-backup.yml
+          # (#6836) : tant que la config n'est pas posée, le job échoue
+          # bruyamment (::error:: + exit 1) au lieu d'un skip success — un
+          # skip silencieux ressemble à un success (leçon #3545).
+          # Configurer un staging réel (app Render + vars.STAGING_API_URL +
+          # secrets.RENDER_STAGING_DEPLOY_HOOK_URL) rend ce job vert sans
+          # autre changement ; la prod n'est jamais utilisée comme cible.
           if [[ -z "${STAGING_API_URL}" || -z "${RENDER_STAGING_DEPLOY_HOOK_URL}" ]]; then
-            echo "::warning::Staging non configuré (issue #1485) : STAGING_API_URL / RENDER_STAGING_DEPLOY_HOOK_URL absents. Déploiement staging ignoré — la production n'est jamais utilisée comme cible."
-            echo "configured=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "::error::Staging non configuré (#6839) : vars.STAGING_API_URL et/ou secrets.RENDER_STAGING_DEPLOY_HOOK_URL absents — aucun déploiement staging n'a eu lieu."
+              echo "::error::Provisionner un vrai staging (option A de #6839) ou supprimer ce job devenu inutile (le tier dev/continu est déployé par deploy-main.yml)."
+              echo "## Staging deployment skipped — FAIL-LOUD (#6839)"
+              echo ""
+              echo "STAGING_API_URL / RENDER_STAGING_DEPLOY_HOOK_URL ne sont pas configurés."
+              echo "Ce job échoue volontairement : un no-op silencieux masquait l'absence de staging (#6839, convention #6836/#3545)."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi

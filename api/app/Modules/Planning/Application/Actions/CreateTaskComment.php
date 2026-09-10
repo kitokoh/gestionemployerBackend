@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Planning\Application\Actions;
 
 use App\Core\Auth\Domain\Models\Employee;
-use App\Modules\Notification\Infrastructure\Services\CommunicationService;
+use App\Contracts\Communication\CommunicationServiceInterface;
 use App\Modules\Planning\Domain\Models\Task;
 use App\Modules\Planning\Domain\Models\TaskComment;
 
@@ -23,7 +23,7 @@ use App\Modules\Planning\Domain\Models\TaskComment;
 class CreateTaskComment
 {
     public function __construct(
-        private readonly CommunicationService $communicationService,
+        private readonly CommunicationServiceInterface $communicationService,
     ) {}
 
     public function execute(Employee $actor, Task $task, string $content): TaskComment
