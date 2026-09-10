@@ -104,9 +104,19 @@ def main() -> int:
         print(f"::error::Catalogue JSON invalide : {exc}", file=sys.stderr)
         return 1
 
-    catalogue_events = {e["name"]: e for e in catalogue.get("events", [])}
+    raw_events = catalogue.get("events", [])
+    raw_names = [e.get("name") for e in raw_events]
+    duplicates = sorted({n for n in raw_names if raw_names.count(n) > 1})
+    catalogue_events = {e["name"]: e for e in raw_events}
 
     errors: list[str] = []
+
+    # ── 0. Unicité des noms dans le catalogue (issue #7148) ────────────────
+    if duplicates:
+        errors.append(
+            "Entrées dupliquées dans le catalogue (nom présent 2× ou plus) : "
+            + ", ".join(str(d) for d in duplicates)
+        )
 
     # ── 1 & 2. Chaque classe Event a une entrée catalogue à jour ────────────
     code_event_names: set[str] = set()

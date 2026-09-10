@@ -75,6 +75,17 @@ events:
     deprecation: null
 ```
 
+## Événements BC-28 CATALOG (2026-09-09)
+
+| Événement | Classe | Consumers | Référence |
+|---|---|---|---|
+| `catalog.inquiry_received` v1.0.0 | `App\Events\CatalogInquiryReceived` | `App\Listeners\CreateCrmLeadFromCatalogInquiry` | BC-28 C-LEAD #6884 |
+| `catalog.inquiry_erased` v1.0.0 | `App\Events\CatalogInquiryErased` | `App\Listeners\EraseCrmLeadsOnCatalogInquiryErased` | BC-28 C-RGPD #6889 |
+
+Contrat cross-BC : Catalog ne touche jamais les tables d'un autre contexte — CRM (BC-11) consomme ces
+événements (création/suppression de leads `b2b_catalog`). Aucune PII dans le payload au-delà de
+l'email acheteur nécessaire au rapprochement (effacement RGPD).
+
 ## Ajout / modification d'un événement
 
 1. Créer/modifier la classe dans `api/app/Events/` (ou `Domain/Events` du
