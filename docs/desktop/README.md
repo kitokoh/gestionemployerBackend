@@ -46,7 +46,7 @@ chaîne ci-dessous. **Aucune tranche ne s'active sans ligne validée ici.**
 3. **Signature** (obligatoire pour tout canal public) : Windows — certificat code
    signing (+ packaging MSIX si retenu) ; macOS — Developer ID + notarisation +
    stapling. Secrets = GitHub Actions secrets (jamais dans le dépôt).
-4. **Canaux** : dev (GitHub Release `desktop-<app>-dev`, non signé toléré, marqué) →
+4. **Canaux** : dev (GitHub Release `desktop-<app>-dev`, non signé toléré, marqué — ✅ implémenté, lot 3) →
    beta/pilotes (signé, UAT via `docs/ops/RECETTE_UAT_*.md` du BC) → prod
    (GitHub Release semver signée). Auto-update non activé par défaut (décision par
    tranche).

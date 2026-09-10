@@ -83,6 +83,11 @@ jobs:
       - name: Build (verify, non signé)
         working-directory: front/mobile_apps/${{ matrix.app }}
         shell: bash
+        # Fix MSVC 14.51 (runner windows-2025) : <experimental/coroutine> retiré par
+        # la STL récente → local_auth_windows ne compile plus (STL1011). Macro officiel
+        # MSVC ; à retirer quand le plugin sera compatible (suivi #7056).
+        env:
+          CXXFLAGS: "-D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS"
         run: |
           if [ "$RUNNER_OS" = "Windows" ]; then
             flutter build windows --debug
