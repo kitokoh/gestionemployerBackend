@@ -185,6 +185,14 @@ class AIToolRegistrySeeder extends Seeder
                     ],
                     'required' => ['schedule_id', 'employee_id'],
                 ]),
+                'required_permissions' => '["schedules.assign"]',
+                'required_role' => 'manager',
+                'module' => 'rh',
+            ],
+            // B3c (#6858) — outil écriture BC-13 COMMS (annonce tenant, parité
+            // AnnouncementController, exécution après confirmation) ; permissions
+            // alignées sur `config ai.write_tools.notify_team`.
+            [
                 'name' => 'notify_team',
                 'description' => 'Send a short message to a team (whole company for principal/RH, or one department) — confirmation required before send, rate-limited.',
                 'parameters' => json_encode([
