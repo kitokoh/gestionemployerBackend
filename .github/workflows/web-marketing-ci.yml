@@ -85,7 +85,7 @@ jobs:
       - name: Build Next.js vitrine
         working-directory: front/web
         env:
-          NEXT_PUBLIC_API_URL: ${{ vars.PROD_API_BASE_URL }}
+          NEXT_PUBLIC_API_URL: ${{ vars.DEV_API_BASE_URL }}
           # #4600/#3452 : le build production échoue sans URL de marque réelle
           # (leopardo-rh.com NXDOMAIN) — la var pointe la vitrine live.
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
@@ -121,7 +121,7 @@ jobs:
       - name: Run preview funnel tests
         working-directory: front/web
         env:
-          NEXT_PUBLIC_API_URL: ${{ vars.PROD_API_BASE_URL }}
+          NEXT_PUBLIC_API_URL: ${{ vars.DEV_API_BASE_URL }}
           # #4600/#3452 : le build production échoue sans URL de marque réelle
           # (leopardo-rh.com NXDOMAIN) — la var pointe la vitrine live.
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
@@ -131,7 +131,7 @@ jobs:
       - name: Run preview authenticated client smokes
         working-directory: front/web
         env:
-          NEXT_PUBLIC_API_URL: ${{ vars.PROD_API_BASE_URL }}
+          NEXT_PUBLIC_API_URL: ${{ vars.DEV_API_BASE_URL }}
           # #4600/#3452 : le build production échoue sans URL de marque réelle
           # (leopardo-rh.com NXDOMAIN) — la var pointe la vitrine live.
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
