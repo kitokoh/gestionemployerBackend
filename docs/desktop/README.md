@@ -14,12 +14,15 @@
 | `leopardo_hr` | RH dédié | ✅ windows/macos/linux | ❌ aucune |
 | `leopardo_marketing` | Marketing/communication | ✅ windows/macos/linux | ❌ aucune |
 | `leopardo_platform_admin` | Super-admin plateforme | ✅ windows/macos/linux | ❌ aucune |
-| `leopardo_accounting` | Comptabilité | ✅ windows/macos (lot 1 — PR #7095, issue #7106) | 🚧 pilote (lot 2 — branche `feat/7056-desktop-tooling`) |
+| `leopardo_accounting` | Comptabilité | ✅ windows/macos (lot 1 — PR #7095, issue #7106) | 🚧 pilote — pipeline CI livré (build + smoke + install-test, canal fermé ; lot 2 #7133 + #7056) |
 | `leopardo_travel_agent` | Agent/vendeur Travel | ❌ | ❌ |
 
-Aucun script melos `build:windows`/`build:macos`, aucun workflow desktop, aucune
-signature/canal : **tout est à créer**. La CI mobile actuelle (`mobile-apps-ci.yml`,
-`mobile-distribute.yml`) ne couvre que l'Android → Firebase App Distribution.
+Scripts melos `build:windows`/`build:macos` livrés (lot 2, `leopardo_core` ignoré) et
+workflow de vérification `.github/workflows/desktop-ci.yml` livré. Le pipeline de
+distribution pilote `.github/workflows/desktop-distribute.yml` couvre désormais
+`analyze + tests → build → smoke → install-test → artefact (canal fermé)`, sans
+signature/notarisation (palier pilote #7055). La CI mobile (`mobile-apps-ci.yml`,
+`mobile-distribute.yml`) n'est pas modifiée et reste Android → Firebase App Distribution.
 
 ## 2. Registre des tranches desktop (à valider PM)
 
@@ -40,29 +43,46 @@ chaîne ci-dessous. **Aucune tranche ne s'active sans ligne validée ici.**
 1. **CI de vérification** (livrée — `.github/workflows/desktop-ci.yml`) : build
    Windows/macOS des apps disposant du scaffolding, déclenché quand les dossiers
    `windows/`/`macos/` (ou le workflow) changent. Aucune signature ni distribution.
-2. **Scripts melos** (à ajouter lors de l'activation d'une tranche) :
-   `melos run build:windows -- -t <app>` / `build:macos` (`flutter build windows` /
-   `flutter build macos --release`, filtre packages, `leopardo_core` ignoré).
-3. **Signature** (obligatoire pour tout canal public) : Windows — certificat code
-   signing (+ packaging MSIX si retenu) ; macOS — Developer ID + notarisation +
-   stapling. Secrets = GitHub Actions secrets (jamais dans le dépôt).
-4. **Canaux** : dev (GitHub Release `desktop-<app>-dev`, non signé toléré, marqué — ✅ implémenté, lot 3) →
-   beta/pilotes (signé, UAT via `docs/ops/RECETTE_UAT_*.md` du BC) → prod
-   (GitHub Release semver signée). Auto-update non activé par défaut (décision par
-   tranche).
-5. **DoD de tranche** : checklist du protocole `docs/PROTOCOLES/P06_DESKTOP_DISTRIBUTION.md` (build CI vert ×OS, tests
+2. **Scripts melos** (livrés — lot 2, #7133) : `melos run build:windows` →
+   `flutter build windows --release` / `build:macos` → `flutter build macos --release
+   --no-codesign` (filtre packages, `leopardo_core` ignoré).
+3. **Pipeline pilote** (livré — `.github/workflows/desktop-distribute.yml`, #7056) :
+   `workflow_dispatch` (app, plateforme, volet, `api_url`) →
+   `prepare` (matrice dynamique) → `analyze-and-test` → `build-and-package`
+   (Windows `.exe`/zip récursif ; macOS `.app`/ditto — bits d'exécution préservés) →
+   `desktop-smoke` (démarrage/fenêtre/fermeture propre) → `install-test`
+   (install/désinstall sur runner propre, contrôle d'identité) → `publish-pilot`
+   (GitHub Release `desktop-<app>-dev`, **pré-release, non signée**, marquée
+   `PILOT_UNSIGNED.txt`). `desktop-smoke` et `install-test` sont des gardes
+   **non bloquantes au démarrage** (`continue-on-error`) : à promouvoir en gate dur
+   après le premier run pilote vert sur les deux OS (P06 §5). Login + parcours
+   critique = UAT pilote (`RUNBOOK_DESKTOP_ACCOUNTING.md` §5), pas en CI (pas de
+   credentials en CI).
+4. **Signature** (obligatoire pour tout canal public, hors périmètre pilote) :
+   Windows — certificat code signing (+ packaging MSIX si retenu) ; macOS —
+   Developer ID + notarisation + stapling. Secrets = GitHub Actions secrets
+   (jamais dans le dépôt) — ⏳ à provisionner.
+5. **Canaux** : dev (GitHub Release `desktop-<app>-dev`, non signé, pré-release —
+   ✅ implémenté) → beta/pilotes (signé, UAT via `docs/ops/RECETTE_UAT_*.md` du BC)
+   → prod (GitHub Release semver signée). Auto-update non activé par défaut
+   (décision par tranche).
+6. **DoD de tranche** : checklist du protocole `docs/PROTOCOLES/P06_DESKTOP_DISTRIBUTION.md` (build CI vert ×OS, tests
    desktop, smoke signé, UAT pilote, signature/notarisation, CHANGELOG, vitrine).
 
 ## 4. Écarts & dépendances (rattrapage)
 
-- ⏳ Décision PM : tranche pilote (recommandation : Comptabilité bureau — BC-08 —
-  ou Kiosk) — issue #7072.
+- ✅ Décision PM tranche pilote : **GO** Comptabilité bureau (BC-08, `leopardo_accounting`) — #7055.
+- ✅ Scaffolding desktop `leopardo_accounting` (windows/macos) — lot 1 (#7095/#7106).
+- ✅ Scripts melos, workflow de vérification, workflow pilote, matrice compat desktop + garde — lot 2 (#7133) et #7056.
+- ⏳ **Premier run réel** du pipeline `desktop-distribute.yml` (workflow_dispatch) : les jobs
+  `desktop-smoke`/`install-test` sont non bloquants tant qu'ils n'ont pas tourné vert une fois
+  sur runner Windows **et** macOS — c'est ce run qui valide le smoke/install en conditions (P06 §5).
 - ⏳ Provisionner les certificats (Windows) et le Developer ID (macOS) dans les
   secrets GitHub avant tout canal public.
-- ⏳ Ajouter le scaffolding desktop à `leopardo_accounting` /
-  `leopardo_travel_agent` si une tranche les concerne.
-- Le workflow `desktop-ci.yml` est livré **non déclenché** tant qu'aucun dossier
-  desktop ne change : première activation = première validation réelle en conditions.
+- ⏳ Scaffolding desktop `leopardo_travel_agent` si une tranche le concerne (aucune décision à ce jour).
+- ⏳ Harmonisation d'identité desktop (`com.leopardo.<app>`, nom produit « Leopardo Accounting ») :
+  le scaffold `flutter create` a produit `com.leopardo.leopardoAccounting` / `leopardo_accounting` —
+  à aligner (P06 §3.2) **avant** le premier build signé (l'identité fixe Keychain/DPAPI).
 
 ## Liens
 
