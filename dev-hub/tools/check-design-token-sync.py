@@ -136,6 +136,28 @@ def check_tailwind(rows, config_path, label):
     return problems, infos
 
 
+def check_cross_surface(web_path, admin_path):
+    """Compare les palettes partagées entre la vitrine web et l'admin (issue #7149).
+
+    La garde historique ne comparait chaque config qu'à COULEURS.md : une dérive
+    entre deux surfaces sur une palette non documentée (ex. échelle cyan) restait
+    invisible. Ici : toute clé (palette, nuance) présente des deux côtés doit
+    porter la même valeur.
+    """
+    problems = []
+    if not (os.path.exists(web_path) and os.path.exists(admin_path)):
+        return problems
+    web = parse_tailwind_palettes(web_path)
+    admin = parse_tailwind_palettes(admin_path)
+    for pal in sorted(set(web) & set(admin)):
+        for shade in sorted(set(web[pal]) & set(admin[pal])):
+            if web[pal][shade] != admin[pal][shade]:
+                problems.append(
+                    "derive inter-surfaces — %s-%s : web #%s vs admin #%s"
+                    % (pal, shade, web[pal][shade], admin[pal][shade]))
+    return problems
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=".")
@@ -165,6 +187,15 @@ def main():
         p, i = check_tailwind(rows, os.path.join(root, "front/admin-dashboard/tailwind.config.js"),
                               "Admin")
         problems += p; infos += i
+
+    # Comparaison inter-surfaces (issue #7149) : palettes partagées web ↔ admin
+    if not args.no_web and not args.no_admin:
+        p = check_cross_surface(
+            os.path.join(root, "front/web/tailwind.config.ts"),
+            os.path.join(root, "front/admin-dashboard/tailwind.config.js"))
+        problems += p
+        if not p:
+            infos.append("Web ↔ Admin : palettes partagées cohérentes")
 
     for line in infos:
         print("ℹ", line)
