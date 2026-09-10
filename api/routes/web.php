@@ -13,6 +13,8 @@ use App\Http\Controllers\Web\DemoLoginController;
 use App\Http\Controllers\Web\WebAuthController;
 use App\Http\Controllers\Web\WebEmployeeController;
 use App\Http\Controllers\Web\WebEmployeeManagementController;
+use App\Modules\Showcase\Interfaces\Api\V1\Controllers\ShowcasePublicController;
+use App\Modules\Showcase\Interfaces\Web\Controllers\ShowcasePublicPageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -180,3 +182,16 @@ Route::middleware(['auth:web', 'tenant', 'manager_role:principal,superviseur'])-
     Route::post('/biometrics/requests/{id}/reject', [BiometricAdminController::class, 'reject'])->name('biometrics.requests.reject');
     Route::post('/biometrics/kiosks', [BiometricAdminController::class, 'createKiosk'])->name('biometrics.kiosks.store');
 });
+
+// BC-27 SHOWCASE (#6873) — vitrine publique SSR (/vitrine/{slug}), sitemap.xml
+// et robots.txt. Routes isolées, sans auth ni contexte tenant (le tenant est
+// résolu par slug dans le contrôleur). Routes HTML : hors contrat OpenAPI.
+Route::get('/vitrine/sitemap.xml', [ShowcasePublicController::class, 'sitemap'])
+    ->name('showcase.vitrine.sitemap');
+
+Route::get('/robots.txt', [ShowcasePublicController::class, 'robots'])
+    ->name('showcase.vitrine.robots');
+
+Route::get('/vitrine/{slug}', [ShowcasePublicPageController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9\-_]{1,160}')
+    ->name('showcase.vitrine.show');

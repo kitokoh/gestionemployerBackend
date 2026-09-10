@@ -13,7 +13,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * Exposé aux seuls gestionnaires du tenant (routes authentifiées +
  * Policies) — contrairement à la ressource publique (#6867) qui ne doit
- * JAMAIS exposer `company_id` ni `id` interne.
+ * JAMAIS exposer `company_id`, `id` interne ni le jeton d'aperçu.
+ *
+ * Étendue par les lots v1 :
+ *   - V-PUBLISH #6871 : `preview_token` + `preview_path` (lien d'aperçu) ;
+ *   - V-RGPD #6875 : `legal` (bloc mentions légales / confidentialité).
  *
  * @mixin CompanyShowcase
  */
@@ -28,6 +32,7 @@ final class ShowcaseResource extends JsonResource
         $showcase = $this->resource;
 
         $settings = $showcase->settings;
+        $legal = $showcase->legal;
 
         return [
             'id' => $showcase->id,
@@ -35,6 +40,11 @@ final class ShowcaseResource extends JsonResource
             'status' => $showcase->status->value,
             'theme' => $showcase->theme,
             'settings' => is_array($settings) ? $settings : new \stdClass,
+            'legal' => is_array($legal) ? $legal : new \stdClass,
+            'preview_token' => $showcase->preview_token,
+            'preview_path' => $showcase->preview_token !== null
+                ? '/public/vitrine/'.$showcase->slug.'?token='.$showcase->preview_token
+                : null,
             'published_at' => $showcase->published_at?->toIso8601String(),
             'created_at' => $showcase->created_at?->toIso8601String(),
             'updated_at' => $showcase->updated_at?->toIso8601String(),

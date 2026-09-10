@@ -18,6 +18,7 @@ use App\Events\EmployeeRoleAssigned;
 use App\Events\FuelStationAlert;
 use App\Events\MarketingLeadQualified;
 use App\Events\PayrollValidated;
+use App\Events\ShowcaseContactReceived;
 use App\Events\SubscriptionPaid;
 use App\Events\TaxRateApproved;
 use App\Events\TaxRateRejected;
@@ -29,6 +30,7 @@ use App\Listeners\EraseCrmLeadsOnCatalogInquiryErased;
 use App\Listeners\FuelStationAlertListener;
 use App\Listeners\LinkPartnerToNewCompany;
 use App\Listeners\NotifyTaxRateValidation;
+use App\Listeners\NotifyTenantOnShowcaseContact;
 use App\Listeners\ProcessCommissionOnPayment;
 use App\Listeners\WebhookListener;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -68,5 +70,9 @@ class EventServiceProvider extends ServiceProvider
         // BC-28 CATALOG (C-RGPD #6889) — effacement RGPD d'une demande →
         // propagation aux leads CRM BC-11 du même acheteur.
         CatalogInquiryErased::class => [EraseCrmLeadsOnCatalogInquiryErased::class],
+
+        // BC-27 SHOWCASE (#6875 V-RGPD) — formulaire de contact public →
+        // notification des responsables du tenant (BC-13).
+        ShowcaseContactReceived::class => [NotifyTenantOnShowcaseContact::class],
     ];
 }

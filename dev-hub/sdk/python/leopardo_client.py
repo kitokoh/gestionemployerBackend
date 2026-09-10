@@ -3152,6 +3152,18 @@ class LeopardoClient:
         """Vitrine publique d'un tenant (BC-27 #6867)"""
         return self.request("GET", "/public/vitrine/{slug}", **kwargs)
 
+    def post_public_vitrine_by_slug_contact(self, **kwargs):
+        """Formulaire de contact public d'une vitrine (BC-27 #6875)"""
+        return self.request("POST", "/public/vitrine/{slug}/contact", **kwargs)
+
+    def get_public_vitrine_robots_txt(self, **kwargs):
+        """robots.txt public (BC-27 #6873)"""
+        return self.request("GET", "/public/vitrine/robots.txt", **kwargs)
+
+    def get_public_vitrine_sitemap_xml(self, **kwargs):
+        """Sitemap XML des vitrines publiees (BC-27 #6873)"""
+        return self.request("GET", "/public/vitrine/sitemap.xml", **kwargs)
+
     def post_push_notifications_send(self, **kwargs):
         """Envoyer une notification push de test a un employe"""
         return self.request("POST", "/push-notifications/send", **kwargs)
@@ -3400,6 +3412,14 @@ class LeopardoClient:
         """Creation 1-clic de la vitrine (US1)"""
         return self.request("POST", "/showcase", **kwargs)
 
+    def post_showcase_preview_token(self, **kwargs):
+        """Genere un jeton d'apercu prive d'un brouillon (BC-27 #6871)"""
+        return self.request("POST", "/showcase/preview-token", **kwargs)
+
+    def post_showcase_publish(self, **kwargs):
+        """Publication de la vitrine (draft -> published, BC-27 #6871)"""
+        return self.request("POST", "/showcase/publish", **kwargs)
+
     def get_showcase_sections(self, **kwargs):
         """Liste ordonnee des sections de la vitrine (BC-27 #6866)"""
         return self.request("GET", "/showcase/sections", **kwargs)
@@ -3419,6 +3439,14 @@ class LeopardoClient:
     def post_showcase_sections_reorder(self, **kwargs):
         """Reordonnancement complet des sections (ids = ordre cible)"""
         return self.request("POST", "/showcase/sections/reorder", **kwargs)
+
+    def patch_showcase_settings(self, **kwargs):
+        """Variables de marque et bloc legal editables (BC-27 #6875)"""
+        return self.request("PATCH", "/showcase/settings", **kwargs)
+
+    def post_showcase_unpublish(self, **kwargs):
+        """Depublication de la vitrine (published -> draft, BC-27 #6871)"""
+        return self.request("POST", "/showcase/unpublish", **kwargs)
 
     def get_sites(self, **kwargs):
         """Lister les sites"""

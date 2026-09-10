@@ -3915,6 +3915,21 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("GET", "/public/vitrine/{slug}", options);
     },
 
+    /** Formulaire de contact public d'une vitrine (BC-27 #6875) */
+    postPublicVitrineBySlugContact(options = {}) {
+      return request("POST", "/public/vitrine/{slug}/contact", options);
+    },
+
+    /** robots.txt public (BC-27 #6873) */
+    getPublicVitrineRobotsTxt(options = {}) {
+      return request("GET", "/public/vitrine/robots.txt", options);
+    },
+
+    /** Sitemap XML des vitrines publiees (BC-27 #6873) */
+    getPublicVitrineSitemapXml(options = {}) {
+      return request("GET", "/public/vitrine/sitemap.xml", options);
+    },
+
     /** Envoyer une notification push de test a un employe */
     postPushNotificationsSend(options = {}) {
       return request("POST", "/push-notifications/send", options);
@@ -4225,6 +4240,16 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("POST", "/showcase", options);
     },
 
+    /** Genere un jeton d'apercu prive d'un brouillon (BC-27 #6871) */
+    postShowcasePreviewToken(options = {}) {
+      return request("POST", "/showcase/preview-token", options);
+    },
+
+    /** Publication de la vitrine (draft -> published, BC-27 #6871) */
+    postShowcasePublish(options = {}) {
+      return request("POST", "/showcase/publish", options);
+    },
+
     /** Liste ordonnee des sections de la vitrine (BC-27 #6866) */
     getShowcaseSections(options = {}) {
       return request("GET", "/showcase/sections", options);
@@ -4248,6 +4273,16 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
     /** Reordonnancement complet des sections (ids = ordre cible) */
     postShowcaseSectionsReorder(options = {}) {
       return request("POST", "/showcase/sections/reorder", options);
+    },
+
+    /** Variables de marque et bloc legal editables (BC-27 #6875) */
+    patchShowcaseSettings(options = {}) {
+      return request("PATCH", "/showcase/settings", options);
+    },
+
+    /** Depublication de la vitrine (published -> draft, BC-27 #6871) */
+    postShowcaseUnpublish(options = {}) {
+      return request("POST", "/showcase/unpublish", options);
     },
 
     /** Lister les sites */

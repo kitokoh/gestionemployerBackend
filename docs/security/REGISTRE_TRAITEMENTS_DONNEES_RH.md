@@ -123,3 +123,22 @@ C-LEAD #6884, volet conformité C-RGPD #6889.
 |---|---|---|---|---|---|---|
 | Demandes de devis B2B (`catalog_inquiries`) | Repondre a une demande de devis / contact B2B | Societe acheteur, email, message, produit + quantite, horodatage consentement, IP hashee (jamais en clair) | Acheteurs professionnels (visiteurs du catalogue public) | Consentement explicite (checkbox, horodate `consent_at`) + interet legitime commercial | 90 jours (`retention_until`, purge `catalog:purge-expired-inquiries`) | Minimisation (aucun champ optionnel superflu), consentement horodate, IP hash SHA-256, isolation tenant (company_id), acces back-office reserve principal/rh/manager, droit d'effacement (DELETE `catalog/inquiries/{id}`), propagation effacement aux leads CRM BC-11 (`catalog.inquiry_erased`), aucune donnee acheteur exposee publiquement (accuse seul) |
 | Leads BC-11 issus du catalogue (source `b2b_catalog`) | Pipeline commercial du tenant (qualification, devis) | Societe, email, notes (produit concerne + message), source | Prospects du tenant | Contrat / interet legitime ; consentement du formulaire source | Alignee sur la demande source (effacee avec elle) | Créés uniquement par contrat evenementiel depuis Catalog ; effaces en cascade a la demande (`EraseCrmLeadsOnCatalogInquiryErased`) |
+
+## 11. Vitrine publique — formulaire de contact (BC-27, issue #6875)
+
+Traitement des données de visiteur collectées via le formulaire de contact
+d'une vitrine publique de tenant (`showcase_contact_messages`) — volet
+conformité V-RGPD #6875. La vitrine ne dépose **aucun cookie tiers** et ne
+collecte aucune donnée de navigation : seule la soumission volontaire du
+formulaire est traitée. La page publique ne contient aucune donnée RH interne
+(revue DTO public + test de non-fuite `ShowcasePublicApiTest`).
+
+| Traitement | Finalites | Donnees traitees | Personnes concernees | Base legale type | Conservation indicative | Mesures de protection |
+|---|---|---|---|---|---|---|
+| Messages du formulaire de contact vitrine (`showcase_contact_messages`) | Repondre a une demande envoyee depuis la vitrine publique d'un tenant | Nom, email, message, horodatage consentement, IP hashee SHA-256 (jamais en clair) | Visiteurs de la vitrine publique (prospects) | Consentement explicite (case a cocher, horodate `consent_at`) + interet legitime (reponse a la demande) | 180 jours (`retention_until`) | Minimisation (champs bornes, aucun champ interne), consentement obligatoire, IP hash SHA-256, isolation tenant (`company_id`), rate limit dedie + honeypot anti-spam, notification BC-13 aux responsables uniquement, aucune donnee visiteur exposee publiquement, aucun cookie tiers (banniere informative sans tracker) |
+| Notification interne de contact (BC-13) | Informer les responsables du tenant d'un nouveau message | Titre/contenu de notification (nom du visiteur), identifiant de message | Responsables du tenant (principal/rh/manager) | Contrat / interet legitime | Alignee sur la duree du message source | Evenement `showcase.contact_received` sans PII (identifiant seul), canaux/preferences respectes, acces reserve aux roles de gestion |
+
+Le bloc « mentions légales / politique de confidentialité » de la vitrine est
+editable par le tenant (`PATCH /api/v1/showcase/settings`, champ `legal`) ; en
+l'absence d'edition, un texte generique est servi (jamais de page publiee sans
+mentions).

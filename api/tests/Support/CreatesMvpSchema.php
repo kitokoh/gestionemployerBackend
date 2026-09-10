@@ -3089,6 +3089,25 @@ trait CreatesMvpSchema
             });
         }
 
+        // ── BC-27 SHOWCASE (#6875 V-RGPD) — showcase_contact_messages ───────
+        if (! Schema::hasTable($this->moduleTable('showcase_contact_messages'))) {
+            Schema::create($this->moduleTable('showcase_contact_messages'), function (Blueprint $table): void {
+                $table->id();
+                $table->uuid('company_id');
+                $table->unsignedBigInteger('showcase_id');
+                $table->string('name', 150);
+                $table->string('email', 255);
+                $table->text('message');
+                $table->timestamp('consent_at');
+                $table->date('retention_until');
+                $table->string('ip_hash', 64)->nullable();
+                $table->timestamps();
+
+                $table->index('company_id', 'showcase_contact_messages_company_index');
+                $table->index(['showcase_id', 'created_at'], 'showcase_contact_messages_showcase_created_index');
+            });
+        }
+
     }
 
     private function createVerticalParityTables(): void

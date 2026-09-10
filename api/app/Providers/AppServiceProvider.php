@@ -346,6 +346,16 @@ class AppServiceProvider extends ServiceProvider
                 ->by('shop-public:'.$request->ip());
         });
 
+        // BC-27 SHOWCASE (#6875 V-RGPD) — formulaire de contact public d'une
+        // vitrine : bucket dédié plus serré (défaut 5/min par IP + slug) pour
+        // limiter le spam sans pénaliser la lecture publique de la vitrine.
+        RateLimiter::for('showcase-contact', function (Request $request) {
+            $slug = (string) $request->route('slug', 'unknown');
+
+            return Limit::perMinute((int) config('security.rate_limits.showcase_contact_per_minute', 5))
+                ->by('showcase-contact:'.$slug.'|'.$request->ip());
+        });
+
         // PA2-API-005 — Session-based web login forms (employee login, super-admin
         // platform login) are not covered by the API 'auth-sensitive' limiter
         // above, which only guards the Sanctum token endpoints. Keyed by e-mail +

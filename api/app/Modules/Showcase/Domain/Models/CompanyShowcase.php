@@ -26,7 +26,9 @@ use Illuminate\Support\Carbon;
  * @property CompanyShowcaseStatus $status
  * @property string $theme
  * @property array<string, mixed>|null $settings
+ * @property array<string, mixed>|null $legal
  * @property string|null $custom_domain
+ * @property string|null $preview_token
  * @property Carbon|null $published_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -47,8 +49,20 @@ class CompanyShowcase extends Model
         'status',
         'theme',
         'settings',
+        'legal',
         'custom_domain',
+        'preview_token',
         'published_at',
+    ];
+
+    /**
+     * Le jeton d'aperçu est un secret privé : jamais sérialisé par défaut
+     * (l'API de gestion l'expose explicitement via ShowcaseResource).
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'preview_token',
     ];
 
     /**
@@ -59,6 +73,7 @@ class CompanyShowcase extends Model
         return [
             'status' => CompanyShowcaseStatus::class,
             'settings' => 'array',
+            'legal' => 'array',
             'published_at' => 'datetime',
         ];
     }

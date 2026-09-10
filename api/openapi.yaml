@@ -2221,6 +2221,80 @@ paths:
                 type: object
         '404':
           description: Slug inconnu, societe suspendue ou vitrine non publiee
+  /public/vitrine/{slug}/contact:
+    post:
+      tags:
+      - Showcase
+      summary: Formulaire de contact public d'une vitrine (BC-27 #6875)
+      description: Rate limit dedie (showcase-contact) + honeypot + consentement RGPD obligatoire. Le message est minimise (retention bornee, IP hashee) et notifie aux responsables du tenant (BC-13). 404 fail-closed si la vitrine est absente ou non publiee.
+      parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              - email
+              - message
+              - consent
+              properties:
+                name:
+                  type: string
+                  maxLength: 150
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                message:
+                  type: string
+                  maxLength: 5000
+                consent:
+                  type: boolean
+                company_website:
+                  type: string
+                  description: Honeypot anti-spam (doit rester vide).
+      responses:
+        '201':
+          description: Message recu (accuse sans engagement)
+        '404':
+          description: Vitrine absente ou non publiee (noindex)
+        '422':
+          description: Validation echouee (consentement obligatoire)
+        '429':
+          description: Trop de requetes (rate limit dedie)
+  /public/vitrine/sitemap.xml:
+    get:
+      tags:
+      - Showcase
+      summary: Sitemap XML des vitrines publiees (BC-27 #6873)
+      description: Ne liste QUE les vitrines publiees (jamais de brouillon), URLs canoniques /vitrine/{slug}.
+      responses:
+        '200':
+          description: Sitemap XML
+          content:
+            application/xml:
+              schema:
+                type: string
+  /public/vitrine/robots.txt:
+    get:
+      tags:
+      - Showcase
+      summary: robots.txt public (BC-27 #6873)
+      description: Indexation des vitrines autorisee, apercus (?token=) et API exclus, pointeur sitemap.
+      responses:
+        '200':
+          description: robots.txt
+          content:
+            text/plain:
+              schema:
+                type: string
   /showcase:
     get:
       tags:
@@ -2246,6 +2320,97 @@ paths:
           description: Vitrine deja existante
         '403':
           description: Role insuffisant ou feature flag desactive
+  /showcase/publish:
+    post:
+      tags:
+      - Showcase
+      summary: Publication de la vitrine (draft -> published, BC-27 #6871)
+      description: Passe la vitrine en published, pose published_at, revoque le jeton d'apercu, invalide le cache public et journalise l'audit (qui/quand). RBAC principal/rh + isolation tenant.
+      responses:
+        '200':
+          description: Vitrine publiee (ShowcaseResource)
+        '403':
+          description: Role insuffisant ou feature flag desactive
+        '404':
+          description: Aucune vitrine pour ce tenant
+  /showcase/unpublish:
+    post:
+      tags:
+      - Showcase
+      summary: Depublication de la vitrine (published -> draft, BC-27 #6871)
+      description: Repasse la vitrine en draft (route publique 404/noindex), remet published_at a null et invalide le cache public.
+      responses:
+        '200':
+          description: Vitrine depubliee (ShowcaseResource)
+        '403':
+          description: Role insuffisant ou feature flag desactive
+        '404':
+          description: Aucune vitrine pour ce tenant
+  /showcase/preview-token:
+    post:
+      tags:
+      - Showcase
+      summary: Genere un jeton d'apercu prive d'un brouillon (BC-27 #6871)
+      description: Retourne un jeton permettant de consulter un brouillon via GET /public/vitrine/{slug}?token=... (reponse X-Robots-Tag noindex, jamais cachee). Revoque a la publication.
+      responses:
+        '200':
+          description: Jeton d'apercu genere
+        '403':
+          description: Role insuffisant ou feature flag desactive
+        '404':
+          description: Aucune vitrine pour ce tenant
+  /showcase/settings:
+    patch:
+      tags:
+      - Showcase
+      summary: Variables de marque et bloc legal editables (BC-27 #6875)
+      description: Allowlist stricte (brand_name, tagline, og_image, couleurs ; legal notice/privacy/contact_email) - toute cle inconnue est ignoree. Invalide le cache public.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                settings:
+                  type: object
+                  properties:
+                    brand_name:
+                      type: string
+                    tagline:
+                      type: string
+                    og_image:
+                      type: string
+                    colors:
+                      type: object
+                      properties:
+                        primary:
+                          type: string
+                        accent:
+                          type: string
+                        surface:
+                          type: string
+                        on_primary:
+                          type: string
+                legal:
+                  type: object
+                  properties:
+                    notice:
+                      type: string
+                    privacy:
+                      type: string
+                    contact_email:
+                      type: string
+                      format: email
+      responses:
+        '200':
+          description: Vitrine mise a jour (ShowcaseResource)
+        '403':
+          description: Role insuffisant ou feature flag desactive
+        '404':
+          description: Aucune vitrine pour ce tenant
+        '422':
+          description: Payload invalide
   /showcase/sections:
     get:
       tags:
