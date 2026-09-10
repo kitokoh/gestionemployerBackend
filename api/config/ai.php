@@ -108,6 +108,10 @@ return [
         // B3b (#6857) — affectation d'un shift (schedule) à un employé,
         // parité ScheduleController::assignEmployees (BC-05 WORKFORCE).
         'shift_assign',
+        // B3c (#6858) — envoi d'un message à une équipe (annonce tenant,
+        // BC-13 COMMS), parité AnnouncementController, exécution après
+        // confirmation (flux A4, contrat A3 #6850).
+        'notify_team',
     ],
 
     // BC-23-D05 (issue #6237) — matrice de permissions par outil AI
@@ -153,10 +157,18 @@ return [
         // ScheduleController::assignEmployees (api.manager + isManager +
         // visibleToManager pour les managers d'équipe).
         'shift_assign' => ['role' => 'manager', 'permissions' => ['schedules.assign']],
+        // B3c (#6858) — outil envoi BC-13 COMMS (contrat A3, #6850) : message
+        // à une équipe via le système d'annonces (parité AnnouncementController,
+        // api.manager + authorizeAudience — principal/RH pour company).
+        'notify_team' => ['role' => 'manager', 'permissions' => ['announcements.create']],
     ],
 
     // BC-23-D05 (issue #6237) — permissions accordées par rôle (résolution du
     // demandeur). Listes explicites et versionnées (pas d'héritage implicite).
+    'notify_team_rate' => [
+        'max_per_hour' => 10,
+    ],
+
     'role_permissions' => [
         'employee' => [
             'employees.view',

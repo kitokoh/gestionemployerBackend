@@ -35,7 +35,7 @@
 | `SocialDeclarationController` | 557 | déclarations sociales par pays (11 générateurs) | **B — Déclarations** |
 | `SalaryAdvanceController` | 433 | avances : cycle d'approbation complet | **C — Avances** |
 | `PaySlipController` | 394 | bulletins : lecture, PDF, envoi | **D — Bulletins** |
-| `PaymentBatchController` | 337 | batch de paiement : store→paid→confirm | **E — Paiements** |
+| `PaymentBatchController` | 183 | batch de paiement : store→paid→confirm (store/confirm/markPaid extraits, 2026-09-08) | **E — Paiements** |
 | `TaxSlabAdminController` | 333 | référentiels barèmes (admin) | F — Référentiels |
 | `PayrollCycleController` | 289 | settings de cycle, soldes, résumés | A / lecture |
 | (28 contrôleurs au total, ~6 556 lignes) | | | |
@@ -86,9 +86,15 @@ correspondant (lecture employés via `Employee`, identifiants entreprise via
 `PaymentBatchController` (batch store→paid→confirm), `PayrollPaymentOrderController`
 (ordres de paiement), `BankExportController` (RIB/iban, formats bancaires),
 `BulkPaymentController`, `PaymentDocumentController`.
-Candidats : `CreatePaymentBatchAction`, `MarkPaymentBatchPaidAction`,
-`ConfirmPaymentBatchAction`, `GenerateBankExportAction`,
-`GeneratePaymentOrderAction`, `GeneratePaymentDocumentAction`.
+Candidats (convention Payroll, sans suffixe `Action`) : `CreatePaymentBatch` ✅,
+`ConfirmPaymentItemReception` ✅, `MarkPaymentBatchPaid` ✅ (2026-09-08 — store,
+confirm et markPaid extraits ; markPaid = garde de statut draft/processing +
+transaction batch→paid (`marked_paid_by/at`) + items→paid (`paid_at`), puis par
+item : document `GeneratePaymentDocumentJob` + entrée ledger `LedgerService`
+`TYPE_PAYMENT`) ; reste : `GenerateBankExport` (dispatch `GenerateBankExportJob`
+dans `BankExportController::store`/régénération), `GeneratePaymentOrder`
+(`PayrollPaymentOrderService` sous `PayrollPaymentOrderController::prepare/execute`),
+`GeneratePaymentDocument` (`PaymentDocumentController`).
 
 ### Lot 5 — Bulletins (`PaySlipController`)
 Candidats : `GeneratePaySlipPdfAction` (downloadPdf — PaySlipPdfGenerator),
