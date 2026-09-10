@@ -4766,7 +4766,8 @@
     "travelAgency": "Agence de voyage",
     "surveyStats": "Surveys de solutions",
     "solutionSurveys": "Surveys de solutions",
-    "travel": "Agence de voyage"
+    "travel": "Agence de voyage",
+    "showcase": "Site vitrine"
   },
   "companydetailCoreModuleAlwaysActive": "Module cœur toujours actif",
   "smartAttendanceSessionsTitle": "Sessions Smart Attendance",
@@ -6015,5 +6016,36 @@
   "fuelPumpistSubmit": "Enregistrer le relevé",
   "crmAccounts": "Comptes CRM",
   "crmContacts": "Contacts CRM",
-  "crmLeads": "Leads CRM"
+  "crmLeads": "Leads CRM",
+  "showcase": {
+    "title": "Site vitrine",
+    "subtitle": "Composez et publiez le site public de votre entreprise en 1 clic.",
+    "published": "Publié",
+    "draft": "Brouillon",
+    "publish": "Publier",
+    "unpublish": "Dépublier",
+    "empty": "Aucune vitrine pour le moment. Créez-la pour composer votre site public.",
+    "create": "Créer ma vitrine",
+    "created": "Vitrine créée.",
+    "preview_link": "Lien d’aperçu privé",
+    "generate_preview": "Générer un lien d’aperçu",
+    "preview_generated": "Lien d’aperçu généré.",
+    "open_preview": "Ouvrir l’aperçu",
+    "settings": "Apparence et mentions",
+    "settings_saved": "Réglages enregistrés.",
+    "theme": "Thème",
+    "brand_name": "Nom de marque",
+    "tagline": "Slogan",
+    "legal_notice": "Mentions légales",
+    "legal_privacy": "Politique de confidentialité",
+    "save_settings": "Enregistrer les réglages",
+    "sections": "Sections de la page",
+    "add_section": "Ajouter une section",
+    "no_sections": "Aucune section — ajoutez-en une pour commencer.",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "section_saved": "Section enregistrée.",
+    "section_deleted": "Section supprimée.",
+    "invalid_json": "Contenu JSON invalide — corrigez avant d’enregistrer."
+  }
 }
