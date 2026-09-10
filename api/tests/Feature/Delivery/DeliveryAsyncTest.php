@@ -6,13 +6,13 @@ namespace Tests\Feature\Delivery;
 
 use App\Core\Tenant\Domain\Models\Company;
 use App\Core\Tenant\TenantManager;
-use App\Modules\Delivery\Infrastructure\Jobs\CloseDeliveryRouteJob;
-use App\Modules\Delivery\Infrastructure\Jobs\ExportDeliveryReportJob;
-use App\Modules\Delivery\Infrastructure\Services\DeliveryReportService;
 use App\Modules\Delivery\Domain\Models\Delivery;
 use App\Modules\Delivery\Domain\Models\DeliveryDeadLetter;
 use App\Modules\Delivery\Domain\Models\DeliveryRoute;
 use App\Modules\Delivery\Domain\Models\DeliveryStop;
+use App\Modules\Delivery\Infrastructure\Jobs\CloseDeliveryRouteJob;
+use App\Modules\Delivery\Infrastructure\Jobs\ExportDeliveryReportJob;
+use App\Modules\Delivery\Infrastructure\Services\DeliveryReportService;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\RefreshTenantDatabase;

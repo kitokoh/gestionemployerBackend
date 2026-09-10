@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Delivery\Console\Commands;
 
-use App\Modules\Delivery\Infrastructure\Jobs\ExportDeliveryReportJob;
 use App\Modules\Delivery\Domain\Models\Delivery;
+use App\Modules\Delivery\Infrastructure\Jobs\ExportDeliveryReportJob;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 

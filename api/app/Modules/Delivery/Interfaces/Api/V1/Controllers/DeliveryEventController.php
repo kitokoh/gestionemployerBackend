@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Delivery\Interfaces\Api\V1\Controllers;
 
-use App\Modules\Delivery\Infrastructure\Services\DeliveryEventService;
 use App\Modules\Delivery\Domain\Models\Delivery;
+use App\Modules\Delivery\Infrastructure\Services\DeliveryEventService;
 use App\Modules\Delivery\Infrastructure\Services\DeliveryTrackingShareService;
 use App\Modules\Delivery\Interfaces\Api\V1\Requests\DeliveryEventStoreRequest;
 use App\Modules\Delivery\Interfaces\Api\V1\Resources\DeliveryEventResource;

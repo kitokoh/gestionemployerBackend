@@ -6,12 +6,12 @@ namespace Tests\Feature\EduManager;
 
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Tenant\Domain\Models\Company;
-use App\Modules\EduManager\Infrastructure\Services\AttendanceService;
 use App\Modules\EduManager\Domain\Models\EduAttendanceCorrection;
 use App\Modules\EduManager\Domain\Models\EduAttendanceRecord;
 use App\Modules\EduManager\Domain\Models\EduStudent;
 use App\Modules\EduManager\Domain\Policies\EduAttendanceCorrectionPolicy;
 use App\Modules\EduManager\Domain\Policies\EduAttendanceRecordPolicy;
+use App\Modules\EduManager\Infrastructure\Services\AttendanceService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\DB;

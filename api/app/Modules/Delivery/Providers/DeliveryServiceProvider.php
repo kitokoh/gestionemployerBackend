@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Delivery\Providers;
 
-use App\Modules\Delivery\Infrastructure\Services\DeliveryNotificationService;
 use App\Modules\Delivery\Domain\Contracts\DeliveryAccountingContract;
 use App\Modules\Delivery\Domain\Contracts\DeliveryRepositoryInterface;
 use App\Modules\Delivery\Domain\Contracts\RecipientMessageContract;
@@ -12,6 +11,7 @@ use App\Modules\Delivery\Domain\Contracts\SolutionManifest;
 use App\Modules\Delivery\Domain\Manifests\DeliveryManifest;
 use App\Modules\Delivery\Domain\Models\DeliveryEvent;
 use App\Modules\Delivery\Infrastructure\Repositories\DeliveryRepository;
+use App\Modules\Delivery\Infrastructure\Services\DeliveryNotificationService;
 use App\Modules\Delivery\Infrastructure\Services\LoggingDeliveryAccountingAdapter;
 use App\Modules\Delivery\Infrastructure\Services\LoggingRecipientMessageAdapter;
 use Illuminate\Support\Facades\Event;

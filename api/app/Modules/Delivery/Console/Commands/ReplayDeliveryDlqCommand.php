@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Delivery\Console\Commands;
 
+use App\Modules\Delivery\Domain\Models\DeliveryDeadLetter;
 use App\Modules\Delivery\Infrastructure\Jobs\CloseDeliveryRouteJob;
 use App\Modules\Delivery\Infrastructure\Jobs\ExportDeliveryReportJob;
-use App\Modules\Delivery\Domain\Models\DeliveryDeadLetter;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
