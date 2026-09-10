@@ -27349,6 +27349,20 @@ paths:
         '404':
           $ref: '#/components/responses/Error404'
 
+  /public/catalog/sitemap.xml:
+    get:
+      tags:
+      - Catalog
+      summary: Sitemap des produits publies (BC-28 C-SEO #6888)
+      description: Liste XML des produits PUBLIES de toutes les societes actives (jamais de brouillon), cache court. Route hors groupe tenant.
+      security: []
+      responses:
+        '200':
+          description: Sitemap XML
+          content:
+            application/xml:
+              schema:
+                type: string
   /public/catalog/{companySlug}:
     get:
       tags:

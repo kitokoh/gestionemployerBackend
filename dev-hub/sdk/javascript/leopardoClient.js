@@ -3910,6 +3910,11 @@ export function createLeopardoClient({ baseUrl, token, fetchImpl = globalThis.fe
       return request("GET", "/public/catalog/{companySlug}/products/{productSlug}", options);
     },
 
+    /** Sitemap des produits publies (BC-28 C-SEO #6888) */
+    getPublicCatalogSitemapXml(options = {}) {
+      return request("GET", "/public/catalog/sitemap.xml", options);
+    },
+
     /** Vitrine publique d'un tenant (BC-27 #6867) */
     getPublicVitrineBySlug(options = {}) {
       return request("GET", "/public/vitrine/{slug}", options);
