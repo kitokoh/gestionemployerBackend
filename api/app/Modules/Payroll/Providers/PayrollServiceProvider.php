@@ -25,8 +25,15 @@ class PayrollServiceProvider extends ServiceProvider
         // (BC-23, #6850) : l'hôte ToolRegistry enrichit l'entrée
         // ai_tool_registry homonyme (sensibilité read, BC propriétaire,
         // schémas) au boot.
+        // Garde d'idempotence (#6947) : le registre est un collecteur
+        // statique qui survit aux re-boots applicatifs (PHPUnit : un
+        // process = N boots) → sans la garde, le 2e boot lève
+        // « AIToolDefinition dupliquée » et fait tomber la suite Feature
+        // entière (même pattern que HR/Absence/Notification).
         foreach (PayrollReadToolCatalog::definitions() as $definition) {
-            AIToolDefinitionRegistry::register($definition);
+            if (! AIToolDefinitionRegistry::has($definition->name)) {
+                AIToolDefinitionRegistry::register($definition);
+            }
         }
     }
 }
