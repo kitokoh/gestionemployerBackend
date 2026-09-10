@@ -4766,7 +4766,8 @@
     "travelAgency": "Seyahat acentesi",
     "surveyStats": "Çözüm anketleri",
     "solutionSurveys": "Çözüm anketleri",
-    "travel": "Seyahat acentesi"
+    "travel": "Seyahat acentesi",
+    "showcase": "Vitrin sitesi"
   },
   "companydetailCoreModuleAlwaysActive": "Çekirdek modül her zaman aktif",
   "smartAttendanceSessionsTitle": "Akıllı yoklama oturumları",
@@ -6148,5 +6149,37 @@
   "fuelPumpistSubmit": "Okumayı kaydet",
   "crmAccounts": "CRM hesapları",
   "crmContacts": "CRM kişileri",
-  "crmLeads": "CRM potansiyel müşterileri"
+  "crmLeads": "CRM potansiyel müşterileri",
+  "showcase": {
+    "title": "Şirket vitrini",
+    "subtitle": "Herkese açık sitenizi tek tıkla oluşturun ve yayınlayın.",
+    "published": "Yayında",
+    "draft": "Taslak",
+    "publish": "Yayınla",
+    "unpublish": "Yayından kaldır",
+    "empty": "Henüz vitrin yok. Genel sitenizi oluşturmak için oluşturun.",
+    "create": "Vitrinimi oluştur",
+    "created": "Vitrin oluşturuldu.",
+    "preview_link": "Özel önizleme bağlantısı",
+    "generate_preview": "Önizleme bağlantısı oluştur",
+    "preview_generated": "Önizleme bağlantısı oluşturuldu.",
+    "open_preview": "Önizlemeyi aç",
+    "settings": "Görünüm ve yasal",
+    "settings_saved": "Ayarlar kaydedildi.",
+    "theme": "Tema",
+    "brand_name": "Marka adı",
+    "tagline": "Slogan",
+    "legal_notice": "Yasal bilgiler",
+    "legal_privacy": "Gizlilik politikası",
+    "save_settings": "Ayarları kaydet",
+    "sections": "Sayfa bölümleri",
+    "add_section": "Bölüm ekle",
+    "no_sections": "Bölüm yok — başlamak için ekleyin.",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "section_saved": "Bölüm kaydedildi.",
+    "section_deleted": "Bölüm silindi.",
+    "invalid_json": "Geçersiz JSON içeriği — kaydetmeden önce düzeltin.",
+    "section_type": "Bölüm türü"
+  }
 }

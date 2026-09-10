@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property int $showcase_id
  * @property ShowcaseSectionType $type
  * @property array<string, mixed> $content
+ * @property array<string, mixed>|null $content_i18n
  * @property int $sort_order
  * @property int $schema_version
  * @property Carbon|null $created_at
@@ -46,6 +47,7 @@ class CompanyShowcaseSection extends Model
         'showcase_id',
         'type',
         'content',
+        'content_i18n',
         'sort_order',
         'schema_version',
     ];
@@ -58,6 +60,7 @@ class CompanyShowcaseSection extends Model
         return [
             'type' => ShowcaseSectionType::class,
             'content' => 'array',
+            'content_i18n' => 'array',
             'sort_order' => 'integer',
             'schema_version' => 'integer',
         ];

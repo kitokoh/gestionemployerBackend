@@ -15,6 +15,9 @@ use PHPUnit\Framework\TestCase;
  * Schema par type v1 (document valide + versionné) et le validator accepte
  * les contenus conformes / rejette les contenus invalides (champ manquant,
  * clé inconnue, borne dépassée, mauvais type, type inconnu).
+ *
+ * Depuis C-VITRINE (#6891) le type `products` (catalogue BC-28) fait partie
+ * des types v1 : le registre le documente et les FormRequests l'acceptent.
  */
 final class ShowcaseSectionSchemaTest extends TestCase
 {
@@ -30,7 +33,7 @@ final class ShowcaseSectionSchemaTest extends TestCase
     {
         $schemas = ShowcaseSectionSchemaRegistry::schemas();
 
-        $this->assertSame(['hero', 'features', 'gallery', 'testimonials', 'contact', 'footer'], array_keys($schemas));
+        $this->assertSame(['hero', 'features', 'gallery', 'testimonials', 'products', 'contact', 'footer'], array_keys($schemas));
         $this->assertSame(ShowcaseSectionType::v1(), ShowcaseSectionSchemaRegistry::knownTypes());
         $this->assertSame(1, ShowcaseSectionSchemaRegistry::SCHEMA_VERSION);
 
@@ -41,8 +44,10 @@ final class ShowcaseSectionSchemaTest extends TestCase
             $this->assertIsArray(ShowcaseSectionSchemaRegistry::schemaFor($type));
         }
 
-        $this->assertNull(ShowcaseSectionSchemaRegistry::schemaFor('products')); // BC-28 #6891, hors v1
-        $this->assertFalse(ShowcaseSectionSchemaRegistry::isKnownType('products'));
+        // C-VITRINE #6891 : le type `products` (catalogue BC-28) fait partie
+        // de la v1 — schéma déclaré et type accepté par la validation.
+        $this->assertIsArray(ShowcaseSectionSchemaRegistry::schemaFor('products'));
+        $this->assertTrue(ShowcaseSectionSchemaRegistry::isKnownType('products'));
     }
 
     /**
@@ -110,7 +115,7 @@ final class ShowcaseSectionSchemaTest extends TestCase
         yield 'contact sans email' => ['contact', ['phone' => '123'], 'content.email'];
         yield 'testimonials sans auteur' => ['testimonials', ['items' => [['quote' => 'q']]], 'content.items.0.author'];
         yield 'footer lien sans label' => ['footer', ['links' => [['url' => 'https://x.fr']]], 'content.links.0.label'];
-        yield 'type inconnu' => ['products', [], 'type'];
+        yield 'type inconnu' => ['not_a_section', [], 'type'];
     }
 
     /**
