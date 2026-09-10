@@ -3148,6 +3148,10 @@ class LeopardoClient:
         """Fiche publique d'un produit publie (sans auth)"""
         return self.request("GET", "/public/catalog/{companySlug}/products/{productSlug}", **kwargs)
 
+    def get_public_catalog_sitemap_xml(self, **kwargs):
+        """Sitemap des produits publies (BC-28 C-SEO #6888)"""
+        return self.request("GET", "/public/catalog/sitemap.xml", **kwargs)
+
     def get_public_vitrine_by_slug(self, **kwargs):
         """Vitrine publique d'un tenant (BC-27 #6867)"""
         return self.request("GET", "/public/vitrine/{slug}", **kwargs)
