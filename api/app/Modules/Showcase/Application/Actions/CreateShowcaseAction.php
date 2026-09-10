@@ -7,6 +7,7 @@ namespace App\Modules\Showcase\Application\Actions;
 use App\Core\Tenant\Domain\Models\Company;
 use App\Modules\Showcase\Domain\Enums\CompanyShowcaseStatus;
 use App\Modules\Showcase\Domain\Models\CompanyShowcase;
+use App\Modules\Showcase\Domain\Support\ShowcaseThemeRegistry;
 
 /**
  * BC-27 SHOWCASE (#6866/#6870) — création 1-clic de la vitrine du tenant
@@ -40,7 +41,7 @@ final class CreateShowcaseAction
             'company_id' => $company->id,
             'slug' => $company->slug,
             'status' => CompanyShowcaseStatus::Draft,
-            'theme' => 'default',
+            'theme' => ShowcaseThemeRegistry::DEFAULT_THEME,
         ]);
 
         return $showcase;

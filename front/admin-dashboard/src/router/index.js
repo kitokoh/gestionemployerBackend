@@ -380,6 +380,15 @@ const routes = [
         }
       },
       {
+        path: '/showcase',
+        name: 'showcase-editor',
+        component: () => import('@/views/showcase/ShowcaseEditorView.vue'),
+        meta: {
+          title: 'navigation.showcase',
+          icon: 'GlobeAltIcon'
+        }
+      },
+      {
         path: '/settings',
         name: 'settings',
         component: () => import('@/views/settings/SettingsView.vue'),

@@ -3080,6 +3080,7 @@ trait CreatesMvpSchema
                 $table->unsignedBigInteger('showcase_id');
                 $table->string('type', 40);
                 $table->json('content')->nullable();
+                $table->json('content_i18n')->nullable();
                 $table->unsignedInteger('sort_order')->default(0);
                 $table->unsignedSmallInteger('schema_version')->default(1);
                 $table->timestamps();

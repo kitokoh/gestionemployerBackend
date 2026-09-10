@@ -130,6 +130,30 @@ final class ShowcaseSectionSchemaRegistry
                 ],
                 'required' => ['items'],
             ],
+            ShowcaseSectionType::Products->value => [
+                'title' => 'products',
+                'type' => 'object',
+                'description' => 'Sélection de produits publiés du catalogue B2B du tenant (BC-28) — grille + lien fiche produit.',
+                'additionalProperties' => false,
+                'properties' => [
+                    'title' => $string(120, 'Titre de la section.'),
+                    'category_slug' => $string(120, 'Slug de catégorie publique (optionnel — filtre la grille).'),
+                    'product_slugs' => [
+                        'type' => 'array',
+                        'maxItems' => 24,
+                        'description' => 'Sélection explicite de produits publiés (slugs). Vide = tous les produits publiés (limités par `limit`).',
+                        'items' => [
+                            'type' => 'string',
+                            'maxLength' => 160,
+                            'description' => 'Slug d\'un produit publié.',
+                        ],
+                    ],
+                    'limit' => [
+                        'type' => 'integer',
+                        'description' => 'Nombre maximum de produits affichés (1-24, défaut 6).',
+                    ],
+                ],
+            ],
             ShowcaseSectionType::Contact->value => [
                 'title' => 'contact',
                 'type' => 'object',
