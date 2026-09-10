@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\HR\Interfaces\Api\V1\Requests;
+namespace App\Modules\Planning\Interfaces\Api\V1\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateScheduleRequest extends FormRequest
+class StoreScheduleRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,9 +17,9 @@ class UpdateScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['sometimes', 'string', 'max:100'],
-            'start_time' => ['sometimes', 'date_format:H:i'],
-            'end_time' => ['sometimes', 'date_format:H:i'],
+            'name' => ['required', 'string', 'max:100'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i'],
             'break_minutes' => ['nullable', 'integer', 'min:0', 'max:480'],
             'work_days' => ['nullable', 'array'],
             'work_days.*' => ['integer', 'between:1,7'],
