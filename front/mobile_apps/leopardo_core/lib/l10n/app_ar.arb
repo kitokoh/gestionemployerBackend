@@ -62,6 +62,7 @@
   "authTwoFactorRequired": "رمز التحقق الثنائي مطلوب.",
   "authDemoAccess": "وصول تجريبي",
   "authTogglePasswordVisibility": "إظهار أو إخفاء كلمة المرور",
+  "authPlatformAdminOnly": "الوصول مقتصر على مسؤولي المنصة.",
   "commonLanguageLabel": "اللغة",
   "commonLanguageVariantsFrFr": "الفرنسية (فرنسا)",
   "commonLanguageVariantsFrBe": "الفرنسية (بلجيكا)",

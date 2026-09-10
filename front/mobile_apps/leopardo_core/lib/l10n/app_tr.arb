@@ -62,6 +62,7 @@
   "authTwoFactorRequired": "2FA kodu gereklidir.",
   "authDemoAccess": "Demo erisimi",
   "authTogglePasswordVisibility": "Sifreyi goster veya gizle",
+  "authPlatformAdminOnly": "Erişim yalnızca platform yöneticilerine açıktır.",
   "commonLanguageLabel": "Dil",
   "commonLanguageVariantsFrFr": "Fransizca (Fransa)",
   "commonLanguageVariantsFrBe": "Fransizca (Belcika)",

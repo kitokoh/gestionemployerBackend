@@ -70,6 +70,7 @@ return [
                 'visibility' => 'Show or hide password',
             ],
         ],
+        'platform_admin_only' => 'Access is restricted to platform administrators.',
     ],
     'common' => [
         'language' => [

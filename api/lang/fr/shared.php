@@ -70,6 +70,7 @@ return [
                 'visibility' => 'Afficher ou masquer le mot de passe',
             ],
         ],
+        'platform_admin_only' => 'Accès réservé aux administrateurs de la plateforme.',
     ],
     'common' => [
         'language' => [

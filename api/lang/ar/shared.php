@@ -70,6 +70,7 @@ return [
                 'visibility' => 'إظهار أو إخفاء كلمة المرور',
             ],
         ],
+        'platform_admin_only' => 'الوصول مقتصر على مسؤولي المنصة.',
     ],
     'common' => [
         'language' => [
