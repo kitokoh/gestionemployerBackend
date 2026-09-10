@@ -26,7 +26,13 @@ class PayrollServiceProvider extends ServiceProvider
         // ai_tool_registry homonyme (sensibilité read, BC propriétaire,
         // schémas) au boot.
         foreach (PayrollReadToolCatalog::definitions() as $definition) {
-            AIToolDefinitionRegistry::register($definition);
+            // Garde d'idempotence (#6947) : AIToolDefinitionRegistry est un
+            // collecteur statique re-booté à chaque requête (PHP-FPM) et à
+            // chaque test — sans elle, le 2e boot du process lève
+            // « AIToolDefinition dupliquée » (cf. paratest).
+            if (! AIToolDefinitionRegistry::has($definition->name)) {
+                AIToolDefinitionRegistry::register($definition);
+            }
         }
     }
 }

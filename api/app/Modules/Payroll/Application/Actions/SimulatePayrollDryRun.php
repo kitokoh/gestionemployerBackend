@@ -53,7 +53,7 @@ class SimulatePayrollDryRun
     ) {}
 
     /**
-     * @param  array<int|string, mixed>|null  $slabsOverride
+     * @param  array<int|string, array{min: float|string, max?: float|string|null, rate: float|string, fixed_deduction?: float|string}>|null  $slabsOverride
      * @return array<string, mixed>
      */
     public function execute(
@@ -80,12 +80,13 @@ class SimulatePayrollDryRun
 
         // Override dry-run du bareme (non persistant).
         if ($hasSlabsOverride) {
-            $slabs = array_map(static fn (array $slab): array => [
+            /** @var array<int, array{min: float, max: float|null, rate: float, fixed_deduction: float}> $slabs */
+            $slabs = array_values(array_map(static fn (array $slab): array => [
                 'min' => (float) $slab['min'],
                 'max' => ($slab['max'] ?? null) !== null ? (float) $slab['max'] : null,
                 'rate' => (float) $slab['rate'],
                 'fixed_deduction' => (float) ($slab['fixed_deduction'] ?? 0),
-            ], $slabsOverride);
+            ], $slabsOverride));
 
             $rules->withTaxSlabs($slabs);
         }

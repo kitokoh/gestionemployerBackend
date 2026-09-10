@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Catalog\Domain\Support;
+namespace App\Modules\Catalog\Infrastructure\Support;
 
 use Illuminate\Support\Facades\Cache;
 
 /**
  * Cache public du catalogue B2B (BC-28 CATALOG, C-PUBLIC #6882).
+ *
+ * Infrastructure (et non Domain) : l'invalidation s'appuie sur la facade
+ * `Cache` (Redis) — interdite en Domain par la garde de pureté de couches
+ * (#6568). Les clés restent exposées aux Interfaces qui les lisent.
  *
  * Deux clés par tenant (UUID company_id, jamais de slug mutable) :
  *   - snapshot : liste publique (company + catégories + produits publiés) ;

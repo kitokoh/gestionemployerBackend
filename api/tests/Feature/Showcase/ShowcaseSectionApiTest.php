@@ -78,6 +78,9 @@ class ShowcaseSectionApiTest extends TestCase
         });
     }
 
+    /**
+     * @return array<string, string>
+     */
     private function heroContent(): array
     {
         return ['heading' => 'Acme Industries'];

@@ -6,7 +6,7 @@ namespace Tests\Feature\Catalog;
 
 use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Tenant\Domain\Models\Company;
-use App\Modules\Catalog\Domain\Support\CatalogPublicCache;
+use App\Modules\Catalog\Infrastructure\Support\CatalogPublicCache;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\Sanctum;
 use Tests\RefreshTenantDatabase;

@@ -8,7 +8,7 @@ use App\Core\Auth\Domain\Models\Employee;
 use App\Http\Controllers\Controller;
 use App\Modules\Catalog\Domain\Enums\CatalogProductStatus;
 use App\Modules\Catalog\Domain\Models\CatalogProduct;
-use App\Modules\Catalog\Domain\Support\CatalogPublicCache;
+use App\Modules\Catalog\Infrastructure\Support\CatalogPublicCache;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\StoreCatalogProductRequest;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\UpdateCatalogProductRequest;
 use Illuminate\Http\JsonResponse;
