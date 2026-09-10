@@ -79,7 +79,9 @@ class CatalogProductController extends Controller
             ),
             'description' => $request->input('description'),
             'price_minor' => $request->integer('price_minor'),
-            'currency' => $request->input('currency'),
+            // C-CURRENCY #6886 : devise par défaut = devise du tenant quand
+            // le formulaire n'en fournit pas (spec §8 « par produit ou défaut tenant »).
+            'currency' => $request->input('currency') ?? (string) currentCompany()->currency,
             'unit' => $request->input('unit', 'piece'),
             'status' => $request->input('status', CatalogProductStatus::Draft->value),
             'meta' => $request->input('meta'),
@@ -126,7 +128,7 @@ class CatalogProductController extends Controller
             'category_id' => $request->input('category_id'),
             'description' => $request->input('description'),
             'price_minor' => $request->integer('price_minor'),
-            'currency' => $request->input('currency'),
+            'currency' => $request->input('currency') ?? $product->currency,
             'unit' => $request->input('unit') ?? $product->unit,
             'status' => $request->input('status') ?? $product->status->value,
             'meta' => $request->input('meta'),
