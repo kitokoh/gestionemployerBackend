@@ -47,6 +47,29 @@ Voir `docs/REFERENTIEL_PRODUIT/STATUTS.md` pour l'association statut ↔ couleur
 | Bordure | `#E2E8F0` | `AppColors.border` | `border-slate-200` |
 | Bordure (sombre) | `#334155` | `AppColors.borderDark` | `border-slate-700` |
 
+## Échelle cyan — surface secondaire / liens (décision 2026-09-09, issue #7129)
+
+> Référence actée : **palette cyan par défaut de Tailwind**, identique sur la vitrine web
+> (`front/web/tailwind.config.ts`) et l'admin (`front/admin-dashboard/tailwind.config.js`).
+> Les valeurs 50/100/200/300 du web (cyan custom désaturé) ont été alignées sur cette
+> référence le 2026-09-09. Tokens Flutter déclarés dans `AppColors` (`cyan50`…`cyan950`)
+> pour la parité L.07 (garde check-design-token-sync.py) — usage mobile si besoin, sinon
+> échelle réservée web/admin.
+
+| step | Hex (web & admin) | Usage typique |
+|---|---|---|
+| 50 | `#ecfeff` | fonds de section cyan très clair |
+| 100 | `#cffafe` | fonds de chips / badges cyan |
+| 200 | `#a5f3fc` | bordures douces |
+| 300 | `#67e8f9` | accents sur fond clair |
+| 400 | `#22d3ee` | accents |
+| 500 | `#06b6d4` | cyan primaire (action secondaire) |
+| 600 | `#0891b2` | hover / actif |
+| 700 | `#0e7490` | texte sur fond clair |
+| 800 | `#155e75` | texte / fonds sombres |
+| 900 | `#164e63` | fonds sombres |
+| 950 | `#083344` | fonds très sombres |
+
 ## Règles d'usage
 
 - **Jamais de couleur hardcodée** dans un écran ou une vue. Toujours passer par les tokens.

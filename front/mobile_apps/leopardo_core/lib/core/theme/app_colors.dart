@@ -215,4 +215,22 @@ class AppColors {
         return textMuted;
     }
   }
+  // ─── Échelle cyan — parité web/admin (issue #7129, L.07) ────────────────
+  // Référence : palette cyan par défaut de Tailwind, alignée sur
+  // tailwind.config.ts (web) et tailwind.config.js (admin). Déclarée ici pour
+  // que COULEURS.md, AppColors et les configs Tailwind restent synchronisés
+  // (garde check-design-token-sync.py). Usage mobile : surfaces secondaires /
+  // liens si besoin — sinon échelle réservée web/admin.
+  static const Color cyan50 = Color(0xFFECFEFF);
+  static const Color cyan100 = Color(0xFFCFFAFE);
+  static const Color cyan200 = Color(0xFFA5F3FC);
+  static const Color cyan300 = Color(0xFF67E8F9);
+  static const Color cyan400 = Color(0xFF22D3EE);
+  static const Color cyan500 = Color(0xFF06B6D4);
+  static const Color cyan600 = Color(0xFF0891B2);
+  static const Color cyan700 = Color(0xFF0E7490);
+  static const Color cyan800 = Color(0xFF155E75);
+  static const Color cyan900 = Color(0xFF164E63);
+  static const Color cyan950 = Color(0xFF083344);
+
 }
