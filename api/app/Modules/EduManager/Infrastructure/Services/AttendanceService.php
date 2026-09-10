@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\EduManager\Application\Services;
+namespace App\Modules\EduManager\Infrastructure\Services;
 
 use App\Modules\EduManager\Domain\Models\EduAttendanceCorrection;
 use App\Modules\EduManager\Domain\Models\EduAttendanceRecord;

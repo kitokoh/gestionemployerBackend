@@ -6,8 +6,8 @@ namespace App\Modules\Delivery\Interfaces\Api\V1\Controllers;
 
 use App\Core\Auth\Domain\Models\Employee;
 use App\Modules\Delivery\Application\Actions\SummarizeDeliveryCodSettlementsAction;
-use App\Modules\Delivery\Application\Services\DeliveryCodSettlementService;
 use App\Modules\Delivery\Domain\Models\DeliveryCodSettlement;
+use App\Modules\Delivery\Infrastructure\Services\DeliveryCodSettlementService;
 use App\Modules\Delivery\Interfaces\Api\V1\Requests\DeliverySettlementCollectRequest;
 use App\Modules\Delivery\Interfaces\Api\V1\Resources\DeliveryCodSettlementResource;
 use Illuminate\Http\JsonResponse;
