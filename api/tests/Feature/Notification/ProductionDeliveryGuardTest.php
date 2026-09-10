@@ -10,9 +10,9 @@ class ProductionDeliveryGuardTest extends TestCase
     protected function tearDown(): void
     {
         // Restore the test environment no matter what a test mutated.
-        config(['app.env' => env('APP_ENV', 'testing')]);
-        config(['mail.default' => env('MAIL_MAILER', 'log')]);
-        config(['communication.providers.whatsapp' => env('COMMUNICATION_WHATSAPP_PROVIDER', 'audit')]);
+        config(['app.env' => 'testing']);
+        config(['mail.default' => 'log']);
+        config(['communication.providers.whatsapp' => 'audit']);
         parent::tearDown();
     }
 
@@ -185,8 +185,8 @@ class ProductionDeliveryGuardTest extends TestCase
                 [ProductionDeliveryGuard::ISSUE_MAILER_LOG]
             );
         } finally {
-            config(['app.env' => env('APP_ENV', 'testing')]);
-            config(['mail.default' => env('MAIL_MAILER', 'log')]);
+            config(['app.env' => 'testing']);
+            config(['mail.default' => 'log']);
         }
     }
 
