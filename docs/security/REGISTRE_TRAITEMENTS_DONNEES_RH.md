@@ -123,3 +123,29 @@ C-LEAD #6884, volet conformité C-RGPD #6889.
 |---|---|---|---|---|---|---|
 | Demandes de devis B2B (`catalog_inquiries`) | Repondre a une demande de devis / contact B2B | Societe acheteur, email, message, produit + quantite, horodatage consentement, IP hashee (jamais en clair) | Acheteurs professionnels (visiteurs du catalogue public) | Consentement explicite (checkbox, horodate `consent_at`) + interet legitime commercial | 90 jours (`retention_until`, purge `catalog:purge-expired-inquiries`) | Minimisation (aucun champ optionnel superflu), consentement horodate, IP hash SHA-256, isolation tenant (company_id), acces back-office reserve principal/rh/manager, droit d'effacement (DELETE `catalog/inquiries/{id}`), propagation effacement aux leads CRM BC-11 (`catalog.inquiry_erased`), aucune donnee acheteur exposee publiquement (accuse seul) |
 | Leads BC-11 issus du catalogue (source `b2b_catalog`) | Pipeline commercial du tenant (qualification, devis) | Societe, email, notes (produit concerne + message), source | Prospects du tenant | Contrat / interet legitime ; consentement du formulaire source | Alignee sur la demande source (effacee avec elle) | Créés uniquement par contrat evenementiel depuis Catalog ; effaces en cascade a la demande (`EraseCrmLeadsOnCatalogInquiryErased`) |
+
+## 11. Vitrine publique d'entreprise (BC-27 SHOWCASE, issues #6867/#6875)
+
+- **Traitement** : publication par le tenant d'un site vitrine (sections
+  typées, catalogue produits optionnel) rendu par l'API publique
+  `/public/vitrine/{slug}` ; aucune collecte de donnée visiteur.
+- **Données exposées** : uniquement du contenu éditorial publié par le
+  tenant (textes, visuels, produits **publiés** du catalogue B2B) — jamais
+  de donnée RH, ni champ interne (DTO public allowlisté, test de non-fuite
+  `ShowcasePublicApiTest`).
+- **Base légale** : intérêt légitime (communication de l'entreprise) —
+  contenu publié à l'initiative du tenant.
+- **Cookies / traceurs** : **aucun cookie tiers, aucun traceur** par défaut ;
+  la politique exposée au public (`cookies.third_party = false`) est
+  déclarative et alignée sur le protocole P05 §5. Aucun consentement
+  nécessaire en l'absence de traceur.
+- **Aperçus** : le jeton d'aperçu (`?token=`) sert un brouillon en
+  `X-Robots-Tag: noindex, nofollow` — jamais indexé, jamais mis en cache.
+- **Droits des personnes** : sans collecte visiteur, aucun droit à exercer
+  côté vitrine ; le formulaire de demande de devis (BC-28, §10) reste le
+  canal de contact et porte son propre consentement.
+- **Conservation** : contenu de vitrine conservé tant que le tenant le
+  maintient publié ; l'audit des transitions (publish/unpublish/settings)
+  est journalisé (`audit_logs`, action `showcase.*`).
+- **Sous-traitants** : hébergement du tenant (Render/Vercel selon
+  l'environnement) — cf. §7.

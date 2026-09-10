@@ -4760,7 +4760,8 @@
     "travelAgency": "Travel agency",
     "surveyStats": "Solution surveys",
     "solutionSurveys": "Solution surveys",
-    "travel": "Travel Agency"
+    "travel": "Travel Agency",
+    "showcase": "Showcase site"
   },
   "companydetailCoreModuleAlwaysActive": "Core module always active",
   "smartAttendanceSessionsTitle": "Smart Attendance sessions",
@@ -6009,5 +6010,36 @@
   "fuelPumpistSubmit": "Submit reading",
   "crmAccounts": "CRM accounts",
   "crmContacts": "CRM contacts",
-  "crmLeads": "CRM leads"
+  "crmLeads": "CRM leads",
+  "showcase": {
+    "title": "Company showcase",
+    "subtitle": "Build and publish your public website in one click.",
+    "published": "Published",
+    "draft": "Draft",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "empty": "No showcase yet. Create it to build your public site.",
+    "create": "Create my showcase",
+    "created": "Showcase created.",
+    "preview_link": "Private preview link",
+    "generate_preview": "Generate preview link",
+    "preview_generated": "Preview link generated.",
+    "open_preview": "Open preview",
+    "settings": "Appearance and legal",
+    "settings_saved": "Settings saved.",
+    "theme": "Theme",
+    "brand_name": "Brand name",
+    "tagline": "Tagline",
+    "legal_notice": "Legal notice",
+    "legal_privacy": "Privacy policy",
+    "save_settings": "Save settings",
+    "sections": "Page sections",
+    "add_section": "Add a section",
+    "no_sections": "No section yet — add one to start.",
+    "save": "Save",
+    "delete": "Delete",
+    "section_saved": "Section saved.",
+    "section_deleted": "Section deleted.",
+    "invalid_json": "Invalid JSON content — fix it before saving."
+  }
 }
