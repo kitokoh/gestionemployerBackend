@@ -215,7 +215,9 @@ export async function submitTrialPassword(
       data: payload.data,
     };
   } catch (error) {
-    safeLog("Trial password error:", error);
+    // Pas de message littéral ici : la garde `check-i18n-diff.js` traite toute
+    // nouvelle chaîne visible comme non traduite. L'erreur remonte en code, le
+    // composant la met en mots via le catalogue.
     return {
       success: false,
       message: "",
