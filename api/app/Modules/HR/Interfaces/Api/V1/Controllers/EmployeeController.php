@@ -168,8 +168,13 @@ class EmployeeController extends Controller
             'salary_base',
             'hourly_rate',
             'preferred_language',
-            // #6546 — extra_data n'est plus exposé sur la liste /employees
-            // (clés RGPD sensibles : national_id, tax_identifier, blood_group).
+            'extra_data',
+            // #6546/#7028 — extra_data présent sur la liste MAIS masqué par
+            // EmployeeResource::maskedExtraData() : les clés RGPD sensibles
+            // (national_id, tax_identifier, blood_group) sont retirées pour
+            // tout viewer ; seules les clés non sensibles (department,
+            // job_title, work_location, education_level…) sont exposées
+            // (contrat EmployeeExtraDataMaskingTest).
         ];
 
         return array_values(array_filter(

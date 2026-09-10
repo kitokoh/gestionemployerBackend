@@ -4,6 +4,11 @@ Derniere mise a jour : 2026-09-05 (audit PM architecture — liste des apps mobi
 
 Ce fichier doit etre lu au debut de chaque nouvelle session agent. Il doit aussi etre mis a jour a chaque push ou merge vers `main`, comme le `CHANGELOG.md`, des qu'une lecon operationnelle peut eviter de perdre du temps plus tard.
 
+> Bibliothèque transversale des pièges connus (vue rapide) : `docs/GESTION_PROJET/BIBLIOTHEQUE_ERREURS.md`.
+> Toute nouvelle leçon opérationnelle = mise à jour AGENTS.md **et**, si c'est un piège
+> rejouable, une ligne dans la bibliothèque des erreurs. Flux pas-à-pas :
+> `docs/GOUVERNANCE/RETEX_FLUX.md` (constat → issue [LECON] → leçon, protocole P04).
+
 > **NOUVEL AGENT ? Commence par lire `dev-hub/prompts/00_AGENT_QUICK_CARD.md` (2 min) pour une carte de reference rapide. Ce fichier AGENTS.md est le guide complet.**
 
 ## ⚡ Spec-Driven Development — Spec Kit (NOUVEAU 2026-08-14)
@@ -206,6 +211,18 @@ un APP_VERSION sur un tier qui n'en porte pas. Rattrapage : `deploy-main-catchup
   (« platform_admin app must not expose forbidden route /attendance ») → Mobile
   Apps CI rouge sur main. Garde : `Get-DartContent $root @('*mock*.dart')`.
   Tout nouveau fichier de mock doit suivre le pattern `*mock*.dart`.
+- **Lecon 2026-09-08 (#6590)** : les fichiers generes mobile NE SONT PLUS
+  COMMITES (`.gitignore` racine : `*.g.dart`, `*.freezed.dart`,
+  `**/lib/l10n/generated/`) — regeneres en CI. Tout job qui analyse, teste ou
+  build une app consommant `leopardo_core` doit d'abord regenerer dans
+  `front/mobile_apps/leopardo_core` : `flutter pub get && flutter gen-l10n &&
+  dart run build_runner build --delete-conflicting-outputs` (le codegen drift
+  + json_serializable exige les dev_dependencies du package core resolues —
+  un `pub get` dans le dossier core est requis, celui de l'app ne suffit
+  pas). La garde ARB l10n (#4762) tourne desormais APRES `flutter gen-l10n`
+  dans le job `flutter-analyze` (projet leopardo_core) — plus dans le job
+  guard (checkout brut sans generes). Tout ajout de cle ARB sans regenerer
+  reste capture a la compile (#4762) ; ne jamais re-commiter un genere.
 
 - **Lecon 2026-08-17 (audit #4868)** : le check externe « Vercel » echoue sur TOUTES les PRs web quand le quota gratuit de deploiements est epuise (`api-deployments-free-per-day`, ~100/jour, famille #3765/#3766). C'est un echec de QUOTA, pas de build — et le check n'est PAS requis (protection de branche : 5 checks requis ; aucun workflow du repo n'attend le status Vercel). Ne pas traiter le rouge Vercel comme bloquant : merger sur la base des checks requis (meme regle que « Workers Builds: gestionemploye », #4216).
 - **Lecon 2026-08-16 (swe-qa-360)** : sous rafale de pushes concurrents (300+
@@ -303,6 +320,14 @@ pour les résoudre au checkout.
 > deplacee vers `docs/ops/STRATEGIE_CI_RAPIDE.md` (issue #6698 — desengorgement d'AGENTS.md).
 
 ## Pieges connus
+
+### 2026-09-08 - Merge lane, garde PA2-OPS-008, pureté des couches Application, mergeability GitHub
+
+- **Garde PA2-OPS-008 BLoquante (nouvelle) : toute PR de code (hors `docs:`/`chore:`) DOIT porter `Closes #N` / `Fixes #N` / `Resolves #N` dans le titre ou le body** (`dev-hub/tools/check-pr-closes-issue.sh`). Une PR « Part of #N » seule est rouge → pour une tranche d'une campagne (ex. #6569, #6968) : **créer une sous-issue de tranche** et mettre `Closes #<sous-issue>` dans le body (précédent : sous-issue #7004 pour la tranche PlatformUsersController de #6569, PR #7002). Les PRs payroll « Part of #6968 » (#6976, #6980…) sont bloquées par cette garde tant qu'elles ne closent rien.
+- **Pureté des couches : les facades Laravel (`use Illuminate\Support\Facades\DB`) sont INTERDITES dans `Application/`** (`check-layer-purity.sh`, issue #6568) — les `Generate*ReportAction` historiques de Platform sont allowlistés, les nouveaux fichiers ne le sont pas. Pour de l'accès données depuis une Action Application : **déléguer à un service `Infrastructure/Services`** (pattern `ProvisionCompany` → `CompanyProvisioningService`, ADR-0020 ; précédent PR #7002) ou utiliser les modèles Eloquent directement (précédents Delivery/Recruitment).
+- **Mergeability GitHub stale sur gros diffs** : une PR peut afficher « merge conflicts » / « not mergeable » alors que `git merge` local est propre (constaté #6983, #6998, #7003, #6955 — diffs énormes ou CHANGELOG) → **fusionner `origin/main` dans la branche et pousser** force le recalcul. Après CHAQUE merge dans main, toute PR ouverte touchant le haut de `CHANGELOG.md` devient `dirty` — la réaligner avant de merger.
+- **Garde « Check unique issue claim per PR » cassée** (`dev-hub/tools/check-issue-claim-unique.sh`) : `gh: Resource not accessible by integration (HTTP 403)` puis `AttributeError: 'str' object has no attribute 'get'` — échoue sur TOUTES les PRs. Non bloquante pour le merge (les 4 checks requis sont PHPStan Strict, Module Structure Validator, Frontend ESLint+TS, actionlint) mais rend « PR Issue Guard » rouge : à corriger dans l'outillage (permissions GITHUB_TOKEN + parsing).
+- **Protection main en `strict`** : 4 checks requis + branche à jour exigée → après chaque merge dans main, les PRs `behind` doivent être mises à jour (update-branch API parfois 404 → fusion locale + push) puis repassent un cycle CI complet. Un « merge sweep » périodique (merge auto des PRs clean + 4 checks verts + inactives ≥ 5 min) évite les heures d'attente.
 
 ### 2026-05-14 - Integration branche Devin Plan 14
 
