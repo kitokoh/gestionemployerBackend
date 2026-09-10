@@ -1,5 +1,24 @@
 name: Desktop - Build & Distribute (pilote)
 
+# Chaîne desktop Leopardo — protocole P06, tranches verticales (registry docs/desktop/README.md).
+# Build du client desktop par BC vertical, à la demande :
+#   - Windows (.exe) / macOS (.app), release ;
+#   - garde API_BASE_URL (#4524) : jamais de build sans volet API explicite ;
+#   - packaging zip + SHA-256 ;
+#   - canal dev : Release GitHub `desktop-<app>-dev` (NON SIGNÉE, marquée pré-release) ;
+#   - artefact de run (14 j) pour les pilotes.
+# Aucune distribution publique (P06 / #3257) : la signature/notarisation est une décision PM
+# distincte, par tranche.
+#
+# Pipeline de distribution (protocole P06 §3-§7, issue #7056) : build → smoke desktop →
+# install-test → publication canal fermé. Les jobs `desktop-smoke` et `install-test` sont
+# des gardes NON BLOQUANTES au démarrage (`continue-on-error`) — promus en gate dur
+# (retrait de `continue-on-error` et du `always()` de `publish-pilot`) après le premier run
+# pilote vert sur les deux OS (P06 §5).
+#
+# Aucun lien public : l'artefact est déposé dans une GitHub Release `--prerelease`
+# du canal fermé (aucune promesse vitrine — #3257 / P03).
+
 on:
   workflow_dispatch:
     inputs:
@@ -28,81 +47,102 @@ on:
           - dev
           - pilot
       api_url:
-        description: "URL API explicite (defaut : vars.PROD_API_BASE_URL, garde #4524)"
+        description: "URL API explicite (defaut : vars.DEV_API_BASE_URL, garde #4524)"
         required: false
         type: string
 
 permissions:
-  contents: write   # publication du canal dev (Release GitHub non signée, P06 §3.4)
+  contents: write   # publication du canal pilote fermé (Release GitHub non signée, P06 §3.4)
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 concurrency:
-  group: desktop-distribute-${{ github.ref }}
+  group: desktop-distribute-${{ github.ref }}-${{ inputs.app }}
   cancel-in-progress: false
 
 jobs:
-  build-and-package:
-    timeout-minutes: 120
-    name: Desktop build (${{ matrix.os.name }})
-    runs-on: ${{ matrix.os.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os:
-              name: windows
-              runner: windows-latest
-            build: windows
-            artifact_path: front/mobile_apps/leopardo_accounting/build/windows/x64/runner/Release/
-            extra_args: ""
-          - os:
-              name: macos
-              runner: macos-latest
-            build: macos
-            artifact_path: front/mobile_apps/leopardo_accounting/build/macos/Build/Products/Release/
-            extra_args: "--no-codesign"   # pilote interne : pas de notarisation (P06 §4)
-
+  # Matrice calculée depuis l'input `platform` (évite de lancer les 2 OS quand un seul est visé).
+  prepare:
+    name: Prepare matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
     steps:
-      # Garde #4524 : jamais de build sans URL d'API explicite (fail-open supprimé).
-      - name: Guard API_BASE_URL (#4524)
+      - name: Build matrix from platform input
+        id: set
         shell: bash
         run: |
-          API_URL="${{ inputs.api_url }}"
-          if [[ -z "${API_URL}" ]]; then
-            API_URL="${{ vars.PROD_API_BASE_URL }}"
-          fi
-          if [[ -z "${API_URL}" ]]; then
-            echo "::error::API_BASE_URL must be set (input api_url ou vars.PROD_API_BASE_URL) — garde #4524."
-            exit 1
-          fi
-          echo "API_BASE_URL=${API_URL}" >> "$GITHUB_ENV"
-          echo "Cible API (volet ${{ inputs.environment }}) : ${API_URL}"
+          set -euo pipefail
+          PLATFORM="${{ inputs.platform }}"
+          case "${PLATFORM}" in
+            windows) JSON='{"include":[{"os":"windows-latest","build":"windows","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/windows/x64/runner/Release","extra":""}]}' ;;
+            macos)   JSON='{"include":[{"os":"macos-latest","build":"macos","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/macos/Build/Products/Release","extra":""}]}' ;;
+            both)    JSON='{"include":[{"os":"windows-latest","build":"windows","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/windows/x64/runner/Release","extra":""},{"os":"macos-latest","build":"macos","artifact":"front/mobile_apps/'"${{ inputs.app }}"'/build/macos/Build/Products/Release","extra":""}]}' ;;
+            *)       echo "::error::platform inconnu: ${PLATFORM}"; exit 1 ;;
+          esac
+          echo "matrix=${JSON}" >> "$GITHUB_OUTPUT"
+          echo "${JSON}"
 
+  build-and-package:
+    needs: prepare
+    timeout-minutes: 120
+    name: Desktop build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+
+    steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           lfs: false
 
-      - name: Setup Flutter (stable)
+      # Garde #4524 : jamais de build sans URL d'API explicite (fail-open supprimé).
+      # Convention #6839 : le tier dev/continu s'appelle DEV_API_BASE_URL — l'ancien
+      # `vars.PROD_API_BASE_URL` n'existe plus, ce qui faisait échouer la garde.
+      - name: Guard API_BASE_URL (#4524)
+        shell: bash
+        env:
+          INPUT_API_URL: ${{ inputs.api_url }}
+          DEFAULT_DEV_URL: ${{ vars.DEV_API_BASE_URL }}
+        run: |
+          set -euo pipefail
+          API_URL="${INPUT_API_URL}"
+          if [[ -z "${API_URL}" ]]; then
+            API_URL="${DEFAULT_DEV_URL}"
+          fi
+          if [[ -z "${API_URL}" ]]; then
+            echo "::error::API_BASE_URL must be set (input api_url, ou vars.DEV_API_BASE_URL) — garde #4524."
+            exit 1
+          fi
+          echo "API_BASE_URL=${API_URL}" >> "$GITHUB_ENV"
+          echo "Cible API (volet ${{ inputs.environment }}) : ${API_URL}"
+
+      - name: Setup Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
-          cache: true
 
-      - name: Regenerate codegen (build_runner — drift / json_serializable)
-        # #6590 : les *.g.dart (drift `edge_database`, json_serializable) ne sont
-        # pas commités — ils sont régénérés avant analyze/build (cf. mobile-apps-ci).
+      - name: Install dependencies (app)
+        working-directory: front/mobile_apps/${{ inputs.app }}
+        run: flutter pub get
+
+      # Codegen + localisations partagés de leopardo_core, GÉNÉRÉS (non versionnés) :
+      # - *.g.dart (drift, json_serializable) — #6590 ;
+      # - app_localizations.dart (sans quoi la compilation windows/macos échoue).
+      - name: Regenerate shared codegen + localizations (leopardo_core)
         working-directory: front/mobile_apps/leopardo_core
         run: |
           flutter pub get
           dart run build_runner build
+          flutter gen-l10n
 
-      - name: Build ${{ matrix.os.name }} (release)
+      - name: Build (${{ matrix.build }}, release)
         shell: bash
-        # Fix MSVC 14.51 (runner windows-2025) : local_auth_windows (dépendance de
-        # leopardo_core) utilise <experimental/coroutine> retiré par la STL récente
+        # Fix MSVC récent (runners windows-2025) : local_auth_windows (dépendance de
+        # leopardo_core) utilise <experimental/coroutine>, retiré par la STL actuelle
         # (erreur STL1011). Le macro officiel MSVC supprime l'erreur — parade amont
         # documentée, à retirer quand le plugin sera compatible (suivi #7056).
         env:
@@ -110,7 +150,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "front/mobile_apps/${{ inputs.app }}"
-          flutter build ${{ matrix.build }} --release ${{ matrix.extra_args }} \
+          flutter build ${{ matrix.build }} --release ${{ matrix.extra }} \
             --dart-define=API_BASE_URL="${API_BASE_URL}"
 
       - name: Verify artifact
@@ -118,66 +158,253 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${{ matrix.build }}" == "windows" ]]; then
-            ARTIFACT="front/mobile_apps/${{ inputs.app }}/build/windows/x64/runner/Release"
-            test -f "${ARTIFACT}/${{ inputs.app }}.exe"
-            du -h "${ARTIFACT}/${{ inputs.app }}.exe"
+            test -f "${{ matrix.artifact }}/${{ inputs.app }}.exe"
+            du -h "${{ matrix.artifact }}/${{ inputs.app }}.exe"
           else
-            ARTIFACT="front/mobile_apps/${{ inputs.app }}/build/macos/Build/Products/Release"
-            test -d "${ARTIFACT}/${{ inputs.app }}.app"
-            du -sh "${ARTIFACT}/${{ inputs.app }}.app"
+            test -d "${{ matrix.artifact }}/${{ inputs.app }}.app"
+            du -sh "${{ matrix.artifact }}/${{ inputs.app }}.app"
           fi
 
-      - name: Package + checksums (zip + SHA-256)
+      - name: Package + checksums (zip + SHA-256) + marquage pilote
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PYEOF'
-          import hashlib, pathlib, shutil, zipfile
-          app = "${{ inputs.app }}"
-          osname = "${{ matrix.os.name }}"
-          build = "${{ matrix.build }}"
-          base = pathlib.Path(f"front/mobile_apps/{app}/build")
-          if build == "windows":
-              src = base / "windows/x64/runner/Release"
-              target_name = f"{app}.exe"
-          else:
-              src = base / "macos/Build/Products/Release"
-              target_name = f"{app}.app"
-          assert (src / target_name).exists(), f"artefact introuvable: {src / target_name}"
-          out = pathlib.Path("dist"); shutil.rmtree(out, ignore_errors=True); out.mkdir()
-          zip_path = out / f"leopardo-desktop-{app}-{osname}.zip"
-          with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
-              z.write(src / target_name, arcname=target_name)
-              if build == "windows":
-                  for child in src.iterdir():
-                      if child.name != target_name and child.is_file():
-                          z.write(child, arcname=child.name)
-          digest = hashlib.sha256(zip_path.read_bytes()).hexdigest()
-          (out / f"leopardo-desktop-{app}-{osname}.sha256").write_text(f"{digest}  {zip_path.name}\n")
-          print(f"{zip_path} sha256={digest}")
+          APP="${{ inputs.app }}"
+          BUILD="${{ matrix.build }}"
+          OUT="dist"
+          rm -rf "$OUT"; mkdir -p "$OUT"
+          ZIP="leopardo-desktop-${APP}-${BUILD}.zip"
+          if [[ "$BUILD" == "windows" ]]; then
+            # Zip RÉCURSIF du dossier Release (exe + DLL + data/) — l'exe seul
+            # ne démarre pas (flutter_windows.dll, icu data, désactivé).
+            python3 - "$APP" "$OUT/$ZIP" <<'PYEOF'
+          import pathlib, sys, zipfile
+          app, out = sys.argv[1], sys.argv[2]
+          src = pathlib.Path(f"front/mobile_apps/{app}/build/windows/x64/runner/Release")
+          exe = src / f"{app}.exe"
+          assert exe.is_file(), f"artefact introuvable: {exe}"
+          with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+              for p in sorted(src.rglob("*")):
+                  z.write(p, arcname=str(p.relative_to(src)))
+          print(f"windows: {out} ({exe.name} + DLL/data)")
           PYEOF
-
-      - name: Publish dev release (NON SIGNÉ — usage interne, P06 §3.4)
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          TAG="desktop-${{ inputs.app }}-dev"
-          NOTES="Canal dev desktop — build NON SIGNÉ, usage interne/pilote.
-          App: ${{ inputs.app }} | Plateforme: ${{ matrix.os.name }} | Run: ${{ github.run_id }}
-          Volet API: ${{ inputs.environment }} | Commit: ${{ github.sha }}
-          Aucune distribution publique (protocole P06 / #3257)."
-          if gh release view "${TAG}" >/dev/null 2>&1; then
-            gh release upload "${TAG}" dist/* --clobber
           else
-            gh release create "${TAG}" dist/* --title "Desktop dev — ${{ inputs.app }}" --notes "${NOTES}" --prerelease
+            SRC="front/mobile_apps/$APP/build/macos/Build/Products/Release/$APP.app"
+            test -d "$SRC"
+            # `ditto` préserve les bits d'exécution et métadonnées du bundle
+            # (un zip Python ne conserve pas le +x → .app non lançable).
+            ditto -c -k --sequesterRsrc --keepParent "$SRC" "$OUT/$ZIP"
+            # Vérifie que l'exécutable est bien dans l'archive avant publication.
+            ditto -x -k "$OUT/$ZIP" "$OUT/.verify"
+            test -x "$OUT/.verify/$APP.app/Contents/MacOS/$APP"
+            rm -rf "$OUT/.verify"
           fi
+          python3 - "$OUT" "$ZIP" <<'PYEOF'
+          import hashlib, pathlib, sys
+          out, name = pathlib.Path(sys.argv[1]), sys.argv[2]
+          p = out / name
+          digest = hashlib.sha256(p.read_bytes()).hexdigest()
+          (out / (name + ".sha256")).write_text(f"{digest}  {name}\n")
+          print(f"{name} sha256={digest}")
+          PYEOF
+          printf 'PILOT - build NON SIGNE / NON NOTARIE - usage interne uniquement.\nAucune distribution publique (protocole P06 / honnetete vitrine #3257).\nApp: %s | OS: %s | Commit: %s\n' \
+            "$APP" "$BUILD" "${{ github.sha }}" > "$OUT/PILOT_UNSIGNED.txt"
+          ls -la "$OUT"
 
       - name: Upload artifact (canal pilote interne — aucun lien public)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: leopardo-desktop-${{ inputs.app }}-${{ matrix.os.name }}-${{ github.run_id }}
+          name: leopardo-desktop-${{ inputs.app }}-${{ matrix.build }}-${{ github.run_id }}
           path: dist/
           if-no-files-found: error
           retention-days: 14
+
+  # ── Smoke desktop : démarrage / fenêtre / fermeture propre (P06 §5) ─────────
+  # Garde NON BLOQUANTE au démarrage (continue-on-error). Le login + parcours
+  # critique nécessitent une API + des credentials : couverts par l'UAT pilote
+  # (RUNBOOK §5), pas en CI (aucun secret de test en clair — constitution §V).
+  desktop-smoke:
+    timeout-minutes: 45
+    name: Desktop smoke (${{ matrix.build }})
+    needs: [prepare, build-and-package]
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Download packaged artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: leopardo-desktop-${{ inputs.app }}-${{ matrix.build }}-${{ github.run_id }}
+          path: workdir
+
+      - name: Unpack artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p app
+          ZIP="workdir/leopardo-desktop-${{ inputs.app }}-${{ matrix.build }}.zip"
+          test -f "$ZIP"
+          if [[ "${{ matrix.build }}" == "windows" ]]; then
+            python3 -c "import sys, zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])" "$ZIP" app
+          else
+            ditto -x -k "$ZIP" app
+          fi
+          ls -la app
+
+      - name: Smoke démarrage (Windows)
+        if: matrix.build == 'windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $app = "${{ inputs.app }}"
+          $exe = Join-Path $PWD "app\$app.exe"
+          if (-not (Test-Path $exe)) { throw "exe introuvable après unpack: $exe" }
+          $p = Start-Process -FilePath $exe -WorkingDirectory (Split-Path $exe) -PassThru
+          Start-Sleep -Seconds 25
+          if ($p.HasExited) { throw "l'application s'est arrêtée prématurément (code $($p.ExitCode))" }
+          $proc = Get-Process -Id $p.Id
+          Write-Host "App démarrée (PID $($p.Id)) — titre fenêtre: '$($proc.MainWindowTitle)'"
+          Stop-Process -Id $p.Id -Force
+          Start-Sleep -Seconds 3
+          if (Get-Process -Id $p.Id -ErrorAction SilentlyContinue) { throw "processus orphelin après fermeture" }
+          Write-Host "Smoke OK : démarrage + fermeture propre"
+
+      - name: Smoke démarrage (macOS)
+        if: matrix.build == 'macos'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="${{ inputs.app }}"
+          BIN="$PWD/app/$APP.app/Contents/MacOS/$APP"
+          test -x "$BIN"
+          "$BIN" > smoke.log 2>&1 &
+          PID=$!
+          sleep 25
+          if ! kill -0 "$PID" 2>/dev/null; then
+            echo "::error::l'application s'est arrêtée prématurément"; cat smoke.log; exit 1
+          fi
+          echo "App démarrée (PID $PID) — fermeture propre"
+          kill "$PID"
+          wait "$PID" 2>/dev/null || true
+          sleep 3
+          if pgrep -f "$APP.app/Contents/MacOS/$APP" >/dev/null; then
+            echo "::error::processus orphelin après fermeture"; exit 1
+          fi
+          echo "Smoke OK : démarrage + fermeture propre"
+
+  # ── Install-test : install/désinstall sur runner propre (P06 §5) ────────────
+  # Garde NON BLOQUANTE au démarrage (continue-on-error).
+  install-test:
+    timeout-minutes: 45
+    name: Desktop install/uninstall (${{ matrix.build }})
+    needs: [prepare, build-and-package]
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Download packaged artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: leopardo-desktop-${{ inputs.app }}-${{ matrix.build }}-${{ github.run_id }}
+          path: workdir
+
+      - name: Install / verify / uninstall (Windows)
+        if: matrix.build == 'windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $app = "${{ inputs.app }}"
+          $zip = "workdir/leopardo-desktop-$app-windows.zip"
+          $install = Join-Path $env:LOCALAPPDATA "Programs\Leopardo\$app"
+          if (Test-Path $install) { Remove-Item $install -Recurse -Force }
+          New-Item -ItemType Directory -Path $install -Force | Out-Null
+          Expand-Archive -Path $zip -DestinationPath $install -Force
+          $exe = Join-Path $install "$app.exe"
+          if (-not (Test-Path $exe)) { throw "exe absent après installation" }
+          foreach ($item in @("flutter_windows.dll", "data")) {
+            if (-not (Test-Path (Join-Path $install $item))) { throw "élément runtime manquant: $item" }
+          }
+          $vi = (Get-Item $exe).VersionInfo
+          Write-Host "Identité binaire: Product=$($vi.ProductName) FileVersion=$($vi.FileVersion) Company=$($vi.CompanyName)"
+          $p = Start-Process -FilePath $exe -WorkingDirectory $install -PassThru
+          Start-Sleep -Seconds 20
+          if ($p.HasExited) { throw "l'app installée ne démarre pas (code $($p.ExitCode))" }
+          Stop-Process -Id $p.Id -Force
+          Start-Sleep -Seconds 3
+          # Canal pilote = exe portable : la désinstallation = suppression du dossier.
+          Remove-Item $install -Recurse -Force
+          if (Test-Path $install) { throw "désinstallation incomplète" }
+          Write-Host "Installation + désinstallation OK"
+
+      - name: Install / verify / uninstall (macOS)
+        if: matrix.build == 'macos'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="${{ inputs.app }}"
+          ZIP="$PWD/workdir/leopardo-desktop-$APP-macos.zip"
+          INSTALL="$HOME/Applications"
+          TARGET="$INSTALL/$APP.app"
+          mkdir -p "$INSTALL"
+          rm -rf "$TARGET"
+          ditto -x -k "$ZIP" "$INSTALL"
+          test -x "$TARGET/Contents/MacOS/$APP"
+          BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$TARGET/Contents/Info.plist")
+          test -n "$BID"
+          echo "Identité bundle: $BID"
+          # État de signature : attendu NON SIGNÉ en pilote (P06 §4) — informatif.
+          codesign -dv --verbose=2 "$TARGET" 2>&1 || echo "::warning::bundle non signé (attendu en phase pilote)"
+          "$TARGET/Contents/MacOS/$APP" > install.log 2>&1 &
+          PID=$!
+          sleep 25
+          if ! kill -0 "$PID" 2>/dev/null; then
+            echo "::error::l'app installée ne démarre pas"; cat install.log; exit 1
+          fi
+          kill "$PID"
+          wait "$PID" 2>/dev/null || true
+          rm -rf "$TARGET"
+          test ! -e "$TARGET"
+          echo "Installation + désinstallation OK"
+
+  # ── Publication canal fermé (GitHub Release pré-release) ────────────────────
+  # NON SIGNÉ, non public. `always()` : les gardes smoke/install-test sont
+  # non bloquantes au démarrage — à retirer avec `continue-on-error` après le
+  # premier run pilote vert (P06 §5 : « pas de build desktop sans tests verts »).
+  publish-pilot:
+    timeout-minutes: 20
+    name: Publish pilot artifact (canal fermé)
+    needs: [build-and-package, desktop-smoke, install-test]
+    if: ${{ always() && needs.build-and-package.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: leopardo-desktop-${{ inputs.app }}-*-${{ github.run_id }}
+          path: dist
+          merge-multiple: true
+
+      - name: Publish pilot release (NON SIGNÉ — aucun lien public, P06 §3.4)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          ls -la dist
+          TAG="desktop-${{ inputs.app }}-dev"
+          NOTES="Canal fermé desktop — build NON SIGNÉ / NON NOTARIÉ, usage interne/pilote.
+          App: ${{ inputs.app }} | Plateforme: ${{ inputs.platform }} | Run: ${{ github.run_id }}
+          Volet API: ${{ inputs.environment }} | Commit: ${{ github.sha }}
+          Aucune distribution publique, aucun lien vitrine (protocole P06 / #3257)."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+          else
+            gh release create "$TAG" dist/* \
+              --title "Desktop pilote — ${{ inputs.app }} (non signé)" \
+              --notes "$NOTES" --prerelease --latest=false
+          fi

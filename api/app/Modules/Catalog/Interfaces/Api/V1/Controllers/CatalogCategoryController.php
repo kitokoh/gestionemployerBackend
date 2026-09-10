@@ -7,7 +7,7 @@ namespace App\Modules\Catalog\Interfaces\Api\V1\Controllers;
 use App\Core\Auth\Domain\Models\Employee;
 use App\Http\Controllers\Controller;
 use App\Modules\Catalog\Domain\Models\CatalogCategory;
-use App\Modules\Catalog\Infrastructure\Support\CatalogPublicCache;
+use App\Modules\Catalog\Infrastructure\Services\CatalogPublicCache;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\StoreCatalogCategoryRequest;
 use App\Modules\Catalog\Interfaces\Api\V1\Requests\UpdateCatalogCategoryRequest;
 use Illuminate\Http\JsonResponse;

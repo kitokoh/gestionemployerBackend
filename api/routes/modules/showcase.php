@@ -30,6 +30,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['throttle:shop-public'])
     ->prefix('public/vitrine')
     ->group(function (): void {
+        // V-SEO #6873 : sitemap (vitrines publiees uniquement) + robots.
+        Route::get('/sitemap.xml', [ShowcasePublicController::class, 'sitemap']);
+        Route::get('/robots.txt', [ShowcasePublicController::class, 'robots']);
+
+        // V-PUBLIC-API #6867 (+ apercu prive V-PUBLISH #6871 via ?token=).
         Route::get('/{slug}', [ShowcasePublicController::class, 'show'])
             ->where('slug', '[A-Za-z0-9\-_]{1,160}');
     });
@@ -41,6 +46,14 @@ Route::middleware(['throttle:api', 'auth:sanctum', 'token.refresh', 'tenant', 't
         // Vitrine du tenant (création 1-clic US1 — socle des issues #6866/#6870).
         Route::get('/', [ShowcaseController::class, 'show']);
         Route::post('/', [ShowcaseController::class, 'store']);
+
+        // V-PUBLISH #6871 : workflow de publication + apercu prive.
+        Route::post('/publish', [ShowcaseController::class, 'publish']);
+        Route::post('/unpublish', [ShowcaseController::class, 'unpublish']);
+        Route::post('/preview-token', [ShowcaseController::class, 'previewToken']);
+
+        // V-THEMES #6868 / V-RGPD #6875 : theme, variables de marque, legal.
+        Route::put('/settings', [ShowcaseController::class, 'updateSettings']);
 
         // Sections (contrat JSON Schema + CRUD, #6866).
         Route::get('/sections', [ShowcaseSectionController::class, 'index']);

@@ -28,9 +28,17 @@
 1. Déclencher le build : GitHub Actions → workflow **Desktop - Build & Distribute (pilote)** →
    `Run workflow` → app `leopardo_accounting`, plateforme `windows` et/ou `macos`,
    environnement `dev` (ou `pilot` si un volet pilote dédié existe).
-2. Récupérer l'artefact `leopardo-desktop-leopardo_accounting-<os>-<run>` (onglet Summary du run).
-3. Vérifier l'empreinte : comparer le SHA-256 de l'artefact reçu avec celui affiché dans le run
+2. Récupérer l'artefact, au choix :
+   - **artefact de run** `leopardo-desktop-leopardo_accounting-<os>-<run>` (onglet Summary, rétention 14 j) ;
+   - **canal dev** : Release GitHub `desktop-leopardo_accounting-dev` (zip + `.sha256`, marquée
+     **non signée / pré-release**, usage interne uniquement — jamais un canal public).
+3. Vérifier l'empreinte : comparer le SHA-256 du zip reçu avec le fichier `.sha256` publié
    (toute divergence = ne pas installer, signaler immédiatement).
+4. Contrôler le statut des jobs de vérification du run : `analyze-and-test`, `desktop-smoke`
+   (démarrage/fermeture propre) et `install-test` (install/désinstall sur runner propre). Ces deux
+   derniers sont **non bloquants** tant qu'ils n'ont pas été validés une première fois — un échec
+   n'empêche pas la publication de l'artefact mais **doit être signalé sur l'issue #7056** avant
+   toute installation sur poste pilote.
 
 ## 3. Configuration du volet API (avant première installation)
 
@@ -51,9 +59,10 @@
 4. Créer un raccourci bureau (optionnel).
 
 ### macOS
-1. Copier `Leopardo Accounting.app` dans `/Applications/`.
+1. Copier `leopardo_accounting.app` dans `/Applications/` (nom produit du scaffold actuel ;
+   harmonisation « Leopardo Accounting » suivie dans `docs/desktop/README.md` §4 avant le build signé).
 2. Première ouverture : clic droit sur l'app → « Ouvrir » → confirmer (Gatekeeper, build non notarié).
-3. Si le système bloque quand même : `xattr -dr com.apple.quarantine "/Applications/Leopardo Accounting.app"`
+3. Si le système bloque quand même : `xattr -dr com.apple.quarantine "/Applications/leopardo_accounting.app"`
    (commande admin, à documenter sur l'issue pilote — alternative à ne pas généraliser).
 
 ## 5. Vérifications post-installation (smoke pilote — à cocher et dater)
@@ -71,10 +80,11 @@
 ## 6. Désinstallation
 
 - **Windows** : fermer l'app, supprimer le dossier d'installation + le raccourci. Résidus éventuels
-  de cache Flutter sous `%APPDATA%\com.leopardo.accounting` (identifiant à confirmer au build signé).
+  de cache Flutter sous `%APPDATA%\com.leopardo.leopardoAccounting` (identité du scaffold actuel,
+  à aligner `com.leopardo.accounting` — P06 §3.2).
 - **macOS** : glisser l'app à la Corbeille ; résidus sous `~/Library/Application Support/` (même
-  identifiant). Le token de session vit dans le trousseau : le supprimer via « Trousseau d'accès »
-  si l'on veut une déconnexion totale du poste.
+  identifiant `com.leopardo.leopardoAccounting`). Le token de session vit dans le trousseau : le
+  supprimer via « Trousseau d'accès » si l'on veut une déconnexion totale du poste.
 
 ## 7. Problèmes connus & parades
 

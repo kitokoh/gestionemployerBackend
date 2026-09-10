@@ -105,9 +105,13 @@ class ShowcasePublicApiTest extends TestCase
             ->assertJsonPath('data.company_name', $company->name)
             ->assertJsonPath('data.theme', 'default')
             ->assertJsonPath('data.settings.brand_name', 'Acme Industries')
-            // allowlist : logo_id (interne) exclu, couleurs scalaires incluses
-            ->assertJsonPath('data.settings.colors.primary', '#0F172A')
+            // Allowlist `settings` : scalaires uniquement (logo_id, ids et
+            // structures internes exclus). La surcharge de couleur du tenant
+            // sort par le canal public dédié `theme_config.variables`
+            // (ShowcaseThemeRegistry::resolvedVariables, V-THEMES #6868).
+            ->assertJsonPath('data.theme_config.variables.primary', '#0F172A')
             ->assertJsonMissingPath('data.settings.logo_id')
+            ->assertJsonMissingPath('data.settings.colors')
             ->assertJsonCount(2, 'data.sections')
             ->assertJsonPath('data.sections.0.type', 'hero')
             ->assertJsonPath('data.sections.1.type', 'footer');
