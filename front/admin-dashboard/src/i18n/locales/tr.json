@@ -1111,7 +1111,11 @@
     "two_fa_label": "2FA kodu",
     "two_fa_required_msg": "Bir doğrulama kodu gereklidir.",
     "two_fa_setup_failed": "2FA gizli anahtarı oluşturulamadı.",
-    "unexpected_error": "Beklenmeyen bir hata oluştu."
+    "unexpected_error": "Beklenmeyen bir hata oluştu.",
+    "demo_panel_title": "Demo erişimi — bir profil seçin",
+    "demo_panel_hint": "Demo ortamı: anında giriş yapmak için bir profil seçin. Üretimde devre dışı.",
+    "demo_badge_platform": "Platform",
+    "demo_access": "Demo hesabı kullan"
   },
   "settingsShareProfileOrScan": "Profilinizi paylaşın veya bir şirketi tarayın.",
   "attendanceStatusInProgress": "Devam ediyor",

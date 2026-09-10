@@ -1105,7 +1105,11 @@
     "two_fa_label": "رمز التحقق بخطوتين",
     "two_fa_required_msg": "رمز تحقق مطلوب.",
     "two_fa_setup_failed": "فشل إنشاء مفتاح التحقق بخطوتين.",
-    "unexpected_error": "حدث خطأ غير متوقع."
+    "unexpected_error": "حدث خطأ غير متوقع.",
+    "demo_panel_title": "الوصول التجريبي — اختر حسابًا",
+    "demo_panel_hint": "بيئة تجريبية: اختر حسابًا لتسجيل الدخول فورًا. معطّل في الإنتاج.",
+    "demo_badge_platform": "المنصة",
+    "demo_access": "استخدام حساب تجريبي"
   },
   "settingsShareProfileOrScan": "شارك ملفك الشخصي أو امسح شركة.",
   "attendanceStatusInProgress": "جارٍ",

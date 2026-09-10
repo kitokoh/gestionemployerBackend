@@ -1111,7 +1111,11 @@
     "two_fa_label": "Code 2FA",
     "two_fa_required_msg": "Un code de vérification est requis.",
     "two_fa_setup_failed": "La génération du secret 2FA a échoué.",
-    "unexpected_error": "Une erreur inattendue est survenue."
+    "unexpected_error": "Une erreur inattendue est survenue.",
+    "demo_panel_title": "Accès démo — choisir un profil",
+    "demo_panel_hint": "Environnement de démonstration : sélectionnez un profil pour vous connecter immédiatement. Désactivé en production.",
+    "demo_badge_platform": "Plateforme",
+    "demo_access": "Utiliser un compte démo"
   },
   "settingsShareProfileOrScan": "Partager votre profil ou scanner une entreprise.",
   "attendanceStatusInProgress": "En cours",

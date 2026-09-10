@@ -25,7 +25,7 @@ name: Deploy Production - Leopardo RH
 # Variable intentionnellement distincte de la `vars.DEV_API_BASE_URL`
 # utilisée ailleurs dans ce repo (qui cible en réalité l'environnement
 # dev/continu — dette de nommage historique, voir
-# docs/OPS/RENDER_DEV_PROD_TOPOLOGY.md) : ce workflow utilise
+# docs/ops/RENDER_DEV_PROD_TOPOLOGY.md) : ce workflow utilise
 # `secrets.PROD_RENDER_API_BASE_URL` pour éviter toute ambiguïté avec la vraie
 # production tant que ce renommage plus large n'a pas été fait.
 #
@@ -201,7 +201,7 @@ jobs:
           [[ -z "${RENDER_PROD_API_KEY}" ]] && missing+=("secrets.RENDER_PROD_API_KEY")
           [[ -z "${RENDER_PROD_SERVICE_ID}" ]] && missing+=("secrets.RENDER_PROD_SERVICE_ID")
           if [[ ${#missing[@]} -gt 0 ]]; then
-            echo "::error::Missing: ${missing[*]} (voir docs/OPS/RENDER_DEV_PROD_TOPOLOGY.md)"
+            echo "::error::Missing: ${missing[*]} (voir docs/ops/RENDER_DEV_PROD_TOPOLOGY.md)"
             exit 1
           fi
 
