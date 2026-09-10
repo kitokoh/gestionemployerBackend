@@ -11,9 +11,9 @@ use App\Modules\Showcase\Domain\Enums\CompanyShowcaseStatus;
 use App\Modules\Showcase\Domain\Models\CompanyShowcase;
 use App\Modules\Showcase\Domain\Models\CompanyShowcaseSection;
 use App\Modules\Showcase\Domain\Support\ShowcaseLocales;
-use App\Modules\Showcase\Infrastructure\Services\ShowcaseProductsResolver;
 use App\Modules\Showcase\Infrastructure\Services\ShowcasePublicCache;
 use App\Modules\Showcase\Interfaces\Api\V1\Resources\VitrinePublicResource;
+use App\Shared\Contracts\Catalog\PublishedProductsProvider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -46,7 +46,7 @@ final class ShowcasePublicController extends Controller
     public function __construct(
         private readonly TenantManager $tenantManager,
         private readonly ShowcasePublicCache $cache,
-        private readonly ShowcaseProductsResolver $productsResolver,
+        private readonly PublishedProductsProvider $productsProvider,
     ) {}
 
     public function show(Request $request, string $slug): JsonResponse
@@ -70,7 +70,7 @@ final class ShowcasePublicController extends Controller
                 return null;
             }
 
-            return $this->tenantManager->withinTenant($company, function () use ($request, $slug, $locale, $providedToken, &$isPreview): ?array {
+            return $this->tenantManager->withinTenant($company, function () use ($company, $request, $slug, $locale, $providedToken, &$isPreview): ?array {
                 /** @var CompanyShowcase|null $showcase */
                 $showcase = CompanyShowcase::query()
                     ->where('slug', $slug)
@@ -103,7 +103,7 @@ final class ShowcasePublicController extends Controller
                     ->get()
                     ->all();
 
-                $resource = new VitrinePublicResource($showcase, $sections, $company->name, $locale, $this->productsResolver);
+                $resource = new VitrinePublicResource($showcase, $sections, $company->name, $locale, $this->productsProvider);
 
                 return $resource->resolve($request);
             });
