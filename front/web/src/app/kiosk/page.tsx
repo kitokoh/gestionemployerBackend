@@ -100,19 +100,27 @@ export default function RestaurantKioskPage() {
     setMenuError(null);
 
     try {
-      const [menuRes, branchesRes] = await Promise.all([
-        apiFetch('/public/restaurant/menu', {
+      // Chemins réels : /public/restaurant/kiosk/menu|orders (routes/api.php:225-227).
+      // L'ancien préfixe /public/restaurant/menu répondait 404.
+      const menuRes = await apiFetch('/public/restaurant/kiosk/menu', {
+        headers: { 'X-Restaurant-Shop-Token': token },
+        _cacheBust: true,
+      });
+
+      // Aucune route « branches » n'existe côté API : l'appel est isolé pour ne
+      // plus faire échouer tout le menu (il était dans le même Promise.all).
+      let branchesRes: Response | null = null;
+      try {
+        branchesRes = await apiFetch('/public/restaurant/branches', {
           headers: { 'X-Restaurant-Shop-Token': token },
           _cacheBust: true,
-        }),
-        apiFetch('/public/restaurant/branches', {
-          headers: { 'X-Restaurant-Shop-Token': token },
-          _cacheBust: true,
-        }),
-      ]);
+        });
+      } catch {
+        branchesRes = null;
+      }
 
       const menuJson = (await menuRes.json()) as { data: KioskCategory[] };
-      const branchesJson = (await branchesRes.json()) as { data: KioskBranch[] };
+      const branchesJson = branchesRes ? ((await branchesRes.json()) as { data: KioskBranch[] }) : null;
 
       const list = Array.isArray(menuJson?.data) ? menuJson.data : [];
       const branchList = Array.isArray(branchesJson?.data) ? branchesJson.data : [];
@@ -179,7 +187,7 @@ export default function RestaurantKioskPage() {
     setPayment({ step: 'placing' });
 
     try {
-      const res = await apiFetch('/public/restaurant/orders', {
+      const res = await apiFetch('/public/restaurant/kiosk/orders', {
         method: 'POST',
         headers: { 'X-Restaurant-Shop-Token': token },
         body: JSON.stringify({
