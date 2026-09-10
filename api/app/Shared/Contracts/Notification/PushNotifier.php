@@ -22,7 +22,7 @@ interface PushNotifier
      * Envoie une notification push aux appareils d'un employé du tenant.
      *
      * @param  array<string, mixed>  $data  données additionnelles (module, référence…)
-     * @return int  nombre d'appareils notifiés
+     * @return int nombre d'appareils notifiés
      */
     public function sendToUser(int $userId, string $title, string $body, array $data = []): int;
 }

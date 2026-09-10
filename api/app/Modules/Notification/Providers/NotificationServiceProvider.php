@@ -12,6 +12,7 @@ use App\Modules\Notification\Infrastructure\Services\PushNotificationService;
 use App\Shared\Contracts\Notification\EmployeeNotifier;
 use App\Shared\Contracts\Notification\PushNotifier;
 use Illuminate\Support\ServiceProvider;
+
 class NotificationServiceProvider extends ServiceProvider
 {
     public function register(): void
