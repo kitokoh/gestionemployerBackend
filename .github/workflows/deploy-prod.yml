@@ -22,7 +22,7 @@ name: Deploy Production - Leopardo RH
 # (release automatique). En workflow_dispatch sur un tag plus ancien, un
 # avertissement explicite est émis (l'API recevra le code de main).
 #
-# Variable intentionnellement distincte de la `vars.PROD_API_BASE_URL`
+# Variable intentionnellement distincte de la `vars.DEV_API_BASE_URL`
 # utilisée ailleurs dans ce repo (qui cible en réalité l'environnement
 # dev/continu — dette de nommage historique, voir
 # docs/OPS/RENDER_DEV_PROD_TOPOLOGY.md) : ce workflow utilise
