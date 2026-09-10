@@ -288,6 +288,10 @@ final class TwoFactorAuthService
 
             $tokenResult = $employee->createToken($tokenName, $abilities, $expiresAt);
 
+            // Issue #7009 : quota de tokens actifs — purge des plus anciens
+            // au-delà de config('auth.max_active_tokens_per_user').
+            app(TokenQuotaService::class)->prune($employee);
+
             return [
                 'token' => $tokenResult->plainTextToken,
                 'token_type' => 'Bearer',
