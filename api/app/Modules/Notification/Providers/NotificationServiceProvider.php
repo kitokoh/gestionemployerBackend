@@ -8,9 +8,10 @@ use App\AI\Support\AIToolDefinitionRegistry;
 use App\Contracts\Communication\CommunicationServiceInterface;
 use App\Modules\Notification\Domain\Support\NotifyTeamToolCatalog;
 use App\Modules\Notification\Infrastructure\Services\CommunicationService;
+use App\Modules\Notification\Infrastructure\Services\PushNotificationService;
 use App\Shared\Contracts\Notification\EmployeeNotifier;
+use App\Shared\Contracts\Notification\PushNotifier;
 use Illuminate\Support\ServiceProvider;
-
 class NotificationServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -18,6 +19,7 @@ class NotificationServiceProvider extends ServiceProvider
         // Contrat partagé (isolation #5584) : les modules métier notifient
         // via l'interface, jamais par import direct du service.
         $this->app->bind(EmployeeNotifier::class, CommunicationService::class);
+        $this->app->bind(PushNotifier::class, PushNotificationService::class);
         $this->app->bind(CommunicationServiceInterface::class, CommunicationService::class);
     }
 
