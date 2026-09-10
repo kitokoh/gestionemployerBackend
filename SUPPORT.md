@@ -12,7 +12,7 @@ Besoin d'aide ? Voici les bons canaux, du plus rapide au plus structuré.
 
 - **Discussions GitHub** (si activé) pour les questions ouvertes et les idées.
 - Template [feature.yml](.github/ISSUE_TEMPLATE/feature.yml) pour une demande structurée.
-- Roadmap publique : [ROADMAP.md](ROADMAP.md) · état opérationnel réel : [PILOTAGE.md](PILOTAGE.md).
+- Roadmap publique : [ROADMAP.md](docs/REFERENTIEL_PRODUIT/ROADMAP.md) · état opérationnel réel : [PILOTAGE.md](PILOTAGE.md).
 
 ## 📚 Documentation
 
