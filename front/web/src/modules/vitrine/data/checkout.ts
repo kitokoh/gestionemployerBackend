@@ -331,7 +331,7 @@ export const checkoutCopyByLocale: Record<AppLocale, CheckoutCopy> = {
       },
       operations: {
         label: 'Operations',
-        employeeLimit: "Jusqu'à 250 employés",
+        employeeLimit: "Jusqu'à 200 employés",
         features: [
           'Tout Pilot inclus',
           'Paie automatisée',
@@ -531,7 +531,7 @@ export const checkoutCopyByLocale: Record<AppLocale, CheckoutCopy> = {
       },
       operations: {
         label: 'Operations',
-        employeeLimit: 'Up to 250 employees',
+        employeeLimit: 'Up to 200 employees',
         features: [
           'Everything in Pilot',
           'Automated payroll',
@@ -730,7 +730,7 @@ export const checkoutCopyByLocale: Record<AppLocale, CheckoutCopy> = {
       },
       operations: {
         label: 'Operations',
-        employeeLimit: '250 çalışana kadar',
+        employeeLimit: '200 çalışana kadar',
         features: [
           "Pilot'un tamamı",
           'Otomatik bordro',
@@ -928,7 +928,7 @@ export const checkoutCopyByLocale: Record<AppLocale, CheckoutCopy> = {
       },
       operations: {
         label: 'Operations',
-        employeeLimit: 'حتى 250 موظفاً',
+        employeeLimit: 'حتى 200 موظفاً',
         features: [
           'كل ما في Pilot',
           'رواتب آلية',
