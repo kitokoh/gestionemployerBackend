@@ -81,9 +81,11 @@ class CatalogPublicApiTest extends TestCase
             ->assertJsonPath('data.products.0.price_minor', 1_250_000)
             ->assertJsonPath('data.products.0.currency', 'DZD');
 
-        // DTO strict : AUCUN champ interne (id, company_id, status, meta, dates).
+        // DTO strict : AUCUN champ interne (id, company_id, status, notes,
+        // dates). `meta` est le bloc SEO dérivé du contenu (#6888), jamais
+        // un champ de la table `catalog_products`.
         $this->assertSame(
-            ['slug', 'name', 'description', 'price_minor', 'currency', 'unit', 'category'],
+            ['slug', 'name', 'description', 'price_minor', 'currency', 'unit', 'photos', 'category', 'inquiry_path', 'meta'],
             array_keys($response->json('data.products.0'))
         );
         $this->assertSame(
@@ -124,7 +126,7 @@ class CatalogPublicApiTest extends TestCase
             ->assertJsonPath('data.description', 'Fraiseuse 3 axes')
             ->assertJsonPath('data.unit', 'piece');
         $this->assertSame(
-            ['slug', 'name', 'description', 'price_minor', 'currency', 'unit', 'category'],
+            ['slug', 'name', 'description', 'price_minor', 'currency', 'unit', 'photos', 'category', 'inquiry_path', 'meta', 'related'],
             array_keys($response->json('data'))
         );
     }

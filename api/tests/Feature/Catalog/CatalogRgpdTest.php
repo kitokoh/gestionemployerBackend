@@ -140,13 +140,14 @@ class CatalogRgpdTest extends TestCase
         $this->assertSame(['status', 'reference'], array_keys($response->json('data')));
 
         // Le catalogue public ne contient aucun champ interne (id/company_id/
-        // status/meta/notes/consentement/rétention).
+        // status/notes/consentement/rétention) ; `meta` est le bloc SEO
+        // dérivé du contenu (#6888).
         $catalogue = $this->getJson('/api/v1/public/catalog/'.$this->companyA->slug)
             ->assertStatus(200)
             ->json('data');
         $this->assertSame(['slug', 'name'], array_keys($catalogue['company']));
         $this->assertSame(
-            ['slug', 'name', 'description', 'price_minor', 'currency', 'unit', 'category'],
+            ['slug', 'name', 'description', 'price_minor', 'currency', 'unit', 'photos', 'category', 'inquiry_path', 'meta'],
             array_keys($catalogue['products'][0])
         );
     }

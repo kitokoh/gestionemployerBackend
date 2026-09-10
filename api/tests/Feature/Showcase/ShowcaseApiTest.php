@@ -88,7 +88,7 @@ class ShowcaseApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.slug', $company->slug)
             ->assertJsonPath('data.status', 'draft')
-            ->assertJsonPath('data.theme', 'default');
+            ->assertJsonPath('data.theme', 'industrie'); // ShowcaseThemeRegistry::DEFAULT_THEME (#6868)
     }
 
     public function test_creation_is_idempotent_and_slug_matches_company_slug(): void
