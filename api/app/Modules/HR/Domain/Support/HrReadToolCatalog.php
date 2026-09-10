@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\HR\Domain\Support;
 
+use App\AI\Support\AIToolCatalog;
 use App\AI\Support\AIToolDefinition;
 use App\AI\Support\AIToolSensitivity;
 
@@ -22,7 +23,7 @@ use App\AI\Support\AIToolSensitivity;
  * l'hôte BC-23 (ToolRegistry) enrichit les entrées `ai_tool_registry`
  * homonymes sans changer leur comportement (tranche additive A3).
  */
-final class HrReadToolCatalog
+final class HrReadToolCatalog implements AIToolCatalog
 {
     /**
      * @return list<AIToolDefinition>
