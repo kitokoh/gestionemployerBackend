@@ -2211,6 +2211,172 @@ paths:
           description: ALREADY_APPLIED (déjà postulé)
         '422':
           description: Validation
+  /public/vitrine/{slug}:
+    get:
+      tags:
+      - Showcase
+      summary: Vitrine publique d'un tenant (BC-27 #6867)
+      description: DTO public isole (theme + sections + settings filtres), aucun champ interne. 404 si slug inconnu, societe suspendue, vitrine absente ou non publiee.
+      parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Vitrine publique (VitrinePublicResource)
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Slug inconnu, societe suspendue ou vitrine non publiee
+  /showcase:
+    get:
+      tags:
+      - Showcase
+      summary: Vitrine du tenant courant (gestion)
+      description: Gestion reservee principal/rh du tenant (feature flag company_showcase). 404 tant que la vitrine n'a pas ete creee.
+      responses:
+        '200':
+          description: Vitrine du tenant (ShowcaseResource)
+        '403':
+          description: Role insuffisant ou feature flag desactive
+        '404':
+          description: Aucune vitrine pour ce tenant
+    post:
+      tags:
+      - Showcase
+      summary: Creation 1-clic de la vitrine (US1)
+      description: Cree la vitrine en draft (slug = slug du tenant). Idempotent (201 a la creation, 200 si la vitrine existe deja).
+      responses:
+        '201':
+          description: Vitrine creee
+        '200':
+          description: Vitrine deja existante
+        '403':
+          description: Role insuffisant ou feature flag desactive
+  /showcase/sections:
+    get:
+      tags:
+      - Showcase
+      summary: Liste ordonnee des sections de la vitrine (BC-27 #6866)
+      responses:
+        '200':
+          description: Sections de la vitrine (ShowcaseSectionResource)
+    post:
+      tags:
+      - Showcase
+      summary: Ajout d'une section (content valide par JSON Schema du type)
+      description: Le content est valide contre le contrat de sections versionne (schema_version 1). 422 si le schema est invalide.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - type
+              - content
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - hero
+                  - features
+                  - gallery
+                  - testimonials
+                  - contact
+                  - footer
+                content:
+                  type: object
+                schema_version:
+                  type: integer
+                  minimum: 1
+      responses:
+        '201':
+          description: Section creee
+        '422':
+          description: Contenu non conforme au JSON Schema du type
+  /showcase/sections/reorder:
+    post:
+      tags:
+      - Showcase
+      summary: Reordonnancement complet des sections (ids = ordre cible)
+      description: Les ids doivent couvrir exactement les sections existantes de la vitrine (422 sinon).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - ids
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Liste reordonnee des sections
+        '422':
+          description: Ensemble d'ids incomplet ou inconnu
+  /showcase/sections/{section}:
+    patch:
+      tags:
+      - Showcase
+      summary: Mise a jour d'une section (PATCH partiel type et/ou content)
+      parameters:
+      - name: section
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - hero
+                  - features
+                  - gallery
+                  - testimonials
+                  - contact
+                  - footer
+                content:
+                  type: object
+                schema_version:
+                  type: integer
+      responses:
+        '200':
+          description: Section mise a jour
+        '404':
+          description: Section introuvable (autre tenant ou autre vitrine)
+        '422':
+          description: Contenu non conforme au JSON Schema du type
+    delete:
+      tags:
+      - Showcase
+      summary: Suppression d'une section
+      parameters:
+      - name: section
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Section supprimee
+        '404':
+          description: Section introuvable (autre tenant ou autre vitrine)
+
   /onboarding/invitation/{token}:
     get:
       tags:
