@@ -195,6 +195,15 @@ const nextConfig: NextConfig = {
 
   // Redirects for old image paths and SEO
   redirects: async () => [
+    // #7101 : l'i18n vitrine passe par `?lang=` (issue #4004/#4173) — aucune route
+    // préfixée n'existe. Les chemins /fr /en /ar /tr (et sous-chemins) répondaient
+    // 404 ; on les redirige en 301 vers la forme canonique `?lang=` pour ne jamais
+    // servir de 404 sur ces chemins réservés (SEO + liens partagés).
+    {
+      source: "/:locale(fr|en|tr|ar)/:path*",
+      destination: "/:path*?lang=:locale",
+      permanent: true,
+    },
     // ADR-0016 Phase 5 (#5356) + rename UI (#5440) : /smart-attendance → /attendance/geo
     {
       source: "/smart-attendance/:path*",
