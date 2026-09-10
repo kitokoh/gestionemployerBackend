@@ -8,13 +8,10 @@ use App\Core\Auth\Domain\Models\Employee;
 use App\Core\Auth\Infrastructure\Services\DataAccessAuditLogger;
 use App\Core\Tenant\Domain\Models\Company;
 use App\Http\Controllers\Controller;
-<<<<<<< HEAD
-use App\Modules\Payroll\Application\Actions\GenerateCnssMaDeclaration;
-use App\Modules\Payroll\Application\Actions\GenerateDsnFrDeclaration;
-=======
 use App\Modules\Payroll\Application\Actions\GenerateCnasDzDeclaration;
 use App\Modules\Payroll\Application\Actions\GenerateDasDzDeclaration;
->>>>>>> origin/main
+use App\Modules\Payroll\Application\Actions\GenerateCnssMaDeclaration;
+use App\Modules\Payroll\Application\Actions\GenerateDsnFrDeclaration;
 use App\Modules\Payroll\Domain\Models\PayrollRun;
 use App\Modules\Payroll\Infrastructure\Services\CedeaoCnsDeclarationGenerator;
 use App\Modules\Payroll\Infrastructure\Services\CemacCnpsDeclarationGenerator;
@@ -33,13 +30,10 @@ class SocialDeclarationController extends Controller
     public function __construct(
         private readonly DataAccessAuditLogger $auditLogger,
         private readonly SocialDeclarationService $declarationService,
-<<<<<<< HEAD
-        private readonly GenerateCnssMaDeclaration $generateCnssMa,
-        private readonly GenerateDsnFrDeclaration $generateDsnFr,
-=======
         private readonly GenerateCnasDzDeclaration $generateCnasDz,
         private readonly GenerateDasDzDeclaration $generateDasDz,
->>>>>>> origin/main
+        private readonly GenerateCnssMaDeclaration $generateCnssMa,
+        private readonly GenerateDsnFrDeclaration $generateDsnFr,
     ) {}
 
     public function generateCnasDz(Request $request): JsonResponse
