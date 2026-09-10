@@ -62,6 +62,7 @@
   "authTwoFactorRequired": "Le code 2FA est requis.",
   "authDemoAccess": "Acces Demo",
   "authTogglePasswordVisibility": "Afficher ou masquer le mot de passe",
+  "authPlatformAdminOnly": "Accès réservé aux administrateurs de la plateforme.",
   "commonLanguageLabel": "Langue",
   "commonLanguageVariantsFrFr": "Français (France)",
   "commonLanguageVariantsFrBe": "Français (Belgique)",

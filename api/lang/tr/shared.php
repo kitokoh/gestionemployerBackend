@@ -70,6 +70,7 @@ return [
                 'visibility' => 'Sifreyi goster veya gizle',
             ],
         ],
+        'platform_admin_only' => 'Erişim yalnızca platform yöneticilerine açıktır.',
     ],
     'common' => [
         'language' => [
