@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       api_url:
-        description: "API Render base URL (défaut : vars.PROD_API_BASE_URL)"
+        description: "API Render base URL (défaut : vars.DEV_API_BASE_URL)"
         required: false
       web_url:
-        description: "Public web/vitrine base URL (défaut : vars.PROD_WEB_URL)"
+        description: "Public web/vitrine base URL (défaut : vars.DEV_WEB_URL)"
         required: false
       admin_url:
-        description: "Admin dashboard base URL (défaut : vars.PROD_ADMIN_URL)"
+        description: "Admin dashboard base URL (défaut : vars.DEV_ADMIN_URL)"
         required: false
       max_latency_ms:
         description: "Maximum accepted latency per probe, including Render cold start"
@@ -45,9 +45,9 @@ jobs:
           lfs: false
 
       - name: Guard production URLs (fail-closed, #4720)
-        if: ${{ (!github.event.inputs.api_url && !vars.PROD_API_BASE_URL) || (!github.event.inputs.web_url && !vars.PROD_WEB_URL) || (!github.event.inputs.admin_url && !vars.PROD_ADMIN_URL) }}
+        if: ${{ (!github.event.inputs.api_url && !vars.DEV_API_BASE_URL) || (!github.event.inputs.web_url && !vars.DEV_WEB_URL) || (!github.event.inputs.admin_url && !vars.DEV_ADMIN_URL) }}
         run: |
-          echo "::error::PROD_API_BASE_URL / PROD_WEB_URL / PROD_ADMIN_URL must be set (legacy defaults removed, issue #4720)."
+          echo "::error::DEV_API_BASE_URL / DEV_WEB_URL / DEV_ADMIN_URL must be set (legacy defaults removed, issue #4720)."
           exit 1
 
       - name: Run launch probes
@@ -59,9 +59,9 @@ jobs:
           LAUNCH_SMOKE_RETRY_DELAY_SECONDS: "15"
         run: |
           bash dev-hub/tools/launch-observability-smoke.sh \
-            "${{ github.event.inputs.api_url || vars.PROD_API_BASE_URL }}" \
-            "${{ github.event.inputs.web_url || vars.PROD_WEB_URL }}" \
-            "${{ github.event.inputs.admin_url || vars.PROD_ADMIN_URL }}"
+            "${{ github.event.inputs.api_url || vars.DEV_API_BASE_URL }}" \
+            "${{ github.event.inputs.web_url || vars.DEV_WEB_URL }}" \
+            "${{ github.event.inputs.admin_url || vars.DEV_ADMIN_URL }}"
 
       - name: Upload launch smoke report
         if: always()

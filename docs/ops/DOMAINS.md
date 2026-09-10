@@ -23,7 +23,8 @@ le DNS de production n'est pas provisionné (#3452).
 `admin.leopardo-rh.com`, `api.leopardo-rh.com`, `docs.leopardo-rh.com`,
 `api.leopardo.app`, `proxy.leopardo-rh.com`, `demo.leopardo-rh.com`,
 `api-staging.leopardo-rh.com`, `demo.leopardo.app`, `client-a.leopardo-rh.com`
-(exemple illustratif tenant), `noreply@leopardo-rh.com` (expéditeur mail).
+(exemple illustratif tenant), `mail.leopardo-rh.com` (domaine d'expédition
+Mailgun PROD), `noreply@leopardo-rh.com` (expéditeur mail).
 
 Ils ne doivent **pas** être utilisés comme defaults de build ni comme URL de
 smoke test avant validation DNS/HTTP. La mise en place du DNS et des certificats
@@ -51,6 +52,7 @@ reste une responsabilité d'infrastructure distincte (#3452).
 | `api-staging.leopardo-rh.com` | API staging cible (`dev-hub/load`) | `target` | NXDOMAIN — #3452. |
 | `demo.leopardo.app` | App démo Edge (test SignupForm) | `target` | NXDOMAIN — #3452. |
 | `client-a.leopardo-rh.com` | Exemple illustratif tenant (docs MULTITENANCY) | `target` | Usage documentaire uniquement. |
+| `mail.leopardo-rh.com` | Domaine d'expédition Mailgun PROD (garde livraison #6919) | `target` | NXDOMAIN — DNS #3452 ; référence config prod, pas de build. |
 
 ## Surfaces verticales — sous-domaines Vercel v1 (issue #6918)
 

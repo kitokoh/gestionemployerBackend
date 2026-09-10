@@ -77,7 +77,7 @@ class PlatformAdminDashboardController extends Controller
     {
         /** @var SuperAdmin|null $actor */
         $actor = $request->user();
-        DB::table('platform_alert_dismissals')->updateOrInsert(
+        DB::table('public.platform_alert_dismissals')->updateOrInsert(
             ['alert_key' => $alertKey],
             ['dismissed_by' => $actor?->id, 'created_at' => now()]
         );
@@ -99,7 +99,7 @@ class PlatformAdminDashboardController extends Controller
     private function publicCount(string $table): int
     {
         try {
-            return (int) DB::table($table)->count();
+            return (int) DB::table('public.'.$table)->count();
         } catch (\Throwable $e) {
             $this->reportDashboardFailure(__FUNCTION__, $e);
         }
@@ -117,7 +117,7 @@ class PlatformAdminDashboardController extends Controller
     private function publicWhere(string $table, string $column, mixed $value): int
     {
         try {
-            return (int) DB::table($table)->where($column, $value)->count();
+            return (int) DB::table('public.'.$table)->where($column, $value)->count();
         } catch (\Throwable $e) {
             $this->reportDashboardFailure(__FUNCTION__, $e);
         }
@@ -137,7 +137,7 @@ class PlatformAdminDashboardController extends Controller
     private function publicCreatedToday(string $table): int
     {
         try {
-            return (int) DB::table($table)
+            return (int) DB::table('public.'.$table)
                 ->where('created_at', '>=', Carbon::today()->startOfDay())
                 ->count();
         } catch (\Throwable $e) {
@@ -186,7 +186,7 @@ class PlatformAdminDashboardController extends Controller
     private function companyActivities(): array
     {
         try {
-            return DB::table('companies')
+            return DB::table('public.companies')
                 ->orderByDesc('created_at')
                 ->limit(10)
                 ->get(['id', 'name', 'status', 'created_at'])
@@ -207,7 +207,7 @@ class PlatformAdminDashboardController extends Controller
     private function supportTicketActivities(): array
     {
         try {
-            return DB::table('platform_support_tickets')
+            return DB::table('public.platform_support_tickets')
                 ->orderByDesc('created_at')
                 ->limit(10)
                 ->get(['id', 'company_id', 'subject', 'priority', 'created_at'])
@@ -273,7 +273,7 @@ class PlatformAdminDashboardController extends Controller
     private function dismissedAlertKeys(): array
     {
         try {
-            return DB::table('platform_alert_dismissals')->pluck('alert_key')->all();
+            return DB::table('public.platform_alert_dismissals')->pluck('alert_key')->all();
         } catch (\Throwable $e) {
             $this->reportDashboardFailure(__FUNCTION__, $e);
         }
@@ -318,7 +318,7 @@ class PlatformAdminDashboardController extends Controller
     private function failedJobsAlert(): ?array
     {
         try {
-            $failed = (int) DB::table('failed_jobs')->count();
+            $failed = (int) DB::table('public.failed_jobs')->count();
 
             return $failed > 0
                 ? $this->alert('failed_jobs', 'warning', __('platform.alert_failed_jobs', ['count' => $failed]))
@@ -349,7 +349,7 @@ class PlatformAdminDashboardController extends Controller
     private function trialsExpiringAlert(): ?array
     {
         try {
-            $count = (int) DB::table('companies')
+            $count = (int) DB::table('public.companies')
                 ->where('status', 'trial')
                 ->where('subscription_end', '>=', Carbon::today()->toDateString())
                 ->where('subscription_end', '<=', Carbon::today()->addDays(7)->toDateString())
@@ -367,7 +367,7 @@ class PlatformAdminDashboardController extends Controller
     private function highPriorityTicketsAlert(): ?array
     {
         try {
-            $count = (int) DB::table('platform_support_tickets')
+            $count = (int) DB::table('public.platform_support_tickets')
                 ->where('status', 'open')
                 ->whereIn('priority', ['high', 'urgent'])
                 ->count();

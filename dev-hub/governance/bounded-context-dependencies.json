@@ -537,6 +537,12 @@
       "note": "BC-13 → BC-02 — dépendance réelle constatée (rebaseline MAT-002 2026-09-05, audit PM)"
     },
     {
+      "from": "BC-13",
+      "to": "BC-23",
+      "baseline": true,
+      "note": "BC-13 → BC-23 — NotifyTeamToolCatalog + NotificationServiceProvider importent le contrat AIToolDefinition/AIToolDefinitionRegistry (B3c #6858)"
+    },
+    {
       "from": "BC-15",
       "to": "BC-01",
       "baseline": true,
@@ -685,6 +691,12 @@
       "to": "BC-02",
       "baseline": false,
       "note": "BC-28 → BC-02 — résolution du contexte tenant par slug/public et commande de purge (CatalogPublicController, PurgeExpiredCatalogInquiries) : pattern boutique publique BC-25 (#6226), contrat partagé Core TenantManager"
+    },
+    {
+      "from": "BC-27",
+      "to": "BC-02",
+      "baseline": false,
+      "note": "BC-27 → BC-02 — Actions/Controllers Showcase importent App\\Core\\Tenant\\Domain\\Models\\Company (scope tenant vitrine) + App\\Core\\Tenant\\TenantManager (résolution tenant route publique, #6866/#6867)"
     }
   ]
 }

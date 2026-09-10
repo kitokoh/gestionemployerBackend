@@ -205,7 +205,7 @@ Actions) — valeur dans Pulumi ESC `solarnyxss/leopardo-hr/prod`
 
 Ces noms sont volontairement distincts des secrets/variables déjà utilisés
 par `deploy-main.yml` (`RENDER_DEPLOY_HOOK_URL`, `RENDER_ROLLBACK_HOOK_URL`,
-`vars.PROD_API_BASE_URL`) pour éviter toute collision avec l'environnement
+`vars.DEV_API_BASE_URL`) pour éviter toute collision avec l'environnement
 dev/continu existant.
 
 **Ressources déjà provisionnées (2026-09-03)**, workspace prod Render
