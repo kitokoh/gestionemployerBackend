@@ -6,7 +6,8 @@ Ce fichier doit etre lu au debut de chaque nouvelle session agent. Il doit aussi
 
 > Bibliothèque transversale des pièges connus (vue rapide) : `docs/GESTION_PROJET/BIBLIOTHEQUE_ERREURS.md`.
 > Toute nouvelle leçon opérationnelle = mise à jour AGENTS.md **et**, si c'est un piège
-> rejouable, une ligne dans la bibliothèque des erreurs (flux RETEX, protocole P04).
+> rejouable, une ligne dans la bibliothèque des erreurs. Flux pas-à-pas :
+> `docs/GOUVERNANCE/RETEX_FLUX.md` (constat → issue [LECON] → leçon, protocole P04).
 
 > **NOUVEL AGENT ? Commence par lire `dev-hub/prompts/00_AGENT_QUICK_CARD.md` (2 min) pour une carte de reference rapide. Ce fichier AGENTS.md est le guide complet.**
 

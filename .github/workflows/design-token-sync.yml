@@ -1,0 +1,36 @@
+name: Design Token Sync Guard
+
+# Garde de synchronisation des tokens design (issue #7118, protocole P05 §5 T3) :
+# COULEURS.md <-> AppColors.dart (Flutter) <-> tailwind.config.* (web/admin)
+# doivent bouger ensemble (règle APV L.07). Script : dev-hub/tools/check-design-token-sync.sh
+
+on:
+  pull_request:
+    paths:
+      - "docs/REFERENTIEL_PRODUIT/COULEURS.md"
+      - "front/mobile_apps/leopardo_core/lib/core/theme/**"
+      - "front/web/tailwind.config.ts"
+      - "front/admin-dashboard/tailwind.config.js"
+      - "dev-hub/tools/check-design-token-sync.*"
+  push:
+    branches: [main]
+    paths:
+      - "docs/REFERENTIEL_PRODUIT/COULEURS.md"
+      - "front/mobile_apps/leopardo_core/lib/core/theme/**"
+      - "front/web/tailwind.config.ts"
+      - "front/admin-dashboard/tailwind.config.js"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Run design token sync guard
+        run: bash dev-hub/tools/check-design-token-sync.sh
