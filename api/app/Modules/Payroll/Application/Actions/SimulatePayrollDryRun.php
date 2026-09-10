@@ -52,6 +52,10 @@ class SimulatePayrollDryRun
         private readonly PayrollCalculationAuditRecorder $auditRecorder,
     ) {}
 
+    /**
+     * @param  array<int|string, mixed>|null  $slabsOverride
+     * @return array<string, mixed>
+     */
     public function execute(
         ?string $companyId,
         string $countryCode,

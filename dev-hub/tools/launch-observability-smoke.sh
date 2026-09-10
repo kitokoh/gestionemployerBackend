@@ -41,7 +41,11 @@ json_escape() {
 probe() {
   local name="$1"
   local url="$2"
-  local expected="${3:-200}"
+  shift 2
+  # Statuts acceptés (un ou plusieurs) — ex. /docs : 200 hors prod, 403 en prod (#5588).
+  local -a accepted=("$@")
+  [[ ${#accepted[@]} -eq 0 ]] && accepted=(200)
+  local expected="${accepted[0]}"
 
   local tmp metrics status total_seconds total_ms ok error attempt should_retry
   ok=false
@@ -69,7 +73,12 @@ probe() {
     error="$(cat "${tmp}.err" 2>/dev/null || true)"
     rm -f "${tmp}" "${tmp}.err"
 
-    if [[ "${status}" == "${expected}" && "${total_ms}" -le "${MAX_P95_MS}" ]]; then
+    local status_ok=false
+    local code
+    for code in "${accepted[@]}"; do
+      [[ "${status}" == "${code}" ]] && status_ok=true
+    done
+    if [[ "${status_ok}" == true && "${total_ms}" -le "${MAX_P95_MS}" ]]; then
       ok=true
       error=""
       break
@@ -101,8 +110,8 @@ probe() {
 
 checks=()
 checks+=("$(probe "api_health" "${API_URL}/api/v1/health" 200)")
-checks+=("$(probe "api_docs" "${API_URL}/docs" 200)")
-checks+=("$(probe "api_docs_openapi" "${API_URL}/docs/openapi.yaml" 200)")
+checks+=("$(probe "api_docs" "${API_URL}/docs" 200 403)")  # 403 en prod = doc API privée (#5588)
+checks+=("$(probe "api_docs_openapi" "${API_URL}/docs/openapi.yaml" 200 403)")
 checks+=("$(probe "web_vitrine" "${WEB_URL}" 200)")
 checks+=("$(probe "web_pricing" "${WEB_URL}/pricing" 200)")
 checks+=("$(probe "web_demo" "${WEB_URL}/demo" 200)")
