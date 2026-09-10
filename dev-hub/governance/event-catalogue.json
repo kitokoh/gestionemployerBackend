@@ -107,6 +107,35 @@
       "notes": "Aucun listener enregistré (ni EventServiceProvider, ni Event::listen() dans un ServiceProvider module) — dispatché mais actuellement orphelin. Constat, pas un correctif de cette issue (#5864) : voir CandidateHiringService."
     },
     {
+      "name": "CatalogInquiryErased",
+      "class": "App\\Events\\CatalogInquiryErased",
+      "owner": "BC-28 CATALOG",
+      "version": 1,
+      "status": "active",
+      "payload": {
+        "companyId": "string",
+        "buyerEmail": "string",
+        "inquiryId": "int"
+      },
+      "consumers": [
+        "App\\Listeners\\EraseCrmLeadsOnCatalogInquiryErased"
+      ]
+    },
+    {
+      "name": "CatalogInquiryReceived",
+      "class": "App\\Events\\CatalogInquiryReceived",
+      "owner": "BC-28 CATALOG",
+      "version": 1,
+      "status": "active",
+      "payload": {
+        "companyId": "string",
+        "inquiry": "App\\Modules\\Catalog\\Domain\\Models\\CatalogInquiry"
+      },
+      "consumers": [
+        "App\\Listeners\\CreateCrmLeadFromCatalogInquiry"
+      ]
+    },
+    {
       "name": "CompanyCreated",
       "class": "App\\Events\\CompanyCreated",
       "owner": "BC-02 TENANT",
